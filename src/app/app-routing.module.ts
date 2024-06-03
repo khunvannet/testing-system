@@ -1,10 +1,66 @@
 import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
+import { Routes, RouterModule } from '@angular/router';
+import { HomeComponent } from './pages/home/home.component';
+import { LayoutComponent } from './pages/layout/layout.component';
+import { TestcaseComponent } from './pages/testcase/testcase.component';
+import { TestRunComponent } from './pages/test-run/test-run.component';
+import { DashboardComponent } from './pages/dashboard/dashboard.component';
+import { ActiveRunComponent } from './pages/test-run/active-run/active-run.component';
+import { CloseRunComponent } from './pages/test-run/close-run/close-run.component';
+import { SettingComponent } from './pages/setting/setting.component';
 
-const routes: Routes = [];
+const routes: Routes = [
+  { path: '', pathMatch: 'full', redirectTo: 'home' },
+  { path: 'home', component: HomeComponent },
+  {
+    path: 'test',
+    component: LayoutComponent,
+    children: [
+      { path: 'dashboard', component: DashboardComponent },
+      {
+        path: 'test_cases',
+        component: TestcaseComponent,
+        data: {
+          nzComponentParams: {
+            mode: 'testcase',
+          },
+        },
+      },
+      {
+        path: 'test_run',
+        component: TestRunComponent,
+        data: {
+          nzComponentParams: {
+            mode: 'testrun',
+          },
+        },
+      },
+      {
+        path: 'test_run/run',
+        component: ActiveRunComponent,
+        data: [
+          { index: 0, label: 'Test Run', url: '/test/test_run' },
+          { index: 1, label: 'Active', url: null },
+        ],
+      },
+      {
+        path: 'test_run/close',
+        component: CloseRunComponent,
+        data: [
+          { index: 0, label: 'Test Run', url: '/test/test_run' },
+          { index: 1, label: 'Close', url: null },
+        ],
+      },
+      {
+        path: 'settings',
+        component: SettingComponent,
+      },
+    ],
+  },
+];
 
 @NgModule({
   imports: [RouterModule.forRoot(routes)],
-  exports: [RouterModule]
+  exports: [RouterModule],
 })
-export class AppRoutingModule { }
+export class AppRoutingModule {}

@@ -1,0 +1,198 @@
+.header-form {
+  width: 304px;
+}
+.header-form #logo {
+  text-align: center;
+  max-width: 304px;
+  padding-bottom: 12px;
+}
+.header-form h3 {
+  max-width: 304px;
+  text-align: center;
+  font-family: "Moulpali", cursive;
+  color: #636363;
+}
+
+form {
+  margin: 0;
+}
+.nz-form {
+  width: 304px;
+}
+
+.nz-form-margin {
+  margin-bottom: 16px;
+}
+
+.nz-form-forgot {
+  float: right;
+}
+
+.nz-form-button {
+  width: 100%;
+}
+.page-header {
+  border-bottom: 1px solid #f2f2f2;
+
+  .more-action {
+    text-align: right;
+    margin: 16px 0px;
+  }
+
+  nz-breadcrumb {
+    margin: 16px 0px;
+  }
+}
+
+.page-content {
+  display: flex;
+  flex-flow: column;
+  height: 100%;
+  padding: 0px 20px 48px 30px;
+}
+
+.frm-container {
+  flex: 0 1 auto;
+  overflow-y: auto;
+}
+
+.item-action {
+  flex: 0 0 auto;
+  padding: 6px 8px;
+  display: block;
+}
+
+button {
+  font-size: 13px;
+  padding: 0 32px;
+  margin-right: 8px;
+}
+
+.col-checked {
+  width: 28px;
+}
+
+nz-table {
+  .col-header {
+    font-weight: bold;
+    font-size: 12px;
+    padding: 4px;
+    height: 30px;
+    color: #00000073;
+  }
+
+  .col-numeric {
+    text-align: right;
+  }
+  min-height: 100px;
+}
+
+h5 {
+  font-size: 14px;
+}
+
+::ng-deep .nz-disable-td {
+  padding: 0 !important;
+  border: none !important;
+}
+
+/* Popup Style */
+.header-page {
+  nz-select,
+  .input-group {
+    width: 220px;
+    margin-right: 4px;
+  }
+
+  .ant-picker-range {
+    width: 240px;
+    margin-right: 4px;
+  }
+
+  .btn-filter {
+    padding: 0;
+    font-size: 13px;
+    top: -0.05rem;
+    height: 1.975rem;
+  }
+  padding: 6px 8px;
+
+  .ant-form {
+    height: 36px;
+    display: flex;
+    align-items: center;
+  }
+
+  nz-form-item {
+    margin: 0;
+  }
+}
+
+.title-bar {
+  width: 100%;
+  text-align: center;
+  padding: 8px;
+  border-bottom: 1px solid #f2f2f2;
+
+  h5 {
+    margin: 0;
+    font-size: 12px;
+    color: #00000073;
+  }
+}
+
+::ng-deep .ant-dropdown-menu {
+  .menu-item {
+    width: 160px;
+    font-size: 13px;
+    padding-right: 24px;
+
+    &:hover {
+      background-color: #e6f7ff;
+    }
+  }
+}
+
+::ng-deep .ant-table-footer {
+  border-bottom: 1px #f2f2f2 solid;
+  padding: 4px 4px !important;
+  background-color: #ffff !important;
+}
+
+::ng-deep .ant-table-footer {
+  background-color: #ffff !important;
+}
+
+::ng-deep .nz-disable-td {
+  padding: 0 !important;
+  border: none !important;
+}
+
+.loader {
+  position: absolute;
+  top: 0;
+  height: 0.168rem;
+  z-index: 999;
+  background-color: #1976d3 !important;
+}
+
+[readonly],
+nz-input-group [readonly] * {
+  background: #eeeeee !important;
+}
+nz-range-picker {
+  width: 100%;
+}
+
+.modal-header-ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 40%;
+  margin: auto;
+}
+
+::ng-deep .ant-modal-body {
+  padding: 0;
+}
+/* End Popup Style */

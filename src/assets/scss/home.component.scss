@@ -5,6 +5,16 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+.header-app {
+  display: flex;
+  margin-right: 20px;
+  justify-content: flex-end;
+}
+.header img,
+.images {
+  width: 20px;
+  height: 20px;
+}
 .app-layout {
   height: 100vh;
 }
@@ -49,21 +59,11 @@ nz-header {
   padding: 0;
   width: 100%;
   z-index: 2;
-}
-
-.app-header {
-  position: relative;
-  height: 64px;
-  padding: 24px;
   background: #fff;
-  box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
 }
 
 nz-content {
-  margin: 24px;
+  margin: 10px;
 }
 
 .inner-content {
@@ -72,9 +72,11 @@ nz-content {
   height: 100%;
   border-radius: 4px;
 }
+
 .title-menu {
   font-size: x-large;
 }
+
 .menu-centered li {
   margin-top: 15px;
   background: #ebeaea;

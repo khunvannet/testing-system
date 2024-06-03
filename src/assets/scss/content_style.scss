@@ -1,0 +1,215 @@
+.scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+.scrollbar::-webkit-scrollbar-track {
+  background: #e2e2e2;
+  border-radius: 10px;
+}
+.scrollbar::-webkit-scrollbar-thumb {
+  background: #bcbcbc;
+  border-radius: 10px;
+}
+.scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #a0a0a0;
+  border-radius: 10px;
+}
+.scrollbar::-webkit-scrollbar-thumb:active {
+  background: #909090;
+  border-radius: 10px;
+}
+.scrollbar {
+  overflow-y: scroll;
+  overflow-y: auto;
+  height: 690px;
+  overflow-x: hidden;
+}
+
+.modal-header-ellipsis {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  margin-top: 10px;
+}
+
+nz-layout {
+  height: 100%;
+  min-height: 350px;
+  background-color: inherit;
+  padding: 0px 15px;
+  .ant-breadcrumb .anticon {
+    font-size: 13px;
+    padding: 5px 5px 0;
+  }
+
+  nz-header {
+    display: flex;
+    justify-content: space-between;
+    padding: 0;
+    height: 60px !important;
+    line-height: 60px !important;
+    background-color: inherit;
+    nz-input-group {
+      width: 220px;
+      margin-right: 4px;
+    }
+    nz-select,
+    .input-group {
+      width: 220px;
+      margin-right: 4px;
+    }
+
+    .ant-picker-range {
+      width: 220px;
+      margin-right: 4px;
+    }
+
+    .btn-filter {
+      font-size: 13px;
+      top: -0.05rem;
+      height: 1.975rem;
+    }
+
+    .operation-container {
+      text-align: right;
+    }
+
+    .ant-form {
+      height: 64px;
+      display: flex;
+      align-items: center;
+    }
+
+    nz-form-item {
+      margin: 0;
+    }
+  }
+
+  nz-content {
+    height: 100%;
+    background-color: inherit;
+    nz-select,
+    .input-group {
+      width: 100%;
+      margin-right: 4px;
+    }
+    > div {
+      display: flex;
+      flex-flow: row wrap;
+      > nz-card {
+        width: 200px;
+        margin-top: 10px;
+        box-shadow: rgba(100, 100, 111, 0.2) 0 7px 29px 0;
+        margin-right: 20px;
+        border: unset;
+        ::ng-deep .ant-card-actions > li {
+          margin: 4px 0;
+        }
+      }
+    }
+  }
+
+  nz-table {
+    .col-header {
+      font-weight: bold;
+      font-size: 13px;
+      color: rgba(0, 0, 0, 0.6);
+    }
+    thead,
+    th {
+      font-weight: bold;
+      font-size: 13px;
+      color: rgba(0, 0, 0, 0.6);
+    }
+    .action-row {
+      .action-text {
+        font-size: small;
+      }
+
+      text-align: right;
+
+      .action-button {
+        color: rgba(0, 0, 0, 0.45);
+        font-size: 13px;
+
+        &:hover {
+          color: #68caf8;
+        }
+      }
+    }
+
+    height: 95%;
+    overflow-y: auto;
+
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 999;
+    }
+
+    .col-numeric {
+      text-align: right;
+    }
+  }
+}
+
+.search-box {
+  padding: 8px;
+}
+
+.search-box input {
+  width: 220px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.search-box button {
+  width: 106px;
+}
+
+.search-button {
+  margin-right: 8px;
+}
+
+::ng-deep .ant-dropdown-menu {
+  .menu-item {
+    width: 160px;
+    font-size: 13px;
+    padding-right: 24px;
+
+    &:hover {
+      background-color: #e6f7ff;
+    }
+  }
+}
+
+::ng-deep .nz-disable-td {
+  padding: 0 !important;
+  border: none !important;
+}
+::ng-deep
+  .ant-table-thead
+  > tr
+  > th:not(:last-child):not(.ant-table-selection-column):not(
+    .ant-table-row-expand-icon-cell
+  ):not([colspan])::before {
+  width: 0 !important;
+}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+::ng-deep .ant-tabs-tab .anticon {
+  margin-right: 5px;
+}
+::ng-deep .ant-tabs-tab {
+  padding-bottom: 5px;
+}
+
+[nz-height="100%"] {
+  height: 100%;
+}
+
+::ng-deep [nz-height="100%"] .ant-tabs-content {
+  height: 100%;
+  margin-top: -16px;
+}
