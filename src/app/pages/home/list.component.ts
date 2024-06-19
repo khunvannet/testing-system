@@ -129,8 +129,4 @@ export class ListComponent implements OnInit {
       },
     });
   }
-
-  editProject(project: Project): void {
-    this.uiservice.showEdit(project); // Pass project data to the service to show the edit form
-  }
 }
