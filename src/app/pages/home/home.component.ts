@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { ListUiService } from './list-ui.service';
+import { HomeUiService } from './home-ui.service';
 
 @Component({
   selector: 'app-home',
@@ -152,7 +152,7 @@ export class HomeComponent {
   selectedValue: string | null = null;
   selectedImageSrc: string = '../../../assets/images/kh_FLAG.png';
   isFullScreen = false;
-  constructor(public uiservice: ListUiService) {}
+  constructor(public uiservice: HomeUiService) {}
 
   onLanguageChange(imageSrc: string): void {
     this.selectedImageSrc = imageSrc;

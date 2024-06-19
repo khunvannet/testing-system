@@ -1,7 +1,6 @@
-import { Component, OnInit } from '@angular/core';
-import { MainUiService } from './main-ui.service';
+import { Component, Input, OnInit } from '@angular/core';
 import { MainTest, MainTestService } from './main-test.service';
-import { NzModalService } from 'ng-zorro-antd/modal';
+import { MainUiService } from './main-ui.service';
 
 @Component({
   selector: 'app-main-list',
@@ -36,7 +35,7 @@ import { NzModalService } from 'ng-zorro-antd/modal';
                 class="menu-item"
                 nz-menu-item
                 style="color:blue"
-                (click)="uiService.showEdit(data.id)"
+                (click)="uiservice.showEdit()"
               >
                 <span>
                   <i nz-icon nzType="edit"></i>&nbsp;
@@ -47,7 +46,6 @@ import { NzModalService } from 'ng-zorro-antd/modal';
                 class="menu-item"
                 nz-menu-item
                 style="color:red;"
-                (click)="confirmDelete(data.id)"
                 Call
                 confirmDelete
                 method
@@ -66,14 +64,14 @@ import { NzModalService } from 'ng-zorro-antd/modal';
         </ul>
       </ul>
       <div class="btn-add">
-        <button nz-button nzType="dashed" nzBlock (click)="uiService.showAdd()">
+        <button nz-button nzType="dashed" nzBlock (click)="uiservice.showAdd()">
           Add
         </button>
       </div>
     </ng-container>
     <ng-template #noMain>
       <div class="btn-add">
-        <button nz-button nzType="dashed" nzBlock (click)="uiService.showAdd()">
+        <button nz-button nzType="dashed" nzBlock (click)="uiservice.showAdd()">
           Add
         </button>
       </div>
@@ -111,29 +109,28 @@ import { NzModalService } from 'ng-zorro-antd/modal';
   ],
 })
 export class MainTestListComponent implements OnInit {
+  @Input() projectId: number | null = null;
+  @Input() projectName: string | null = null;
   main: MainTest[] = [];
 
   constructor(
-    public uiService: MainUiService,
-    private mainTestService: MainTestService,
-    private modal: NzModalService // Inject NzModalService for displaying modal
+    private service: MainTestService,
+    public uiservice: MainUiService
   ) {}
 
   ngOnInit(): void {
-    this.refreshMainList();
+    this.getAllMain();
+    console.log(this.projectId);
   }
 
-  refreshMainList(): void {
-    this.main = this.mainTestService.getAllMainTests();
-  }
-
-  confirmDelete(id: number): void {
-    this.modal.confirm({
-      nzTitle: 'Are you sure you want to delete this item?',
-      nzContent: '',
-      nzOnOk: () => {
-        this.mainTestService.deleteMainTest(id);
-        this.refreshMainList();
+  getAllMain(): void {
+    this.service.getProjects().subscribe({
+      next: (data: MainTest[]) => {
+        this.main = data;
+        console.log(this.main);
+      },
+      error: (err: any) => {
+        console.error('Error fetching projects:', err);
       },
     });
   }

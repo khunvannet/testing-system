@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { TestRunUiService } from '../test-run/test-run-ui.service';
+
 import { TestCaseUiService } from './test-case-ui.service';
 
 @Component({
@@ -83,6 +83,11 @@ import { TestCaseUiService } from './test-case-ui.service';
         margin-left: 60px;
       }
       @media (max-width: 575px) {
+        .content-test {
+          nz-header {
+            width: 675px;
+          }
+        }
         .item-center {
           margin-top: 5%;
         }

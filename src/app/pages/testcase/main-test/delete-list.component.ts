@@ -19,7 +19,7 @@ import { NzModalRef } from 'ng-zorro-antd/modal';
               type="text"
               id="name"
               [disabled]="true"
-              [value]="mainItemName"
+              [value]=""
             />
           </nz-form-control>
         </nz-form-item>
@@ -27,8 +27,8 @@ import { NzModalRef } from 'ng-zorro-antd/modal';
     </div>
     <div *nzModalFooter>
       <div>
-        <button nz-button nzType="primary" (click)="onDelete()">Delete</button>
-        <button nz-button nzType="default" (click)="onCancel()">Cancel</button>
+        <button nz-button nzType="primary">Delete</button>
+        <button nz-button nzType="default">Cancel</button>
       </div>
     </div>
   `,
@@ -41,33 +41,4 @@ import { NzModalRef } from 'ng-zorro-antd/modal';
     `,
   ],
 })
-export class DeleteMainOperationComponent {
-  @Input() id: any;
-  @Output() itemDeleted = new EventEmitter<void>();
-  mainItemName: string = '';
-
-  constructor(
-    private mainTestService: MainTestService,
-    private modalInstance: NzModalRef
-  ) {}
-
-  ngOnInit(): void {
-    this.mainItemName = this.fetchMainItemName(this.id);
-  }
-
-  onDelete(): void {
-    this.mainTestService.deleteMainTest(this.id);
-    this.modalInstance.close();
-    console.log(this.id);
-    this.itemDeleted.emit();
-  }
-
-  onCancel(): void {
-    this.modalInstance.close();
-  }
-
-  fetchMainItemName(id: any): string {
-    const mainTest = this.mainTestService.getMainTestById(id);
-    return mainTest ? mainTest.name : '';
-  }
-}
+export class DeleteMainOperationComponent {}

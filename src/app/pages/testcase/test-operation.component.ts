@@ -20,46 +20,16 @@ const getBase64 = (file: File): Promise<string | ArrayBuffer | null> =>
     </div>
     <div class="modal-content" style="margin-top:10px;">
       <form nz-form [formGroup]="form">
-        <nz-row>
-          <nz-col [nzSpan]="18">
-            <nz-form-item>
-              <nz-form-label [nzSpan]="4" nzFor="code" nzRequired
-                >Code</nz-form-label
-              >
-              <nz-form-control [nzSpan]="19">
-                <input
-                  nz-input
-                  formControlName="code"
-                  type="text"
-                  id="code"
-                  [disabled]="true"
-                />
-              </nz-form-control>
-            </nz-form-item>
-          </nz-col>
-          <nz-col [nzSpan]="6">
-            <nz-form-item>
-              <nz-form-label [nzSpan]="8" nzFor="owner" nzRequired
-                >Owner</nz-form-label
-              >
-              <nz-form-control [nzSpan]="20">
-                <nz-select
-                  nzShowSearch
-                  nzAllowClear
-                  nzPlaceHolder="Select a person"
-                  formControlName="owner"
-                >
-                  <nz-option
-                    nzLabel="Khun Vannet"
-                    nzValue="Khun Vannet"
-                  ></nz-option>
-                </nz-select>
-              </nz-form-control>
-            </nz-form-item>
-          </nz-col>
-        </nz-row>
         <nz-form-item>
-          <nz-form-label [nzSpan]="3" nzFor="title" nzRequired
+          <nz-form-label [nzSpan]="6" nzFor="code" nzRequired
+            >Code</nz-form-label
+          >
+          <nz-form-control [nzSpan]="14">
+            <input nz-input formControlName="code" type="text" id="code" />
+          </nz-form-control>
+        </nz-form-item>
+        <nz-form-item>
+          <nz-form-label [nzSpan]="6" nzFor="title" nzRequired
             >Title</nz-form-label
           >
           <nz-form-control [nzSpan]="14">
@@ -67,7 +37,7 @@ const getBase64 = (file: File): Promise<string | ArrayBuffer | null> =>
           </nz-form-control>
         </nz-form-item>
         <nz-form-item>
-          <nz-form-label [nzSpan]="3" nzFor="description"
+          <nz-form-label [nzSpan]="6" nzFor="description"
             >Description</nz-form-label
           >
           <nz-form-control [nzSpan]="14">
@@ -80,7 +50,7 @@ const getBase64 = (file: File): Promise<string | ArrayBuffer | null> =>
           </nz-form-control>
         </nz-form-item>
         <nz-form-item>
-          <nz-form-label [nzSpan]="3" nzFor="note">Notes</nz-form-label>
+          <nz-form-label [nzSpan]="6" nzFor="note">Notes</nz-form-label>
           <nz-form-control [nzSpan]="14">
             <textarea
               rows="4"
@@ -91,7 +61,7 @@ const getBase64 = (file: File): Promise<string | ArrayBuffer | null> =>
           </nz-form-control>
         </nz-form-item>
         <nz-form-item>
-          <nz-form-label [nzSpan]="3" nzFor="attachments"
+          <nz-form-label [nzSpan]="6" nzFor="attachments"
             >Attachments</nz-form-label
           >
           <nz-form-control [nzSpan]="14">
@@ -138,13 +108,7 @@ const getBase64 = (file: File): Promise<string | ArrayBuffer | null> =>
         max-height: 150px;
         overflow-y: auto;
       }
-      ::ng-deep .ant-input-disabled,
-      .ant-input[disabled] {
-        width: 526px;
-      }
-      nz-select {
-        width: 200px;
-      }
+
       .title {
         display: block;
         text-align: center;

@@ -1,5 +1,7 @@
-import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { HomeService, Project } from '../home/home.service';
+import { ProjectSelectionService } from 'src/app/helper/projectselection.service';
 
 @Component({
   selector: 'app-layout',
@@ -24,9 +26,11 @@ import { Router } from '@angular/router';
               nzLabel="All Projects"
               nzValue="All Projects"
             ></nz-option>
-            <nz-option nzLabel="POS Admin" nzValue="POS Admin"></nz-option>
-            <nz-option nzLabel="Fitness" nzValue="Fitness"></nz-option>
-            <nz-option nzLabel="POS" nzValue="tom"></nz-option>
+            <nz-option
+              *ngFor="let data of projects"
+              [nzLabel]="data.name"
+              [nzValue]="data.id"
+            ></nz-option>
           </nz-select>
         </div>
 
@@ -68,12 +72,12 @@ import { Router } from '@angular/router';
         <nz-header>
           <div class="header-app">
             <div
-              style=" background-color: #f0f0f0; font-size:17px; border-radius:5px; padding:5px 15px; height:25px; display: flex; align-items: center; justify-content: center;margin-top:20px;"
+              style="background-color: #f0f0f0; font-size: 17px; border-radius: 5px; padding: 5px 15px; height: 25px; display: flex; align-items: center; justify-content: center; margin-top: 20px;"
             >
               <span nz-icon nzType="cloud-server" nzTheme="outline"></span>
               <span>S9 Server</span>
             </div>
-            <div class="header" style="margin-left:10px;">
+            <div class="header" style="margin-left: 10px;">
               <a
                 nz-dropdown
                 nzTrigger="click"
@@ -126,33 +130,34 @@ import { Router } from '@angular/router';
                 </ul>
               </nz-dropdown-menu>
             </div>
-            <div style="margin-top: 5px; margin-left:10px;">
+            <div style="margin-top: 5px; margin-left: 10px;">
               <i
                 nz-icon
                 nzType="appstore"
                 nzTheme="outline"
-                style="color: #1890ff; font-size:20px;"
+                style="color: #1890ff; font-size: 20px;"
               ></i>
             </div>
             <a (click)="toggleFullScreen()">
-              <div style="margin-top: 5px; margin-left:10px;">
+              <div style="margin-top: 5px; margin-left: 10px;">
                 <span
                   nz-icon
                   [nzType]="isFullScreen ? 'fullscreen-exit' : 'fullscreen'"
                   nzTheme="outline"
-                  style="color:#1890ff; font-size:20px;"
-                ></span></div
-            ></a>
-            <div style="margin-top:2px;margin-left:10px;">
+                  style="color: #1890ff; font-size: 20px;"
+                ></span>
+              </div>
+            </a>
+            <div style="margin-top: 2px; margin-left: 10px;">
               <span
                 nz-icon
                 nzType="user"
                 nzTheme="outline"
-                style=" font-size:18px;border-radius:50%;width:20px;height:20px;background:#1890ff; color:#fff;"
+                style="font-size: 18px; border-radius: 50%; width: 20px; height: 20px; background: #1890ff; color: #fff;"
               ></span>
             </div>
-            <div style="margin-top:2px;margin-left:10px;">
-              <span style="color: #1890ff;font-size:20px;">KhunVannet</span>
+            <div style="margin-top: 2px; margin-left: 10px;">
+              <span style="color: #1890ff; font-size: 20px;">KhunVannet</span>
             </div>
           </div>
         </nz-header>
@@ -162,184 +167,54 @@ import { Router } from '@angular/router';
       </nz-layout>
     </nz-layout>
   `,
-  styles: [
-    `
-      .setting-sider {
-        position: absolute;
-        bottom: 0;
-        margin-bottom: 50px;
-      }
-      .header-app {
-        display: flex;
-        margin-right: 20px;
-        justify-content: flex-end;
-      }
-      .header img,
-      .images {
-        width: 20px;
-        height: 20px;
-      }
-
-      :host {
-        display: flex;
-        text-rendering: optimizeLegibility;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-      }
-
-      .title-menu {
-        font-size: x-large;
-        font-weight: bold;
-      }
-      .menu-sidebar {
-        position: relative;
-        z-index: 10;
-        min-height: 100vh;
-        background: #fff;
-      }
-
-      .header-trigger {
-        height: 64px;
-        padding: 20px 24px;
-        font-size: 20px;
-        cursor: pointer;
-        transition: all 0.3s, padding 0s;
-      }
-      .trigger:hover {
-        color: #1890ff;
-      }
-
-      nz-header {
-        padding: 0;
-        width: 100%;
-        z-index: 2;
-        background: #fff;
-      }
-
-      .inner-content {
-        padding: 24px;
-        background: #fff;
-        height: 100%;
-        border-radius: 4px;
-      }
-      .title-menu {
-        font-size: x-large;
-        font-weight: bold;
-      }
-      .menu-centered li {
-        margin-top: 15px;
-        background: #ebeaea;
-        border-radius: 5px;
-      }
-
-      .menu-layout li {
-        margin-top: 10px;
-        border-radius: 5px;
-        width: 240px;
-        margin-left: 10px;
-      }
-      .select-project {
-        nz-select {
-          width: 240px;
-        }
-        margin-left: 10px;
-        margin-top: 20px;
-      }
-
-      @media (max-width: 575px) {
-        .select-project {
-          nz-select {
-            width: 80px;
-          }
-          margin: 5px 0;
-          padding: 0 10px;
-          margin-left: -10px;
-        }
-        .menu-layout li {
-          margin-top: 10px;
-          border-radius: 5px;
-          width: 90px;
-          margin-left: -10px;
-        }
-        .header-app {
-          display: flex;
-          margin-right: -20px;
-          justify-content: flex-end;
-          width: 800px;
-        }
-        .header img,
-        .images {
-          width: 20px;
-          height: 20px;
-        }
-        nz-content {
-          width: 810px;
-        }
-      }
-      @media (min-width: 576px) and (max-width: 767px) {
-        .select-project {
-          nz-select {
-            width: 80px;
-          }
-          margin: 5px 0;
-          padding: 0 10px;
-          margin-left: -10px;
-        }
-        .menu-layout li {
-          margin-top: 10px;
-          border-radius: 5px;
-          width: 90px;
-          margin-left: -10px;
-        }
-        nz-content {
-          width: 810px;
-        }
-        .header-app {
-          display: flex;
-          margin-right: -20px;
-          justify-content: flex-end;
-          width: 800px;
-        }
-        .header img,
-        .images {
-          width: 20px;
-          height: 20px;
-        }
-      }
-      @media (min-width: 768px) and (max-width: 991px) {
-        nz-content {
-          width: 800px;
-        }
-
-        .header-app {
-          display: flex;
-          margin-right: -20px;
-          justify-content: flex-end;
-          width: 800px;
-        }
-        .header img,
-        .images {
-          width: 20px;
-          height: 20px;
-        }
-      }
-    `,
-  ],
+  styleUrls: ['../../../assets/scss/layout.component.scss'],
 })
 export class LayoutComponent implements OnInit {
   isCollapsed = false;
-  selectedValue: string | null = null;
+  selectedValue: string | number | null = null; // Update the type to accept string or number
   selectedImageSrc: string = '../../../assets/images/kh_FLAG.png';
   isFullScreen = false;
+  projects: Project[] = [];
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private service: HomeService,
+    private projectSelectionService: ProjectSelectionService
+  ) {}
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.getAllProjects();
+    const storedProject = this.projectSelectionService.getSelectedProject();
+    if (storedProject) {
+      this.selectedValue = storedProject.id;
+    }
 
-  onProjectChange(selectedValue: string): void {
-    if (selectedValue === 'All Projects') {
+    // Subscribe to changes in selected project
+    this.projectSelectionService.selectedProject$.subscribe((project) => {
+      this.selectedValue = project ? project.id : null;
+    });
+  }
+
+  onProjectChange(selectedValue: string | number | null): void {
+    // Update selected project in ProjectSelectionService
+    this.projectSelectionService.setSelectedProject({
+      id: typeof selectedValue === 'number' ? selectedValue : null,
+      name:
+        typeof selectedValue === 'string'
+          ? selectedValue
+          : this.getProjectName(selectedValue as number),
+    });
+    if (selectedValue === 'All Projects' || selectedValue === null) {
       this.router.navigate(['home']);
     }
+  }
+
+  private getProjectName(projectId: number | null): string {
+    // Find the project with the given ID in the list of projects
+    const selectedProject = this.projects.find(
+      (project) => project.id === projectId
+    );
+    return selectedProject ? selectedProject.name : ''; // Return the project name if found, otherwise return an empty string
   }
 
   onLanguageChange(imageSrc: string): void {
@@ -371,5 +246,17 @@ export class LayoutComponent implements OnInit {
           );
         });
     }
+  }
+
+  getAllProjects() {
+    this.service.getProjects().subscribe({
+      next: (projects: Project[]) => {
+        this.projects = projects;
+        // console.log(this.projects);
+      },
+      error: (err: any) => {
+        console.error('Error fetching projects:', err);
+      },
+    });
   }
 }

@@ -1,0 +1,171 @@
+.setting-sider {
+  position: absolute;
+  bottom: 0;
+  margin-bottom: 50px;
+}
+.header-app {
+  display: flex;
+  margin-right: 20px;
+  justify-content: flex-end;
+}
+.header img,
+.images {
+  width: 20px;
+  height: 20px;
+}
+
+:host {
+  display: flex;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.title-menu {
+  font-size: x-large;
+  font-weight: bold;
+}
+.menu-sidebar {
+  position: relative;
+  z-index: 10;
+  min-height: 100vh;
+  background: #fff;
+}
+
+.header-trigger {
+  height: 64px;
+  padding: 20px 24px;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.3s, padding 0s;
+}
+.trigger:hover {
+  color: #1890ff;
+}
+
+nz-header {
+  padding: 0;
+  width: 100%;
+  z-index: 2;
+  background: #fff;
+}
+
+.inner-content {
+  padding: 24px;
+  background: #fff;
+  height: 100%;
+  border-radius: 4px;
+}
+.title-menu {
+  font-size: x-large;
+  font-weight: bold;
+}
+.menu-centered li {
+  margin-top: 15px;
+  background: #ebeaea;
+  border-radius: 5px;
+}
+
+.menu-layout li {
+  margin-top: 10px;
+  border-radius: 5px;
+  width: 240px;
+  margin-left: 10px;
+}
+.select-project {
+  nz-select {
+    width: 240px;
+  }
+  margin-left: 10px;
+  margin-top: 20px;
+}
+
+@media (max-width: 575px) {
+  ::ng-deep
+    .ant-select-show-search.ant-select:not(.ant-select-customize-input)
+    .ant-select-selector {
+    width: 70px;
+  }
+  nz-sider {
+    .select-project {
+      nz-select {
+        width: 70px;
+      }
+
+      margin-top: 20px;
+    }
+  }
+  .menu-layout li {
+    margin-top: 10px;
+    border-radius: 5px;
+    width: 90px;
+    margin-left: -10px;
+  }
+  .header-app {
+    display: flex;
+
+    justify-content: flex-end;
+    width: 930px;
+  }
+  .header img,
+  .images {
+    width: 20px;
+    height: 20px;
+  }
+  nz-content {
+    width: 950px;
+  }
+}
+@media (min-width: 576px) and (max-width: 767px) {
+  ::ng-deep
+    .ant-select-show-search.ant-select:not(.ant-select-customize-input)
+    .ant-select-selector {
+    width: 70px;
+  }
+  nz-sider {
+    .select-project {
+      nz-select {
+        width: 70px;
+      }
+
+      margin-top: 20px;
+    }
+  }
+  .menu-layout li {
+    margin-top: 10px;
+    border-radius: 5px;
+    width: 90px;
+    margin-left: -10px;
+  }
+  nz-content {
+    width: 810px;
+  }
+  .header-app {
+    display: flex;
+    margin-right: -20px;
+    justify-content: flex-end;
+    width: 800px;
+  }
+  .header img,
+  .images {
+    width: 20px;
+    height: 20px;
+  }
+}
+@media (min-width: 768px) and (max-width: 991px) {
+  nz-content {
+    width: 800px;
+  }
+
+  .header-app {
+    display: flex;
+    margin-right: -20px;
+    justify-content: flex-end;
+    width: 800px;
+  }
+  .header img,
+  .images {
+    width: 20px;
+    height: 20px;
+  }
+}

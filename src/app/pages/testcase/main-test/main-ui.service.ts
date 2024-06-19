@@ -15,22 +15,21 @@ export class MainUiService {
       nzMaskClosable: false,
       nzFooter: null,
       nzClosable: true,
-      nzWidth: 550,
+      nzWidth: 450,
       nzComponentParams: {
         mode: 'add',
       },
     });
   }
-  showEdit(id: number): void {
+  showEdit(): void {
     this.modalService.create({
       nzContent: MainTestOperationComponent,
       nzMaskClosable: false,
       nzFooter: null,
       nzClosable: true,
-      nzWidth: 550,
+      nzWidth: 450,
       nzComponentParams: {
         mode: 'edit',
-        id: id,
       },
     });
   }

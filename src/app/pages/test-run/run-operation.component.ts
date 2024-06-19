@@ -17,13 +17,13 @@ import {
     <div class="modal-content" style="margin-top:10px;">
       <form nz-form [formGroup]="form">
         <nz-form-item>
-          <nz-form-label [nzSpan]="5" nzFor="code">Code</nz-form-label>
+          <nz-form-label [nzSpan]="4" nzFor="code">Code</nz-form-label>
           <nz-form-control [nzSpan]="16">
             <input nz-input formControlName="code" type="text" id="code" />
           </nz-form-control>
         </nz-form-item>
         <nz-form-item>
-          <nz-form-label [nzSpan]="5" nzFor="title" nzRequired
+          <nz-form-label [nzSpan]="4" nzFor="title" nzRequired
             >Title</nz-form-label
           >
           <nz-form-control [nzSpan]="16">
@@ -31,7 +31,7 @@ import {
           </nz-form-control>
         </nz-form-item>
         <nz-form-item>
-          <nz-form-label [nzSpan]="5" nzFor="project" nzRequired
+          <nz-form-label [nzSpan]="4" nzFor="project" nzRequired
             >Project</nz-form-label
           >
           <nz-form-control [nzSpan]="16">
@@ -43,7 +43,7 @@ import {
           </nz-form-control>
         </nz-form-item>
         <nz-form-item>
-          <nz-form-label [nzSpan]="5" nzFor="testcase">Test Case</nz-form-label>
+          <nz-form-label [nzSpan]="4" nzFor="testcase">Test Case</nz-form-label>
           <nz-form-control [nzSpan]="16">
             <nz-tree
               #nzTreeComponent
@@ -57,7 +57,7 @@ import {
           </nz-form-control>
         </nz-form-item>
         <nz-form-item>
-          <nz-form-label [nzSpan]="5" nzFor="description"
+          <nz-form-label [nzSpan]="4" nzFor="description"
             >Description</nz-form-label
           >
           <nz-form-control [nzSpan]="16">

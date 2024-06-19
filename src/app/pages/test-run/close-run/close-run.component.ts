@@ -104,7 +104,7 @@ import { Observable } from 'rxjs';
         margin-left: 35px;
       }
       nz-input-group {
-        width: 300px;
+        width: 250px;
       }
       nz-header {
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);

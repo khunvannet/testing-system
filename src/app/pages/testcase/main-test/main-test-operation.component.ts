@@ -13,16 +13,16 @@ import { MainTest, MainTestService } from './main-test.service';
     <div class="modal-content" style="margin-top:10px;">
       <form nz-form [formGroup]="form">
         <nz-form-item>
-          <nz-form-label [nzSpan]="3" nzFor="name" nzRequired
+          <nz-form-label [nzSpan]="5" nzFor="name" nzRequired
             >Name</nz-form-label
           >
-          <nz-form-control [nzSpan]="20">
+          <nz-form-control [nzSpan]="16">
             <input nz-input formControlName="name" type="text" id="name" />
           </nz-form-control>
         </nz-form-item>
         <nz-form-item>
-          <nz-form-label [nzSpan]="3" nzFor="project">Project</nz-form-label>
-          <nz-form-control [nzSpan]="20">
+          <nz-form-label [nzSpan]="5" nzFor="project">Project</nz-form-label>
+          <nz-form-control [nzSpan]="16">
             <nz-select
               ngModel="Pos"
               formControlName="project"
@@ -38,22 +38,8 @@ import { MainTest, MainTestService } from './main-test.service';
     </div>
     <div *nzModalFooter>
       <div>
-        <button
-          *ngIf="mode === 'edit'"
-          nz-button
-          nzType="primary"
-          (click)="onEdit()"
-        >
-          Edit
-        </button>
-        <button
-          *ngIf="mode === 'add'"
-          nz-button
-          nzType="primary"
-          (click)="onSave()"
-        >
-          Add
-        </button>
+        <button *ngIf="mode === 'edit'" nz-button nzType="primary">Edit</button>
+        <button *ngIf="mode === 'add'" nz-button nzType="primary">Add</button>
         <button nz-button nzType="default" (click)="onCancel()">Cancel</button>
       </div>
     </div>
@@ -64,22 +50,20 @@ import { MainTest, MainTestService } from './main-test.service';
         display: block;
         text-align: center;
       }
+      ::ng-deep
+        .ant-select-disabled.ant-select:not(.ant-select-customize-input)
+        .ant-select-selector {
+        width: 270px;
+      }
     `,
   ],
 })
 export class MainTestOperationComponent implements OnInit {
-  @Input() id: any;
   @Input() mode: 'add' | 'edit' | undefined;
   @Input() mainTest: MainTest | undefined;
   form!: FormGroup;
-  mainItemName: string = '';
 
-  constructor(
-    private fb: FormBuilder,
-    private modalInstance: NzModalRef,
-    private service: MainTestService,
-    private cdr: ChangeDetectorRef
-  ) {
+  constructor(private fb: FormBuilder, private modalInstance: NzModalRef) {
     this.form = this.fb.group({
       name: ['', Validators.required],
       project: ['', Validators.required],
@@ -90,43 +74,11 @@ export class MainTestOperationComponent implements OnInit {
     if (this.mode === 'edit' && this.mainTest) {
       this.form.patchValue({
         name: this.mainTest.name,
-        project: this.mainTest.project,
       });
     }
   }
 
   onCancel(): void {
     this.modalInstance.close();
-  }
-
-  onSave(): void {
-    if (this.form.valid) {
-      const newTestCase: MainTest = {
-        id: Math.floor(Math.random() * 100),
-        name: this.form.value.name,
-        project: this.form.value.project,
-      };
-      this.service.addMainTest(newTestCase);
-      this.modalInstance.close();
-      this.form.reset();
-      this.cdr.detectChanges(); // Ensure changes are detected
-    }
-  }
-
-  onEdit(): void {
-    if (this.form.valid && this.mainTest) {
-      const updatedTest: MainTest = {
-        id: this.mainTest.id,
-        name: this.form.value.name,
-        project: this.form.value.project,
-      };
-      this.service.updateMainTest(updatedTest);
-      console.log('Before modalInstance.close()');
-      this.modalInstance.close();
-      console.log('After modalInstance.close()');
-      this.cdr.detectChanges(); // Manually trigger change detection
-      this.form.reset();
-    }
-    console.log(this.form.value);
   }
 }

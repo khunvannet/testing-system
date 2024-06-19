@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ListUiService } from '../home/list-ui.service';
+import { HomeUiService } from '../home/home-ui.service';
 
 @Component({
   selector: 'app-no-project-found',
@@ -38,7 +38,7 @@ import { ListUiService } from '../home/list-ui.service';
   ],
 })
 export class NoProjectFoundComponent implements OnInit {
-  constructor(public uiService: ListUiService) {}
+  constructor(public uiService: HomeUiService) {}
 
   ngOnInit(): void {}
 }

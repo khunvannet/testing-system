@@ -1,8 +1,7 @@
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NzModalRef } from 'ng-zorro-antd/modal';
-import { ProjectService } from 'src/app/helper/projecttservice.service';
-import { Project } from './home.service';
+import { Project, HomeService } from './home.service';
 
 @Component({
   selector: 'app-operation',
@@ -10,10 +9,10 @@ import { Project } from './home.service';
     <div *nzModalTitle class="modal-header-ellipsis">
       <span class="title">{{ mode === 'add' ? 'Add ' : 'Edit ' }}</span>
     </div>
-    <div class="modal-content">
-      <form nz-form [formGroup]="projectForm" (ngSubmit)="onSubmit()">
+    <div class="modal-content" style="margin-top:10px;">
+      <form nz-form [formGroup]="form">
         <nz-form-item>
-          <nz-form-label [nzSpan]="7" nzFor="title" nzRequired>
+          <nz-form-label [nzSpan]="7" nzFor="name" nzRequired>
             Project Name
           </nz-form-label>
           <nz-form-control
@@ -22,9 +21,10 @@ import { Project } from './home.service';
           >
             <input
               nz-input
-              formControlName="title"
-              id="title"
+              formControlName="name"
+              id="name"
               placeholder="Input your project name"
+              required
             />
           </nz-form-control>
         </nz-form-item>
@@ -44,10 +44,19 @@ import { Project } from './home.service';
       </form>
     </div>
     <div *nzModalFooter>
-      <div>
-        <button nz-button nzType="primary" (click)="onSubmit()">
-          {{ mode === 'add' ? 'Add' : 'Update' }}
+      <div *ngIf="mode === 'add'">
+        <button
+          [disabled]="!form.valid"
+          nz-button
+          nzType="primary"
+          (click)="onAdd()"
+        >
+          Add
         </button>
+        <button nz-button nzType="default" (click)="onCancel()">Cancel</button>
+      </div>
+      <div *ngIf="mode === 'edit'">
+        <button nz-button nzType="primary" (click)="onEdit()">Edit</button>
         <button nz-button nzType="default" (click)="onCancel()">Cancel</button>
       </div>
     </div>
@@ -61,58 +70,96 @@ import { Project } from './home.service';
     `,
   ],
 })
-export class OperationComponent {
-  @Input() mode: 'add' | 'edit' = 'add'; // Default mode is 'add'
-  @Input() project: Project | undefined; // Project data for editing
-
-  projectForm: FormGroup;
-  modalInstance: NzModalRef | undefined;
+export class OperationComponent implements OnInit {
+  @Input() mode: 'add' | 'edit' | undefined;
+  @Input() project: Project | undefined;
+  @Output() refreshList = new EventEmitter<void>();
+  form: FormGroup;
+  modalInstance: NzModalRef;
 
   constructor(
     private fb: FormBuilder,
-    private projectService: ProjectService,
-    private modalRef: NzModalRef
+    private modalRef: NzModalRef,
+    private homeService: HomeService
   ) {
-    this.projectForm = this.fb.group({
-      title: ['', [Validators.required]],
+    this.modalInstance = this.modalRef;
+    this.form = this.fb.group({
+      name: ['', [Validators.required]],
       description: [''],
     });
-
-    if (this.mode === 'edit' && this.project) {
-      this.projectForm.patchValue({
-        title: this.project.title,
-        description: this.project.description,
-      });
-    }
-
-    this.modalInstance = this.modalRef; // Assigning modalRef to modalInstance
   }
 
-  onSubmit(): void {
-    if (this.projectForm.valid) {
-      const project = this.projectForm.value as Project;
-      console.log('Project data:', project);
-
-      if (this.mode === 'add') {
-        this.projectService.addProject(project); // Add project to service
-      } else if (this.mode === 'edit' && this.project) {
-        this.projectService.updateProject(this.project.id, project); // Update project
-      }
-
-      // Close the modal in both cases
-      this.closeModal();
+  ngOnInit(): void {
+    if (this.mode === 'edit' && this.project) {
+      this.form.patchValue({
+        name: this.project.name,
+        description: this.project.description,
+      });
     }
   }
 
   closeModal(): void {
-    if (this.modalInstance) {
-      this.modalInstance.close();
-      // Reset the form
-      this.projectForm.reset();
-    }
+    this.modalInstance.close();
+    this.form.reset();
   }
 
   onCancel(): void {
     this.closeModal();
+  }
+
+  onAdd(): void {
+    if (this.form.valid) {
+      const formData = this.form.value;
+      if (this.mode === 'add') {
+        this.homeService.getProjects().subscribe({
+          next: (projects: Project[]) => {
+            const projectNames = projects.map((project) => project.name);
+            if (projectNames.includes(formData.name)) {
+              alert(
+                'Error adding project: Project with the same name already exists'
+              );
+            } else {
+              this.homeService.addProject(formData).subscribe({
+                next: (response) => {
+                  this.modalInstance.close(response);
+                  this.form.reset();
+                  console.log('Project added:', response);
+                  this.refreshList.emit(); // Emit event to refresh the list
+                },
+                error: (error) => {
+                  console.error('Error adding project:', error);
+                },
+              });
+            }
+          },
+          error: (err: any) => {
+            console.error('Error fetching projects:', err);
+          },
+        });
+      }
+    }
+  }
+  onEdit(): void {
+    if (this.form.valid && this.project) {
+      const formData = this.form.value;
+      const updatedProject: Project = {
+        ...this.project,
+        name: formData.name,
+        description: formData.description,
+      };
+
+      this.homeService
+        .updateProject(this.project.id, updatedProject)
+        .subscribe({
+          next: (response) => {
+            this.modalInstance.close(response);
+            console.log('Project updated:', response);
+            this.refreshList.emit(); // Emit event to refresh the list
+          },
+          error: (error) => {
+            console.error('Error updating project:', error);
+          },
+        });
+    }
   }
 }

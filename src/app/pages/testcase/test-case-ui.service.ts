@@ -15,7 +15,7 @@ export class TestCaseUiService {
       nzMaskClosable: false,
       nzFooter: null,
       nzClosable: true,
-      nzWidth: 950,
+      nzWidth: 800,
       nzBodyStyle: { height: '550px' },
       nzComponentParams: {
         mode: 'add',

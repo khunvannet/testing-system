@@ -1,44 +1,37 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, catchError, throwError } from 'rxjs';
-import { ProjectService } from 'src/app/helper/projecttservice.service';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
 
 export interface Project {
   id: number;
-  title: string;
+  name: string;
   description: string;
-  alltest: number;
-  alltestrun: number;
 }
 
 @Injectable({
   providedIn: 'root',
 })
 export class HomeService {
-  constructor(
-    private http: HttpClient,
-    private projectService: ProjectService
-  ) {}
-
-  _url: string = '../../../assets/data/project.json';
+  constructor(private http: HttpClient) {}
+  private url: string = 'http://localhost:8080/api/project';
 
   getProjects(): Observable<Project[]> {
-    return this.http
-      .get<Project[]>(this._url)
-      .pipe(catchError(this.errorHandler));
-  }
-  errorHandler(error: HttpErrorResponse) {
-    return throwError(error.message || 'server error');
+    return this.http.get<Project[]>(this.url);
   }
 
-  fetchAndSetProjects(): void {
-    this.getProjects().subscribe({
-      next: (projects: Project[]) => {
-        this.projectService.setProjects(projects);
-      },
-      error: (err: any) => {
-        console.error('Error fetching projects:', err);
-      },
-    });
+  getProjectById(id: number): Observable<Project> {
+    return this.http.get<Project>(`${this.url}/${id}`);
+  }
+
+  addProject(project: Project): Observable<Project> {
+    return this.http.post<Project>(this.url, project);
+  }
+
+  updateProject(id: number, project: Project): Observable<Project> {
+    return this.http.put<Project>(`${this.url}/${id}`, project);
+  }
+
+  deleteProject(id: number): Observable<string> {
+    return this.http.delete(`${this.url}/${id}`, { responseType: 'text' });
   }
 }
