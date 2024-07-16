@@ -10,7 +10,7 @@ import { Project, HomeService } from './home.service';
       <span class="title">{{ mode === 'add' ? 'Add ' : 'Edit ' }}</span>
     </div>
     <div class="modal-content" style="margin-top:10px;">
-      <form nz-form [formGroup]="form">
+      <form nz-form [formGroup]="form" onsubmit="">
         <nz-form-item>
           <nz-form-label [nzSpan]="7" nzFor="name" nzRequired>
             Project Name
@@ -44,8 +44,9 @@ import { Project, HomeService } from './home.service';
       </form>
     </div>
     <div *nzModalFooter>
-      <div *ngIf="mode === 'add'">
+      <div>
         <button
+          *ngIf="mode === 'add'"
           [disabled]="!form.valid"
           nz-button
           nzType="primary"
@@ -53,10 +54,15 @@ import { Project, HomeService } from './home.service';
         >
           Add
         </button>
-        <button nz-button nzType="default" (click)="onCancel()">Cancel</button>
-      </div>
-      <div *ngIf="mode === 'edit'">
-        <button nz-button nzType="primary" (click)="onEdit()">Edit</button>
+
+        <button
+          *ngIf="mode === 'edit'"
+          nz-button
+          nzType="primary"
+          (click)="onEdit()"
+        >
+          Edit
+        </button>
         <button nz-button nzType="default" (click)="onCancel()">Cancel</button>
       </div>
     </div>
@@ -154,7 +160,7 @@ export class OperationComponent implements OnInit {
           next: (response) => {
             this.modalInstance.close(response);
             console.log('Project updated:', response);
-            this.refreshList.emit(); // Emit event to refresh the list
+            this.refreshList.emit();
           },
           error: (error) => {
             console.error('Error updating project:', error);

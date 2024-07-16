@@ -79,6 +79,9 @@ nz-header {
   margin-left: 10px;
   margin-top: 20px;
 }
+.app-layout {
+  height: 100vh;
+}
 
 @media (max-width: 575px) {
   ::ng-deep

@@ -11,7 +11,7 @@ import { TestCaseUiService } from './test-case-ui.service';
         <nz-tab nzTitle="Details">
           <div class="id">
             <h4>ID : L-21</h4>
-            <a (click)="this.uiService.showEdit()">
+            <a>
               <i
                 nz-icon
                 nzType="edit"

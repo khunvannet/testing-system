@@ -86,6 +86,7 @@ import { ProjectSelectionService } from 'src/app/helper/projectselection.service
               >
                 <img [src]="selectedImageSrc" alt="" />
               </a>
+
               <nz-dropdown-menu #menu="nzDropdownMenu">
                 <ul nz-menu>
                   <li
@@ -188,15 +189,12 @@ export class LayoutComponent implements OnInit {
     if (storedProject) {
       this.selectedValue = storedProject.id;
     }
-
-    // Subscribe to changes in selected project
     this.projectSelectionService.selectedProject$.subscribe((project) => {
       this.selectedValue = project ? project.id : null;
     });
   }
 
   onProjectChange(selectedValue: string | number | null): void {
-    // Update selected project in ProjectSelectionService
     this.projectSelectionService.setSelectedProject({
       id: typeof selectedValue === 'number' ? selectedValue : null,
       name:
@@ -208,13 +206,11 @@ export class LayoutComponent implements OnInit {
       this.router.navigate(['home']);
     }
   }
-
   private getProjectName(projectId: number | null): string {
-    // Find the project with the given ID in the list of projects
     const selectedProject = this.projects.find(
       (project) => project.id === projectId
     );
-    return selectedProject ? selectedProject.name : ''; // Return the project name if found, otherwise return an empty string
+    return selectedProject ? selectedProject.name : '';
   }
 
   onLanguageChange(imageSrc: string): void {
@@ -247,12 +243,10 @@ export class LayoutComponent implements OnInit {
         });
     }
   }
-
   getAllProjects() {
     this.service.getProjects().subscribe({
       next: (projects: Project[]) => {
         this.projects = projects;
-        // console.log(this.projects);
       },
       error: (err: any) => {
         console.error('Error fetching projects:', err);

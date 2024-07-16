@@ -1,10 +1,4 @@
-import {
-  Component,
-  EventEmitter,
-  OnInit,
-  Output,
-  TemplateRef,
-} from '@angular/core';
+import { Component, OnInit, TemplateRef } from '@angular/core';
 import { HomeService, Project } from './home.service';
 import { HomeUiService } from './home-ui.service';
 import { ProjectSelectionService } from 'src/app/helper/projectselection.service';
@@ -12,94 +6,101 @@ import { ProjectSelectionService } from 'src/app/helper/projectselection.service
 @Component({
   selector: 'app-list',
   template: `
-    <ng-container *ngIf="projects.length > 0; else noProjects">
-      <nz-header>
-        <div class="header">
-          <div class="btn-run">
-            <button
-              class="create-project"
-              nz-button
-              nzType="primary"
-              (click)="showAdd()"
-            >
-              Create Test Run
-            </button>
-          </div>
-        </div>
-      </nz-header>
-      <nz-table [nzNoResult]="noResult" [nzData]="projects" nzSize="small">
-        <thead>
-          <tr>
-            <th class="col-header" nzWidth="50px">#</th>
-            <th nzColumnKey="name" nzWidth="35%">Project Name</th>
-            <th nzColumnKey="alltestcase" nzWidth="20%">All Test Cases</th>
-            <th nzColumnKey="alltestrun" nzWidth="20%">All Test Run</th>
-            <th nzWidth="165px"></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let project of projects; let i = index">
-            <td nzEllipsis>{{ i + 1 }}</td>
-            <td nzEllipsis>
-              <a
-                [routerLink]="['/test/dashboard']"
-                (click)="selectProject(project.id, project.name)"
+    <ng-container *ngIf="!loading; else loadingTemplate">
+      <ng-container *ngIf="projects.length > 0; else noProjects">
+        <nz-header>
+          <div class="header">
+            <div class="btn-run">
+              <button
+                class="create-project"
+                nz-button
+                nzType="primary"
+                (click)="showAdd()"
               >
-                {{ project.name }}
-              </a>
-            </td>
-            <td nzEllipsis>0</td>
-            <td nzEllipsis>0</td>
-            <td style="display: flex;justify-content:end;">
-              <nz-space [nzSplit]="spaceSplit">
-                <ng-template #spaceSplit>
-                  <nz-divider nzType="vertical"></nz-divider>
-                </ng-template>
-                <ng-container>
-                  <a *nzSpaceItem nz-typography (click)="showEdit(project)">
-                    <i
-                      nz-icon
-                      nzType="edit"
-                      nzTheme="outline"
-                      style="padding-right: 5px"
-                    ></i>
-                    Edit
-                  </a>
-                </ng-container>
-                <ng-container>
-                  <a
-                    *nzSpaceItem
-                    nz-typography
-                    style="color: #F31313"
-                    (click)="deleteProject(project.id)"
-                  >
-                    <i
-                      nz-icon
-                      nzType="delete"
-                      nzTheme="outline"
-                      style="padding-right: 5px"
-                    ></i>
-                    Delete
-                  </a>
-                </ng-container>
-              </nz-space>
-            </td>
-          </tr>
-        </tbody>
-      </nz-table>
+                Create Project
+              </button>
+            </div>
+          </div>
+        </nz-header>
+        <nz-table [nzNoResult]="noResult" [nzData]="projects" nzSize="small">
+          <thead>
+            <tr>
+              <th class="col-header" nzWidth="50px">#</th>
+              <th nzColumnKey="name" nzWidth="35%">Project Name</th>
+              <th nzColumnKey="alltestcase" nzWidth="20%">All Test Cases</th>
+              <th nzColumnKey="alltestrun" nzWidth="20%">All Test Run</th>
+              <th nzWidth="165px"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let project of projects; let i = index">
+              <td nzEllipsis>{{ i + 1 }}</td>
+              <td nzEllipsis>
+                <a
+                  [routerLink]="['/test/dashboard']"
+                  (click)="selectProject(project.id, project.name)"
+                >
+                  {{ project.name }}
+                </a>
+              </td>
+              <td nzEllipsis>0</td>
+              <td nzEllipsis>0</td>
+              <td style="display: flex;justify-content:end;">
+                <nz-space [nzSplit]="spaceSplit">
+                  <ng-template #spaceSplit>
+                    <nz-divider nzType="vertical"></nz-divider>
+                  </ng-template>
+                  <ng-container>
+                    <a *nzSpaceItem nz-typography (click)="showEdit(project)">
+                      <i
+                        nz-icon
+                        nzType="edit"
+                        nzTheme="outline"
+                        style="padding-right: 5px"
+                      ></i>
+                      Edit
+                    </a>
+                  </ng-container>
+                  <ng-container>
+                    <a
+                      *nzSpaceItem
+                      nz-typography
+                      style="color: #F31313"
+                      (click)="deleteProject(project.id)"
+                    >
+                      <i
+                        nz-icon
+                        nzType="delete"
+                        nzTheme="outline"
+                        style="padding-right: 5px"
+                      ></i>
+                      Delete
+                    </a>
+                  </ng-container>
+                </nz-space>
+              </td>
+            </tr>
+          </tbody>
+        </nz-table>
+      </ng-container>
+      <ng-template #noProjects>
+        <div class="container">
+          <h5 style="font-size: 36px; margin-bottom: 6px;">
+            <span nz-icon nzType="info-circle" nzTheme="outline"></span>
+          </h5>
+          <span class="title-menu">No Projects</span>
+          <p id="text">
+            No Project data available. Create a project to get started.
+          </p>
+          <button nz-button nzType="dashed" (click)="showAdd()">
+            Create Project
+          </button>
+        </div>
+      </ng-template>
     </ng-container>
-    <ng-template #noProjects>
-      <div class="container">
-        <h5 style="font-size: 36px; margin-bottom: 6px;">
-          <span nz-icon nzType="info-circle" nzTheme="outline"></span>
-        </h5>
-        <span class="title-menu">No Projects</span>
-        <p id="text">
-          No Project data available. Create a project to get started.
-        </p>
-        <button nz-button nzType="dashed" (click)="showAdd()">
-          Create Project
-        </button>
+    <ng-template #loadingTemplate>
+      <div class="loading-container">
+        <nz-spin></nz-spin>
       </div>
     </ng-template>
   `,
@@ -135,12 +136,19 @@ import { ProjectSelectionService } from 'src/app/helper/projectselection.service
       nz-table {
         margin-top: 10px;
       }
+      .loading-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
     `,
   ],
 })
 export class ListComponent implements OnInit {
   projects: Project[] = [];
   noResult: string | TemplateRef<any> | undefined = 'No Projects Found';
+  loading: boolean = true;
 
   constructor(
     private service: HomeService,
@@ -153,13 +161,17 @@ export class ListComponent implements OnInit {
   }
 
   getAllProjects(): void {
+    this.loading = true;
     this.service.getProjects().subscribe({
       next: (projects: Project[]) => {
-        this.projects = projects;
-        console.log(this.projects);
+        setTimeout(() => {
+          this.projects = projects;
+          this.loading = false;
+        }, 1000);
       },
       error: (err: any) => {
         console.error('Error fetching projects:', err);
+        this.loading = false;
       },
     });
   }

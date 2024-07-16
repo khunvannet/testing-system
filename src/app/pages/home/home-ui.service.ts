@@ -61,8 +61,8 @@ export class HomeUiService {
       nzOnOk: () => {
         this.service.deleteProject(id).subscribe({
           next: (response: any) => {
-            console.log('Project deleted successfully:', response);
-            refreshCallback(); // Call the refresh function to update the project list
+            //console.log('Project deleted successfully:', response);
+            refreshCallback();
           },
           error: (error: any) => {
             console.error('Error deleting project:', error);

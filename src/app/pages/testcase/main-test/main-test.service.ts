@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 export interface MainTest {
   id: number;
   name: string;
-  project_Id: number;
+  projectId: number;
 }
 
 @Injectable({
@@ -16,7 +16,21 @@ export class MainTestService {
 
   constructor(private http: HttpClient) {}
 
-  getProjects(): Observable<MainTest[]> {
+  getMain(): Observable<MainTest[]> {
     return this.http.get<MainTest[]>(this.url);
+  }
+
+  getMainByProjectId(projectId: number): Observable<MainTest[]> {
+    return this.http.get<MainTest[]>(`${this.url}/project/${projectId}`);
+  }
+
+  addMain(main: MainTest): Observable<MainTest> {
+    return this.http.post<MainTest>(this.url, main);
+  }
+  updateMain(id: number, mainTest: MainTest): Observable<MainTest> {
+    return this.http.put<MainTest>(`${this.url}/${id}`, mainTest);
+  }
+  deleteMain(id: number): Observable<string> {
+    return this.http.delete(`${this.url}/${id}`, { responseType: 'text' });
   }
 }

@@ -1,15 +1,38 @@
-import { Injectable } from '@angular/core';
-import { NzModalService } from 'ng-zorro-antd/modal';
+import { Injectable, EventEmitter } from '@angular/core';
+import { MainTest, MainTestService } from './main-test.service';
 import { MainTestOperationComponent } from './main-test-operation.component';
-import { DeleteMainOperationComponent } from './delete-list.component';
+import { NzModalService } from 'ng-zorro-antd/modal';
+import { Subject } from 'rxjs';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 @Injectable({
   providedIn: 'root',
 })
 export class MainUiService {
-  constructor(private modalService: NzModalService) {}
+  dataChanged = new EventEmitter<MainTest>();
+  dataUpdated = new Subject<MainTest>();
 
-  showAdd(componentId: any = ''): void {
+  constructor(
+    private modalService: NzModalService,
+    private service: MainTestService,
+    private sanitizer: DomSanitizer
+  ) {}
+
+  showEdit(mainTest: MainTest): void {
+    this.modalService.create({
+      nzContent: MainTestOperationComponent,
+      nzMaskClosable: false,
+      nzFooter: null,
+      nzClosable: true,
+      nzWidth: 450,
+      nzComponentParams: {
+        mode: 'edit',
+        mainTest: mainTest,
+      },
+    });
+  }
+
+  showAdd(): void {
     this.modalService.create({
       nzContent: MainTestOperationComponent,
       nzMaskClosable: false,
@@ -21,28 +44,26 @@ export class MainUiService {
       },
     });
   }
-  showEdit(): void {
-    this.modalService.create({
-      nzContent: MainTestOperationComponent,
+
+  showDelete(id: number, refreshCallback: () => void): void {
+    this.modalService.confirm({
+      nzTitle: 'Are you sure you want to delete?',
+      nzOkText: 'Yes',
+      nzOkType: 'primary',
+      nzOkDanger: true,
       nzMaskClosable: false,
-      nzFooter: null,
-      nzClosable: true,
-      nzWidth: 450,
-      nzComponentParams: {
-        mode: 'edit',
+      nzOnOk: () => {
+        this.service.deleteMain(id).subscribe({
+          next: (response: any) => {
+            refreshCallback();
+          },
+          error: (error: any) => {
+            console.error('Error deleting Main:', error);
+          },
+        });
       },
-    });
-  }
-  showDelete(id: number): void {
-    this.modalService.create({
-      nzContent: DeleteMainOperationComponent,
-      nzMaskClosable: false,
-      nzComponentParams: {
-        id: id,
-      },
-      nzFooter: null,
-      nzClosable: true,
-      nzWidth: 550,
+      nzCancelText: 'No',
+      nzOnCancel: () => console.log('Cancel'),
     });
   }
 }

@@ -1,27 +1,29 @@
-import { Component, Input, OnInit } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Inject,
+  inject,
+  Input,
+  OnDestroy,
+  OnInit,
+  Output,
+} from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NzModalRef } from 'ng-zorro-antd/modal';
-import { TestCase } from './test-case.service';
-import { TestCaseStateService } from 'src/app/helper/testcasestate.service';
-import { NzUploadFile } from 'ng-zorro-antd/upload';
+import { NzModalRef, NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
+import { TestCase, TestCaseService } from './test-case.service';
+import { Subscription } from 'rxjs';
+import { TestCaseUiService } from './test-case-ui.service';
 
-const getBase64 = (file: File): Promise<string | ArrayBuffer | null> =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = (error) => reject(error);
-  });
 @Component({
   selector: 'app-test-operation',
   template: `
     <div *nzModalTitle class="modal-header-ellipsis">
       <span class="title">{{ mode === 'add' ? 'Add ' : 'Edit ' }}</span>
     </div>
-    <div class="modal-content" style="margin-top:10px;">
+    <div class="modal-content" style="margin-top: 10px;">
       <form nz-form [formGroup]="form">
         <nz-form-item>
-          <nz-form-label [nzSpan]="6" nzFor="code" nzRequired
+          <nz-form-label [nzSpan]="5" nzFor="code" nzRequired
             >Code</nz-form-label
           >
           <nz-form-control [nzSpan]="14">
@@ -29,15 +31,23 @@ const getBase64 = (file: File): Promise<string | ArrayBuffer | null> =>
           </nz-form-control>
         </nz-form-item>
         <nz-form-item>
-          <nz-form-label [nzSpan]="6" nzFor="title" nzRequired
-            >Title</nz-form-label
+          <nz-form-label [nzSpan]="5" nzFor="name" nzRequired
+            >Name</nz-form-label
           >
           <nz-form-control [nzSpan]="14">
-            <input nz-input formControlName="title" type="text" id="title" />
+            <input nz-input formControlName="name" type="text" id="name" />
           </nz-form-control>
         </nz-form-item>
         <nz-form-item>
-          <nz-form-label [nzSpan]="6" nzFor="description"
+          <nz-form-label [nzSpan]="5" nzFor="main" nzRequired
+            >Main Test</nz-form-label
+          >
+          <nz-form-control [nzSpan]="14">
+            <select-main formControlName="mainId"></select-main>
+          </nz-form-control>
+        </nz-form-item>
+        <nz-form-item>
+          <nz-form-label [nzSpan]="5" nzFor="description"
             >Description</nz-form-label
           >
           <nz-form-control [nzSpan]="14">
@@ -50,53 +60,35 @@ const getBase64 = (file: File): Promise<string | ArrayBuffer | null> =>
           </nz-form-control>
         </nz-form-item>
         <nz-form-item>
-          <nz-form-label [nzSpan]="6" nzFor="note">Notes</nz-form-label>
+          <nz-form-label [nzSpan]="5" nzFor="note">Notes</nz-form-label>
           <nz-form-control [nzSpan]="14">
             <textarea
               rows="4"
               nz-input
-              formControlName="note"
+              formControlName="notes"
               id="note"
             ></textarea>
-          </nz-form-control>
-        </nz-form-item>
-        <nz-form-item>
-          <nz-form-label [nzSpan]="6" nzFor="attachments"
-            >Attachments</nz-form-label
-          >
-          <nz-form-control [nzSpan]="14">
-            <div class="clearfix" sy>
-              <nz-upload
-                nzAction="https://www.mocky.io/v2/5cc8019d300000980a055e76"
-                nzListType="picture-card"
-                [(nzFileList)]="fileList"
-                [nzShowButton]="fileList.length < 8"
-                [nzPreview]="handlePreview"
-              >
-                <div>
-                  <span nz-icon nzType="plus"></span>
-                  <div>Upload</div>
-                </div>
-              </nz-upload>
-              <nz-modal
-                [nzVisible]="previewVisible"
-                [nzContent]="modalContent"
-                [nzFooter]="null"
-                (nzOnCancel)="previewVisible = false"
-              >
-                <ng-template #modalContent>
-                  <img [src]="previewImage" [ngStyle]="{ width: '100%' }" />
-                </ng-template>
-              </nz-modal>
-            </div>
           </nz-form-control>
         </nz-form-item>
       </form>
     </div>
     <div *nzModalFooter>
       <div>
-        <button nz-button nzType="primary" (click)="onSave()">
-          {{ mode === 'add' ? 'Add' : 'Update' }}
+        <button
+          *ngIf="mode === 'add'"
+          nz-button
+          nzType="primary"
+          (click)="onSave()"
+        >
+          Add
+        </button>
+        <button
+          *ngIf="mode === 'edit'"
+          nz-button
+          nzType="primary"
+          (click)="onEdit()"
+        >
+          Edit
         </button>
         <button nz-button nzType="default" (click)="onCancel()">Cancel</button>
       </div>
@@ -104,53 +96,53 @@ const getBase64 = (file: File): Promise<string | ArrayBuffer | null> =>
   `,
   styles: [
     `
-      nz-upload {
-        max-height: 150px;
-        overflow-y: auto;
-      }
-
       .title {
         display: block;
         text-align: center;
       }
-      .preview-container {
-        margin-top: 10px;
+      .modal-header-ellipsis {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
-      .preview-image {
-        width: 40px;
-        height: 40px;
-        margin-right: 10px;
-        border: 1px solid #d9d9d9;
-        padding: 2px;
+      .modal-content {
+        margin-top: 10px;
       }
     `,
   ],
 })
-export class TestOperationComponent implements OnInit {
+export class TestOperationComponent implements OnInit, OnDestroy {
   @Input() mode: 'add' | 'edit' = 'add';
   @Input() testCase: TestCase | undefined;
+  @Input() mainId: number | undefined;
+  @Output() refreshList = new EventEmitter<void>();
   form: FormGroup;
-
+  subscription: Subscription = new Subscription();
   constructor(
     private fb: FormBuilder,
     private modalInstance: NzModalRef,
-    private testCaseStateService: TestCaseStateService
+    private service: TestCaseService,
+    public uiservice: TestCaseUiService,
+    @Inject(NZ_MODAL_DATA) public data: any
   ) {
+    this.mainId = data.mainId;
     this.form = this.fb.group({
-      title: ['', Validators.required],
-      owner: ['', Validators.required],
+      code: ['', Validators.required],
+      name: ['', Validators.required],
       description: [''],
-      note: [''],
+      notes: [''],
+      mainId: [this.mainId, Validators.required],
     });
   }
 
   ngOnInit(): void {
     if (this.mode === 'edit' && this.testCase) {
       this.form.patchValue({
-        title: this.testCase.title,
+        code: this.testCase.code,
+        name: this.testCase.name,
         description: this.testCase.description,
-        owner: this.testCase.owner,
-        note: this.testCase.note,
+        notes: this.testCase.notes,
+        mainId: this.testCase.mainId,
       });
     }
   }
@@ -159,41 +151,46 @@ export class TestOperationComponent implements OnInit {
     this.modalInstance.close();
   }
 
+  ngOnDestroy(): void {
+    this.subscription.unsubscribe();
+  }
+
   onSave(): void {
     if (this.form.valid) {
-      const newTestCase: TestCase = {
-        id: this.generateUniqueId(),
-        code: this.generateUniqueCode(),
-        title: this.form.value.title,
-        owner: this.form.value.owner,
-        description: this.form.value.description,
-        note: this.form.value.note,
-        attachment: '',
-        result: [],
+      const formValue = this.form.value;
+      this.service.addTest(formValue).subscribe({
+        next: (result) => {
+          this.modalInstance.close(formValue);
+          console.log(result);
+          this.uiservice.dataChanged.emit(result);
+          this.form.reset();
+        },
+        error: (error) => {
+          console.error('Error adding Test cast:', error);
+        },
+      });
+    } else {
+      console.error('failed to save');
+    }
+  }
+
+  onEdit(): void {
+    if (this.form.valid && this.testCase) {
+      const formData = this.form.value;
+      const updateTest: TestCase = {
+        ...this.testCase,
+        code: formData.code,
+        name: formData.name,
+        description: formData.description,
+        notes: formData.notes,
+        mainId: formData.mainId,
       };
-      this.testCaseStateService.addTestCase(newTestCase);
-      this.modalInstance.close();
-      this.form.reset();
+      this.service.editTest(this.testCase.id, updateTest).subscribe({
+        next: (data) => {
+          this.modalInstance.close(data);
+          this.uiservice.dataChanged.emit(data);
+        },
+      });
     }
   }
-
-  generateUniqueId(): string {
-    return Math.random().toString(36).substr(2, 9);
-  }
-
-  generateUniqueCode(): number {
-    return Math.floor(Math.random() * 1000000);
-  }
-
-  fileList: NzUploadFile[] = [];
-  previewImage: string | undefined = '';
-  previewVisible = false;
-
-  handlePreview = async (file: NzUploadFile): Promise<void> => {
-    if (!file.url && !file['preview']) {
-      file['preview'] = await getBase64(file.originFileObj!);
-    }
-    this.previewImage = file.url || file['preview'];
-    this.previewVisible = true;
-  };
 }

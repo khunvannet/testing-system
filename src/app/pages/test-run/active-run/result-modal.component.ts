@@ -2,7 +2,6 @@ import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NzModalRef } from 'ng-zorro-antd/modal';
 import { NzUploadChangeParam, NzUploadFile } from 'ng-zorro-antd/upload';
-import { TestCaseStateService } from 'src/app/helper/testcasestate.service';
 
 @Component({
   selector: 'app-result',

@@ -1,1 +1,25 @@
 /* You can add global styles to this file, and also import other style files */
+@import url("https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap");
+body,
+.ant-typography,
+.ant-btn,
+.ant-select {
+  font-family: "Quicksand", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 480;
+  font-style: normal;
+}
+h1 {
+  font-optical-sizing: auto;
+  font-weight: 700;
+}
+h2,
+h3,
+h4 {
+  font-optical-sizing: auto;
+  font-weight: 500;
+}
+p {
+  font-optical-sizing: auto;
+  font-weight: 400;
+}

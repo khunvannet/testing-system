@@ -25,7 +25,6 @@ import { MainTestComponent } from './pages/testcase/main-test/main-test.componen
 
 import { MainTestOperationComponent } from './pages/testcase/main-test/main-test-operation.component';
 import { MainTestListComponent } from './pages/testcase/main-test/main-list.component';
-import { DeleteMainOperationComponent } from './pages/testcase/main-test/delete-list.component';
 import { TestRunComponent } from './pages/test-run/test-run.component';
 import { ActiveRunListComponent } from './pages/test-run/active-run/active-run-list.component';
 import { CloseRunListComponent } from './pages/test-run/close-run/close-run-list.component';
@@ -37,6 +36,8 @@ import { CloseRunComponent } from './pages/test-run/close-run/close-run.componen
 import { RunResultsComponent } from './pages/test-run/active-run/result-modal.component';
 import { BreadcrumbComponent } from './pages/shared/breadcrumb.component';
 import { SettingComponent } from './pages/setting/setting.component';
+import { SelecionComponent } from './pages/shared/selection.component';
+import { SelectMainComponent } from './pages/testcase/main-test/selectmain.component';
 
 registerLocaleData(en);
 
@@ -58,7 +59,8 @@ registerLocaleData(en);
     MainTestComponent,
     MainTestListComponent,
     MainTestOperationComponent,
-    DeleteMainOperationComponent,
+    SelectMainComponent,
+    SelecionComponent,
 
     //test run
     TestRunComponent,

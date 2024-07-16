@@ -11,7 +11,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
         nzType="file-add"
         nzTheme="outline"
       ></span>
-      <span class="text1">Create New Folder</span>
+      <span class="text1">Create New Test Case</span>
       <div class="input-add">
         <form nz-form [formGroup]="form" (ngSubmit)="onSubmit()">
           <nz-input-group nzSearch [nzAddOnAfter]="suffixIconButton">

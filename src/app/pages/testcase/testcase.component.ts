@@ -1,43 +1,70 @@
-import { Component } from '@angular/core';
-
+import { Component, OnInit } from '@angular/core';
 import { TestCaseUiService } from './test-case-ui.service';
+import { HomeService, Project } from '../home/home.service';
+import { ProjectSelectionService } from 'src/app/helper/projectselection.service';
 
 @Component({
   selector: 'app-testcase',
-  template: ` <nz-layout>
-    <nz-content>
-      <nz-layout>
-        <nz-sider class="sub-sidebar" nzWidth="256px">
-          <app-main-test></app-main-test>
-        </nz-sider>
-      </nz-layout>
+  template: `
+    <nz-layout>
+      <nz-content>
+        <nz-layout>
+          <nz-sider class="sub-sidebar" nzWidth="256px">
+            <div class="select-project">
+              <nz-select
+                [(ngModel)]="selectedValue"
+                (ngModelChange)="onProjectChange($event)"
+              >
+                <nz-option
+                  *ngFor="let data of projects"
+                  [nzValue]="data.id"
+                  [nzLabel]="data.name"
+                ></nz-option>
+              </nz-select>
+            </div>
+            <div>
+              <app-main-list
+                [projectId]="selectedValue"
+                (mainId)="handleMainId($event)"
+              ></app-main-list>
+            </div>
+          </nz-sider>
+        </nz-layout>
 
-      <div class="content-test">
-        <nz-header>
-          <nz-input-group [nzSuffix]="suffixIconSearch">
-            <input type="text" nz-input />
-          </nz-input-group>
-          <ng-template #suffixIconSearch>
-            <span nz-icon nzType="search"></span>
-          </ng-template>
+        <div class="content-test">
+          <nz-header>
+            <nz-input-group [nzSuffix]="suffixIconSearch">
+              <input type="text" nz-input />
+            </nz-input-group>
+            <ng-template #suffixIconSearch>
+              <span nz-icon nzType="search"></span>
+            </ng-template>
 
-          <button
-            (click)="this.uiService.showAdd()"
-            class="create-project"
-            nz-button
-            nzType="primary"
-          >
-            Create Test Case
-          </button>
-        </nz-header>
-        <div class="test-nav">
-          <app-test-case-list></app-test-case-list>
+            <button
+              (click)="this.uiService.showAdd(selectedMainId)"
+              class="create-project"
+              nz-button
+              nzType="primary"
+            >
+              Create Test Case
+            </button>
+          </nz-header>
+          <app-test-case-list [mainId]="selectedMainId"></app-test-case-list>
         </div>
-      </div>
-    </nz-content>
-  </nz-layout>`,
+      </nz-content>
+    </nz-layout>
+  `,
   styles: [
     `
+      nz-select {
+        width: 235px;
+      }
+
+      .select-project {
+        margin: 10px;
+        margin-top: 17px;
+        width: 100px;
+      }
       nz-input-group {
         width: 250px;
       }
@@ -46,7 +73,6 @@ import { TestCaseUiService } from './test-case-ui.service';
         font-size: 14px;
         font-weight: bold;
       }
-      /* testcase.component.css */
       nz-header {
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         padding: 0 16px;
@@ -64,7 +90,7 @@ import { TestCaseUiService } from './test-case-ui.service';
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         position: relative;
         z-index: 10;
-        min-height: 92vh;
+        min-height: 88vh;
         background: #fff;
       }
       nz-content {
@@ -114,6 +140,56 @@ import { TestCaseUiService } from './test-case-ui.service';
     `,
   ],
 })
-export class TestcaseComponent {
-  constructor(public uiService: TestCaseUiService) {}
+export class TestcaseComponent implements OnInit {
+  projects: Project[] = [];
+  selectedValue: number | null = null;
+  selectedMainId: number | null = null;
+  mainId: number = 0;
+
+  constructor(
+    public uiService: TestCaseUiService,
+    private service: HomeService,
+    private projectSelectionService: ProjectSelectionService
+  ) {}
+
+  ngOnInit(): void {
+    this.getAllProjects();
+    const storedProject = this.projectSelectionService.getSelectedProject();
+    if (storedProject) {
+      this.selectedValue = storedProject.id;
+    }
+
+    this.projectSelectionService.selectedProject$.subscribe((project) => {
+      this.selectedValue = project ? project.id : null;
+    });
+  }
+
+  onProjectChange(selectedValue: number | null): void {
+    this.projectSelectionService.setSelectedProject({
+      id: selectedValue,
+      name: this.getProjectName(selectedValue),
+    });
+  }
+
+  private getProjectName(projectId: number | null): string {
+    const selectedProject = this.projects.find(
+      (project) => project.id === projectId
+    );
+    return selectedProject ? selectedProject.name : '';
+  }
+
+  getAllProjects() {
+    this.service.getProjects().subscribe({
+      next: (projects: Project[]) => {
+        this.projects = projects;
+      },
+      error: (err: any) => {
+        console.error('Error fetching projects:', err);
+      },
+    });
+  }
+
+  handleMainId(id: number): void {
+    this.selectedMainId = id;
+  }
 }

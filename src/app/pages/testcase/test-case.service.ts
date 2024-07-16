@@ -1,35 +1,41 @@
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, catchError, throwError } from 'rxjs';
+import { Observable } from 'rxjs';
+
 export interface TestCase {
-  id: string;
+  id: number;
   code: number;
-  title: string;
+  name: string;
   description: string;
-  owner: string;
-  note: string;
+  notes: string;
   attachment: string;
-  result: Result[];
+  mainId: number;
 }
 
-export interface Result {
-  id: number;
-  status: string;
-}
 @Injectable({
   providedIn: 'root',
 })
 export class TestCaseService {
+  private url: string = 'http://localhost:8080/api/test';
+  dataChanged: any;
+
   constructor(private http: HttpClient) {}
 
-  _url: string = '../../../assets/data/testcase.json';
-
-  getTesteCase(): Observable<TestCase[]> {
-    return this.http
-      .get<TestCase[]>(this._url)
-      .pipe(catchError(this.errorHandler));
+  getTest(): Observable<TestCase[]> {
+    return this.http.get<TestCase[]>(this.url);
   }
-  errorHandler(error: HttpErrorResponse) {
-    return throwError(error.message || 'server error');
+
+  getTestByMainId(mainId: number): Observable<TestCase[]> {
+    return this.http.get<TestCase[]>(`${this.url}/main/${mainId}`);
+  }
+
+  addTest(test: TestCase): Observable<TestCase> {
+    return this.http.post<TestCase>(this.url, test);
+  }
+  editTest(id: number, test: TestCase): Observable<TestCase> {
+    return this.http.put<TestCase>(`${this.url}/${id}`, test);
+  }
+  deleteTest(id: number): Observable<string> {
+    return this.http.delete(`${this.url}/${id}`, { responseType: 'text' });
   }
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit } from '@angular/core';
 import { HomeService, Project } from '../../home/home.service';
 import { ProjectSelectionService } from 'src/app/helper/projectselection.service';
 
@@ -18,7 +18,10 @@ import { ProjectSelectionService } from 'src/app/helper/projectselection.service
       </nz-select>
     </div>
     <div>
-      <app-main-list [projectId]="selectedValue"></app-main-list>
+      <app-main-list
+        [projectId]="selectedValue"
+        (mainId)="handleMainId($event)"
+      ></app-main-list>
     </div>
   `,
   styles: [
@@ -44,7 +47,7 @@ import { ProjectSelectionService } from 'src/app/helper/projectselection.service
 export class MainTestComponent implements OnInit {
   projects: Project[] = [];
   selectedValue: number | null = null;
-
+  selectedMainId: number | null = null;
   constructor(
     private service: HomeService,
     private projectSelectionService: ProjectSelectionService
@@ -57,20 +60,16 @@ export class MainTestComponent implements OnInit {
       this.selectedValue = storedProject.id;
     }
 
-    // Subscribe to changes in selected project
     this.projectSelectionService.selectedProject$.subscribe((project) => {
       this.selectedValue = project ? project.id : null;
     });
   }
 
   onProjectChange(selectedValue: number | null): void {
-    // Update selected project in ProjectSelectionService
     this.projectSelectionService.setSelectedProject({
       id: selectedValue,
       name: this.getProjectName(selectedValue),
     });
-    console.log(selectedValue);
-    console.log(this.getProjectName(selectedValue));
   }
 
   private getProjectName(projectId: number | null): string {
@@ -84,11 +83,14 @@ export class MainTestComponent implements OnInit {
     this.service.getProjects().subscribe({
       next: (projects: Project[]) => {
         this.projects = projects;
-        console.log(this.projects);
       },
       error: (err: any) => {
         console.error('Error fetching projects:', err);
       },
     });
+  }
+  handleMainId(id: number): void {
+    this.selectedMainId = id;
+    console.log('Selected Main ID:', this.selectedMainId);
   }
 }
