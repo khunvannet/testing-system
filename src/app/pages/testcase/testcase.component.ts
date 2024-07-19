@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { TestCaseUiService } from './test-case-ui.service';
 import { HomeService, Project } from '../home/home.service';
 import { ProjectSelectionService } from 'src/app/helper/projectselection.service';
+import { HomeUiService } from '../home/home-ui.service';
 
 @Component({
   selector: 'app-testcase',
@@ -14,12 +15,20 @@ import { ProjectSelectionService } from 'src/app/helper/projectselection.service
               <nz-select
                 [(ngModel)]="selectedValue"
                 (ngModelChange)="onProjectChange($event)"
+                [nzDropdownRender]="actionItem"
               >
                 <nz-option
                   *ngFor="let data of projects"
                   [nzValue]="data.id"
                   [nzLabel]="data.name"
-                ></nz-option>
+                >
+                  {{ data.name }}
+                </nz-option>
+                <ng-template #actionItem>
+                  <a class="item-action" (click)="this.uiProject.showAdd()">
+                    <i nz-icon nzType="plus"></i> Add
+                  </a>
+                </ng-template>
               </nz-select>
             </div>
             <div>
@@ -34,7 +43,12 @@ import { ProjectSelectionService } from 'src/app/helper/projectselection.service
         <div class="content-test">
           <nz-header>
             <nz-input-group [nzSuffix]="suffixIconSearch">
-              <input type="text" nz-input />
+              <input
+                type="text"
+                nz-input
+                [(ngModel)]="searchTerm"
+                (ngModelChange)="onSearch()"
+              />
             </nz-input-group>
             <ng-template #suffixIconSearch>
               <span nz-icon nzType="search"></span>
@@ -49,13 +63,19 @@ import { ProjectSelectionService } from 'src/app/helper/projectselection.service
               Create Test Case
             </button>
           </nz-header>
-          <app-test-case-list [mainId]="selectedMainId"></app-test-case-list>
+          <app-test-case-list
+            [mainId]="selectedMainId"
+            [searchTerm]="searchTerm"
+          ></app-test-case-list>
         </div>
       </nz-content>
     </nz-layout>
   `,
   styles: [
     `
+      .item-action {
+        padding-left: 10px;
+      }
       nz-select {
         width: 235px;
       }
@@ -145,11 +165,13 @@ export class TestcaseComponent implements OnInit {
   selectedValue: number | null = null;
   selectedMainId: number | null = null;
   mainId: number = 0;
+  searchTerm: string = '';
 
   constructor(
     public uiService: TestCaseUiService,
     private service: HomeService,
-    private projectSelectionService: ProjectSelectionService
+    private projectSelectionService: ProjectSelectionService,
+    public uiProject: HomeUiService
   ) {}
 
   ngOnInit(): void {
@@ -182,6 +204,7 @@ export class TestcaseComponent implements OnInit {
     this.service.getProjects().subscribe({
       next: (projects: Project[]) => {
         this.projects = projects;
+        this.uiService.dataChanged.emit();
       },
       error: (err: any) => {
         console.error('Error fetching projects:', err);
@@ -192,4 +215,6 @@ export class TestcaseComponent implements OnInit {
   handleMainId(id: number): void {
     this.selectedMainId = id;
   }
+
+  onSearch(): void {}
 }

@@ -3,7 +3,7 @@ import { MainTest, MainTestService } from './main-test.service';
 import { MainTestOperationComponent } from './main-test-operation.component';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { Subject } from 'rxjs';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { NotificationService } from 'src/app/helper/notification.service';
 
 @Injectable({
   providedIn: 'root',
@@ -15,32 +15,34 @@ export class MainUiService {
   constructor(
     private modalService: NzModalService,
     private service: MainTestService,
-    private sanitizer: DomSanitizer
+    private notificationService: NotificationService
   ) {}
-
-  showEdit(mainTest: MainTest): void {
-    this.modalService.create({
-      nzContent: MainTestOperationComponent,
-      nzMaskClosable: false,
-      nzFooter: null,
-      nzClosable: true,
-      nzWidth: 450,
-      nzComponentParams: {
-        mode: 'edit',
-        mainTest: mainTest,
-      },
-    });
-  }
 
   showAdd(): void {
     this.modalService.create({
       nzContent: MainTestOperationComponent,
       nzMaskClosable: false,
       nzFooter: null,
-      nzClosable: true,
-      nzWidth: 450,
+      nzClosable: false,
+      nzWidth: 400,
+      nzBodyStyle: { height: '300', padding: '0 ' },
       nzComponentParams: {
         mode: 'add',
+      },
+    });
+  }
+
+  showEdit(mainTest: MainTest): void {
+    this.modalService.create({
+      nzContent: MainTestOperationComponent,
+      nzMaskClosable: false,
+      nzFooter: null,
+      nzClosable: false,
+      nzWidth: 400,
+      nzBodyStyle: { height: '300', padding: '0 ' },
+      nzComponentParams: {
+        mode: 'edit',
+        mainTest: mainTest,
       },
     });
   }
@@ -55,10 +57,18 @@ export class MainUiService {
       nzOnOk: () => {
         this.service.deleteMain(id).subscribe({
           next: (response: any) => {
+            // Show success notification
+            this.notificationService.successNotification(
+              'Main deleted successfully!'
+            );
             refreshCallback();
           },
           error: (error: any) => {
             console.error('Error deleting Main:', error);
+            // Show error notification
+            this.notificationService.customErrorNotification(
+              'Failed to delete Main .'
+            );
           },
         });
       },

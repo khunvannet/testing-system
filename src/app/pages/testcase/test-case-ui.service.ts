@@ -6,6 +6,7 @@ import { DetailModalComponent } from './detail-modal.component';
 import { TestCase, TestCaseService } from './test-case.service';
 import { Subject } from 'rxjs';
 import { SafeHtml } from '@angular/platform-browser';
+import { NotificationService } from 'src/app/helper/notification.service';
 
 @Injectable({
   providedIn: 'root',
@@ -16,8 +17,10 @@ export class TestCaseUiService {
   sanitizer: any;
   constructor(
     private modalService: NzModalService,
-    private service: TestCaseService
+    private service: TestCaseService,
+    private notificationService: NotificationService
   ) {}
+
   showAdd(mainId: any, componentId: any = ''): void {
     this.modalService.create({
       nzContent: TestOperationComponent,
@@ -25,7 +28,8 @@ export class TestCaseUiService {
       nzMaskClosable: false,
       nzFooter: null,
       nzClosable: true,
-      nzWidth: 800,
+      nzWidth: 500,
+      nzBodyStyle: { padding: '0 ' },
       nzComponentParams: {
         mode: 'add',
       },
@@ -38,7 +42,8 @@ export class TestCaseUiService {
       nzMaskClosable: false,
       nzFooter: null,
       nzClosable: true,
-      nzWidth: 950,
+      nzWidth: 500,
+      nzBodyStyle: { padding: '0 ' },
       nzComponentParams: {
         mode: 'edit',
         testCase: testCase,
@@ -56,10 +61,18 @@ export class TestCaseUiService {
       nzOnOk: () => {
         this.service.deleteTest(id).subscribe({
           next: (response: any) => {
+            // Show success notification
+            this.notificationService.successNotification(
+              'Test case deleted successfully!'
+            );
             refreshCallback();
           },
           error: (error: any) => {
             console.error('Error deleting Main:', error);
+            // Show error notification
+            this.notificationService.customErrorNotification(
+              'Failed to delete Test case.'
+            );
           },
         });
       },

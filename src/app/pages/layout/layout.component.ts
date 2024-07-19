@@ -40,32 +40,28 @@ import { ProjectSelectionService } from 'src/app/helper/projectselection.service
           [nzInlineCollapsed]="isCollapsed"
           class="menu-layout"
         >
-          <li nz-menu-item>
+          <li
+            nz-menu-item
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: true }"
+          >
             <a routerLink="/test/dashboard">
               <i nz-icon nzType="dashboard" nzTheme="outline"></i>
               <span>Dashboard</span>
             </a>
           </li>
-          <li nz-menu-item>
+          <li nz-menu-item routerLinkActive="active">
             <a routerLink="/test/test_cases">
               <i nz-icon nzType="folder" nzTheme="outline"></i>
               <span>Test Cases</span>
             </a>
           </li>
-          <li nz-menu-item>
+          <li nz-menu-item routerLinkActive="active">
             <a routerLink="/test/test_run">
               <i nz-icon nzType="code" nzTheme="outline"></i>
               <span>Test Run</span>
             </a>
           </li>
-          <div class="setting-sider">
-            <li nz-menu-item>
-              <a routerLink="/test/settings">
-                <i nz-icon nzType="setting" nzTheme="outline"></i>
-                <span>Settings</span>
-              </a>
-            </li>
-          </div>
         </ul>
       </nz-sider>
       <nz-layout>

@@ -3,6 +3,7 @@ import { NzModalRef, NzModalService } from 'ng-zorro-antd/modal';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { OperationComponent } from './home-operation.component';
 import { HomeService, Project } from './home.service';
+import { NotificationService } from 'src/app/helper/notification.service';
 
 @Injectable({
   providedIn: 'root',
@@ -11,7 +12,7 @@ export class HomeUiService {
   constructor(
     private modalService: NzModalService,
     private service: HomeService,
-    private sanitizer: DomSanitizer
+    private notificationService: NotificationService
   ) {}
 
   showAdd(): NzModalRef {
@@ -19,8 +20,9 @@ export class HomeUiService {
       nzContent: OperationComponent,
       nzFooter: null,
       nzMaskClosable: false,
-      nzClosable: true,
-      nzWidth: 500,
+      nzClosable: false,
+      nzWidth: 400,
+      nzBodyStyle: { height: '300', padding: '0 ' },
       nzComponentParams: {
         mode: 'add',
       },
@@ -35,8 +37,9 @@ export class HomeUiService {
 
       nzFooter: null,
       nzMaskClosable: false,
-      nzClosable: true,
-      nzWidth: 500,
+      nzClosable: false,
+      nzWidth: 400,
+      nzBodyStyle: { height: '300', padding: '0 ' },
       nzComponentParams: {
         mode: 'edit',
         project: project,
@@ -47,10 +50,6 @@ export class HomeUiService {
   }
 
   showDelete(id: number, refreshCallback: () => void): void {
-    const content: SafeHtml = this.sanitizer.bypassSecurityTrustHtml(
-      '<b style="color: red;">Some description</b>'
-    );
-
     this.modalService.confirm({
       nzTitle: 'Are you sure you want to delete?',
 
@@ -61,11 +60,18 @@ export class HomeUiService {
       nzOnOk: () => {
         this.service.deleteProject(id).subscribe({
           next: (response: any) => {
-            //console.log('Project deleted successfully:', response);
+            // Show success notification
+            this.notificationService.successNotification(
+              'Project deleted successfully!'
+            );
             refreshCallback();
           },
           error: (error: any) => {
             console.error('Error deleting project:', error);
+            // Show error notification
+            this.notificationService.customErrorNotification(
+              'Failed to delete project.'
+            );
           },
         });
       },

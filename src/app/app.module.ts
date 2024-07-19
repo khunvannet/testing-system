@@ -38,7 +38,6 @@ import { BreadcrumbComponent } from './pages/shared/breadcrumb.component';
 import { SettingComponent } from './pages/setting/setting.component';
 import { SelecionComponent } from './pages/shared/selection.component';
 import { SelectMainComponent } from './pages/testcase/main-test/selectmain.component';
-
 registerLocaleData(en);
 
 @NgModule({

@@ -5,10 +5,11 @@ import {
   Output,
   SimpleChanges,
   EventEmitter,
+  ChangeDetectorRef,
 } from '@angular/core';
 import { MainTest, MainTestService } from './main-test.service';
 import { MainUiService } from './main-ui.service';
-import { ChangeDetectorRef } from '@angular/core';
+import { SessionService } from 'src/app/helper/session.service';
 
 @Component({
   selector: 'app-main-list',
@@ -16,13 +17,18 @@ import { ChangeDetectorRef } from '@angular/core';
     <ng-container>
       <ng-container *ngIf="main.length > 0; else noMain">
         <ul nz-menu nzMode="inline" class="sider-menu" cdkDropList>
-          <li cdkDrag class="block-ordering" *ngFor="let data of main">
+          <li
+            cdkDrag
+            class="block-ordering"
+            *ngFor="let data of main"
+            [class.active]="data.id === activeItemId"
+          >
             <span class="move">
               <i nz-icon nzType="holder" nzTheme="outline"></i>
             </span>
             <a
               nz-menu-item
-              style="margin-left:10px;"
+              style="margin-left: 10px;"
               (click)="clickItem(data.id)"
             >
               {{ data.name }}
@@ -46,7 +52,7 @@ import { ChangeDetectorRef } from '@angular/core';
                 <li
                   class="menu-item"
                   nz-menu-item
-                  style="color:blue"
+                  style="color: blue"
                   (click)="uiservice.showEdit(data)"
                 >
                   <i nz-icon nzType="edit"></i>&nbsp;
@@ -55,7 +61,7 @@ import { ChangeDetectorRef } from '@angular/core';
                 <li
                   class="menu-item"
                   nz-menu-item
-                  style="color:red"
+                  style="color: red"
                   (click)="deleteItem(data.id)"
                 >
                   <i nz-icon nzType="delete"></i>&nbsp;
@@ -92,6 +98,10 @@ import { ChangeDetectorRef } from '@angular/core';
   `,
   styles: [
     `
+      ul {
+        max-height: 530px;
+        overflow-y: auto;
+      }
       .sider-menu {
         margin-top: 30px;
       }
@@ -118,6 +128,9 @@ import { ChangeDetectorRef } from '@angular/core';
         position: relative;
         margin-top: -8px;
       }
+      .block-ordering.active {
+        background-color: #e6f7ff;
+      }
     `,
   ],
 })
@@ -125,18 +138,21 @@ export class MainTestListComponent implements OnInit {
   @Input() projectId: number | null = null;
   @Output() mainId: EventEmitter<number> = new EventEmitter();
   main: MainTest[] = [];
+  activeItemId: number | null = null;
 
   constructor(
     private service: MainTestService,
     public uiservice: MainUiService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private sessionService: SessionService
   ) {}
 
   ngOnInit(): void {
     if (this.projectId !== null) {
       this.getAllMain(this.projectId);
     }
-    // Subscribe to data changes from service
+
+    this.activeItemId = this.sessionService.getSession('activeItemId');
     this.uiservice.dataChanged.subscribe((newMainTest: MainTest) => {
       if (this.projectId !== null && newMainTest.projectId === this.projectId) {
         const index = this.main.findIndex((item) => item.id === newMainTest.id);
@@ -145,7 +161,7 @@ export class MainTestListComponent implements OnInit {
         } else {
           this.main.push(newMainTest);
         }
-        this.cdr.markForCheck(); // Ensure Angular runs change detection
+        this.cdr.markForCheck();
       }
     });
   }
@@ -184,7 +200,8 @@ export class MainTestListComponent implements OnInit {
   }
 
   clickItem(id: number): void {
+    this.activeItemId = id;
     this.mainId.emit(id);
-    //console.log(id);
+    this.sessionService.setSession('activeItemId', id);
   }
 }

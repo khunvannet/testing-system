@@ -1,9 +1,59 @@
 /* You can add global styles to this file, and also import other style files */
 @import url("https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap");
+body {
+  font-family: "Quicksand", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 480;
+  font-style: normal;
+}
+
+@import url("https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap");
+
 body,
-.ant-typography,
 .ant-btn,
-.ant-select {
+.ant-select,
+.ant-input,
+.ant-menu,
+.ant-dropdown,
+.ant-modal,
+.ant-popover,
+.ant-tooltip,
+.ant-message,
+.ant-notification,
+.ant-card,
+.ant-table,
+.ant-form,
+.ant-checkbox,
+.ant-radio,
+.ant-switch,
+.ant-tag,
+.ant-badge,
+.ant-calendar,
+.ant-avatar,
+.ant-breadcrumb,
+.ant-pagination,
+.ant-upload,
+.ant-typography,
+.ant-result,
+.ant-space,
+.ant-descriptions,
+.ant-collapse,
+.ant-list,
+.ant-steps,
+.ant-progress,
+.ant-alert,
+.ant-anchor,
+.ant-back-top,
+.ant-empty,
+.ant-affix,
+.ant-badge,
+.ant-comment,
+.ant-divider,
+.ant-image,
+.ant-rate,
+.ant-statistic,
+.ant-timeline,
+.ant-tooltip {
   font-family: "Quicksand", sans-serif;
   font-optical-sizing: auto;
   font-weight: 480;

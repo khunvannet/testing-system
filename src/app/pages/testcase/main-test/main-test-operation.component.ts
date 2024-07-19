@@ -13,26 +13,29 @@ import { HomeService, Project } from '../../home/home.service';
 import { ProjectSelectionService } from 'src/app/helper/projectselection.service';
 import { Observable, Subscription } from 'rxjs';
 import { MainUiService } from './main-ui.service';
+import { NotificationService } from 'src/app/helper/notification.service';
 
 @Component({
   selector: 'app-main-test-operation',
   template: `
     <div *nzModalTitle class="modal-header-ellipsis">
-      <span class="title">{{ mode === 'add' ? 'Add ' : 'Edit ' }}</span>
+      <span>{{ mode === 'add' ? 'Add ' : 'Edit ' }}</span>
     </div>
-    <div class="modal-content" style="margin-top: 10px;">
+    <div class="modal-content" style="margin-top: 20px;">
       <form nz-form [formGroup]="form">
         <nz-form-item>
-          <nz-form-label [nzSpan]="6" nzFor="name" nzRequired
+          <nz-form-label [nzSpan]="8" nzFor="name" nzRequired
             >Name</nz-form-label
           >
-          <nz-form-control [nzSpan]="14" nzErrorTip="Name is required">
+          <nz-form-control [nzSpan]="15" nzErrorTip="Name is required">
             <input nz-input formControlName="name" type="text" id="name" />
           </nz-form-control>
         </nz-form-item>
         <nz-form-item>
-          <nz-form-label [nzSpan]="6" nzFor="project">Project</nz-form-label>
-          <nz-form-control [nzSpan]="14" nzErrorTip="Project is required">
+          <nz-form-label [nzSpan]="8" nzFor="project" nzRequired
+            >Project</nz-form-label
+          >
+          <nz-form-control [nzSpan]="15">
             <nz-select formControlName="projectId" [nzDisabled]="true">
               <nz-option
                 *ngFor="let data of projects$ | async"
@@ -69,7 +72,10 @@ import { MainUiService } from './main-ui.service';
   `,
   styles: [
     `
-      .title {
+      ::ng-deep .ant-modal-header {
+        padding: 8px 10px;
+      }
+      .modal-header-ellipsis {
         display: block;
         text-align: center;
       }
@@ -91,7 +97,8 @@ export class MainTestOperationComponent implements OnInit, OnDestroy {
     private service: HomeService,
     private projectSelectionService: ProjectSelectionService,
     private mainService: MainTestService,
-    public uiservice: MainUiService
+    public uiservice: MainUiService,
+    private notificationService: NotificationService
   ) {
     this.form = this.fb.group({
       name: ['', Validators.required],
@@ -127,9 +134,17 @@ export class MainTestOperationComponent implements OnInit, OnDestroy {
           this.modalInstance.close(data);
           this.form.reset();
           this.uiservice.dataChanged.emit(data);
+          // Show success notification
+          this.notificationService.successNotification(
+            'Main added successfully!'
+          );
         },
         error: (error) => {
           console.error('Error adding MainTest:', error);
+          // Show error notification
+          this.notificationService.customErrorNotification(
+            'Failed to add Main .'
+          );
         },
       });
     } else {
@@ -150,10 +165,18 @@ export class MainTestOperationComponent implements OnInit, OnDestroy {
         next: (data) => {
           this.modalInstance.close(data);
           this.refreshList.emit();
-          this.uiservice.dataChanged.emit(data); // Emit updated item
+          this.uiservice.dataChanged.emit(data);
+          // Show success notification
+          this.notificationService.successNotification(
+            'Main updated successfully!'
+          );
         },
         error: (error) => {
           console.error('Error updating MainTest:', error);
+          // Show error notification
+          this.notificationService.customErrorNotification(
+            'Failed to update Main .'
+          );
         },
       });
     } else {

@@ -13,46 +13,47 @@ import { NzModalRef, NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
 import { TestCase, TestCaseService } from './test-case.service';
 import { Subscription } from 'rxjs';
 import { TestCaseUiService } from './test-case-ui.service';
+import { NotificationService } from 'src/app/helper/notification.service';
 
 @Component({
   selector: 'app-test-operation',
   template: `
     <div *nzModalTitle class="modal-header-ellipsis">
-      <span class="title">{{ mode === 'add' ? 'Add ' : 'Edit ' }}</span>
+      <span>{{ mode === 'add' ? 'Add ' : 'Edit ' }}</span>
     </div>
-    <div class="modal-content" style="margin-top: 10px;">
+    <div class="modal-content">
       <form nz-form [formGroup]="form">
         <nz-form-item>
-          <nz-form-label [nzSpan]="5" nzFor="code" nzRequired
+          <nz-form-label [nzSpan]="6" nzFor="code" nzRequired
             >Code</nz-form-label
           >
-          <nz-form-control [nzSpan]="14">
+          <nz-form-control [nzSpan]="16" nzErrorTip="Code is required">
             <input nz-input formControlName="code" type="text" id="code" />
           </nz-form-control>
         </nz-form-item>
         <nz-form-item>
-          <nz-form-label [nzSpan]="5" nzFor="name" nzRequired
+          <nz-form-label [nzSpan]="6" nzFor="name" nzRequired
             >Name</nz-form-label
           >
-          <nz-form-control [nzSpan]="14">
+          <nz-form-control [nzSpan]="16" nzErrorTip="Name is required">
             <input nz-input formControlName="name" type="text" id="name" />
           </nz-form-control>
         </nz-form-item>
         <nz-form-item>
-          <nz-form-label [nzSpan]="5" nzFor="main" nzRequired
+          <nz-form-label [nzSpan]="6" nzFor="main" nzRequired
             >Main Test</nz-form-label
           >
-          <nz-form-control [nzSpan]="14">
+          <nz-form-control [nzSpan]="16">
             <select-main formControlName="mainId"></select-main>
           </nz-form-control>
         </nz-form-item>
         <nz-form-item>
-          <nz-form-label [nzSpan]="5" nzFor="description"
+          <nz-form-label [nzSpan]="6" nzFor="description"
             >Description</nz-form-label
           >
-          <nz-form-control [nzSpan]="14">
+          <nz-form-control [nzSpan]="16">
             <textarea
-              rows="4"
+              rows="3"
               nz-input
               formControlName="description"
               id="description"
@@ -60,10 +61,10 @@ import { TestCaseUiService } from './test-case-ui.service';
           </nz-form-control>
         </nz-form-item>
         <nz-form-item>
-          <nz-form-label [nzSpan]="5" nzFor="note">Notes</nz-form-label>
-          <nz-form-control [nzSpan]="14">
+          <nz-form-label [nzSpan]="6" nzFor="note">Notes</nz-form-label>
+          <nz-form-control [nzSpan]="16">
             <textarea
-              rows="4"
+              rows="3"
               nz-input
               formControlName="notes"
               id="note"
@@ -76,6 +77,7 @@ import { TestCaseUiService } from './test-case-ui.service';
       <div>
         <button
           *ngIf="mode === 'add'"
+          [disabled]="!form.valid"
           nz-button
           nzType="primary"
           (click)="onSave()"
@@ -96,17 +98,17 @@ import { TestCaseUiService } from './test-case-ui.service';
   `,
   styles: [
     `
-      .title {
+      .modal-header-ellipsis {
         display: block;
         text-align: center;
+      }
+      .modal-content {
+        padding-top: 20px;
       }
       .modal-header-ellipsis {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-      }
-      .modal-content {
-        margin-top: 10px;
       }
     `,
   ],
@@ -123,6 +125,7 @@ export class TestOperationComponent implements OnInit, OnDestroy {
     private modalInstance: NzModalRef,
     private service: TestCaseService,
     public uiservice: TestCaseUiService,
+    private notificationService: NotificationService,
     @Inject(NZ_MODAL_DATA) public data: any
   ) {
     this.mainId = data.mainId;
@@ -164,9 +167,17 @@ export class TestOperationComponent implements OnInit, OnDestroy {
           console.log(result);
           this.uiservice.dataChanged.emit(result);
           this.form.reset();
+          // Show success notification
+          this.notificationService.successNotification(
+            'Test Case added successfully!'
+          );
         },
         error: (error) => {
           console.error('Error adding Test cast:', error);
+          // Show error notification
+          this.notificationService.customErrorNotification(
+            'Failed to add Main .'
+          );
         },
       });
     } else {
@@ -189,6 +200,17 @@ export class TestOperationComponent implements OnInit, OnDestroy {
         next: (data) => {
           this.modalInstance.close(data);
           this.uiservice.dataChanged.emit(data);
+          // Show success notification
+          this.notificationService.successNotification(
+            'Test Case updated successfully!'
+          );
+        },
+        error: (error) => {
+          console.error('Error update Test cast:', error);
+          // Show error notification
+          this.notificationService.customErrorNotification(
+            'Failed to update Main .'
+          );
         },
       });
     }

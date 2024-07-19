@@ -22,19 +22,31 @@ import { ProjectSelectionService } from 'src/app/helper/projectselection.service
             </div>
           </div>
         </nz-header>
-        <nz-table [nzNoResult]="noResult" [nzData]="projects" nzSize="small">
+        <nz-table
+          #tabletest
+          nzShowSizeChanger
+          [nzNoResult]="noResult"
+          [nzData]="projects"
+          [nzPageSize]="pageSize"
+          [nzPageIndex]="pageIndex"
+          nzSize="small"
+          (nzPageIndexChange)="onPageIndexChange($event)"
+          (nzPageSizeChange)="onPageSizeChange($event)"
+          nzTableLayout="fixed"
+        >
           <thead>
             <tr>
-              <th class="col-header" nzWidth="50px">#</th>
-              <th nzColumnKey="name" nzWidth="35%">Project Name</th>
-              <th nzColumnKey="alltestcase" nzWidth="20%">All Test Cases</th>
-              <th nzColumnKey="alltestrun" nzWidth="20%">All Test Run</th>
-              <th nzWidth="165px"></th>
+              <th class="t-head" nzWidth="5%">#</th>
+              <th class="t-head" nzWidth="25%">Project Name</th>
+              <th class="t-head" nzWidth="25%">Description</th>
+              <th class="t-head" nzWidth="10%">All Test Cases</th>
+              <th class="t-head" nzWidth="10%">All Test Run</th>
+              <th class="t-head" nzWidth="25%"></th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let project of projects; let i = index">
-              <td nzEllipsis>{{ i + 1 }}</td>
+            <tr *ngFor="let project of tabletest.data; let i = index">
+              <td nzEllipsis>{{ (pageIndex - 1) * pageSize + i + 1 }}</td>
               <td nzEllipsis>
                 <a
                   [routerLink]="['/test/dashboard']"
@@ -43,6 +55,7 @@ import { ProjectSelectionService } from 'src/app/helper/projectselection.service
                   {{ project.name }}
                 </a>
               </td>
+              <td nzEllipsis>{{ project.description }}</td>
               <td nzEllipsis>0</td>
               <td nzEllipsis>0</td>
               <td style="display: flex;justify-content:end;">
@@ -106,6 +119,17 @@ import { ProjectSelectionService } from 'src/app/helper/projectselection.service
   `,
   styles: [
     `
+      nz-table {
+        max-height: 495px;
+        overflow-y: auto;
+      }
+      .t-head {
+        position: sticky;
+        top: 0;
+        background-color: #fff;
+        z-index: 1;
+      }
+
       #text {
         color: #7d8597;
       }
@@ -149,7 +173,9 @@ export class ListComponent implements OnInit {
   projects: Project[] = [];
   noResult: string | TemplateRef<any> | undefined = 'No Projects Found';
   loading: boolean = true;
-
+  pageIndex = 1;
+  pageSize = 10;
+  total = 999999;
   constructor(
     private service: HomeService,
     public uiservice: HomeUiService,
@@ -166,8 +192,9 @@ export class ListComponent implements OnInit {
       next: (projects: Project[]) => {
         setTimeout(() => {
           this.projects = projects;
+          this.total = projects.length;
           this.loading = false;
-        }, 1000);
+        }, 350);
       },
       error: (err: any) => {
         console.error('Error fetching projects:', err);
@@ -195,6 +222,13 @@ export class ListComponent implements OnInit {
     });
   }
 
+  onPageIndexChange(pageIndex: number): void {
+    this.pageIndex = pageIndex;
+  }
+
+  onPageSizeChange(pageSize: number): void {
+    this.pageSize = pageSize;
+  }
   selectProject(projectId: number, projectName: string) {
     this.projectSelectionService.setSelectedProject({
       id: projectId,

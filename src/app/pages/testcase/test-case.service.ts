@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 
 export interface TestCase {
   id: number;
-  code: number;
+  code: string;
   name: string;
   description: string;
   notes: string;

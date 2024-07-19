@@ -2,39 +2,31 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NzModalRef } from 'ng-zorro-antd/modal';
 import { Project, HomeService } from './home.service';
+import { NotificationService } from 'src/app/helper/notification.service';
 
 @Component({
   selector: 'app-operation',
   template: `
     <div *nzModalTitle class="modal-header-ellipsis">
-      <span class="title">{{ mode === 'add' ? 'Add ' : 'Edit ' }}</span>
+      <span>{{ mode === 'add' ? 'Add ' : 'Edit ' }}</span>
     </div>
-    <div class="modal-content" style="margin-top:10px;">
+    <div class="modal-content">
       <form nz-form [formGroup]="form" onsubmit="">
         <nz-form-item>
-          <nz-form-label [nzSpan]="7" nzFor="name" nzRequired>
-            Project Name
+          <nz-form-label [nzSpan]="8" nzFor="name" nzRequired>
+            Name
           </nz-form-label>
-          <nz-form-control
-            [nzSpan]="14"
-            nzErrorTip="Please input the project name!"
-          >
-            <input
-              nz-input
-              formControlName="name"
-              id="name"
-              placeholder="Input your project name"
-              required
-            />
+          <nz-form-control [nzSpan]="15" nzErrorTip="Name is required">
+            <input nz-input formControlName="name" id="name" required />
           </nz-form-control>
         </nz-form-item>
         <nz-form-item>
-          <nz-form-label [nzSpan]="7" nzFor="description">
+          <nz-form-label [nzSpan]="8" nzFor="description">
             Description
           </nz-form-label>
-          <nz-form-control [nzSpan]="14">
+          <nz-form-control [nzSpan]="15">
             <textarea
-              rows="4"
+              rows="3"
               nz-input
               formControlName="description"
               id="description"
@@ -69,7 +61,13 @@ import { Project, HomeService } from './home.service';
   `,
   styles: [
     `
-      .title {
+      ::ng-deep .ant-modal-header {
+        padding: 8px 10px;
+      }
+      .modal-content {
+        padding-top: 20px;
+      }
+      .modal-header-ellipsis {
         display: block;
         text-align: center;
       }
@@ -86,7 +84,8 @@ export class OperationComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private modalRef: NzModalRef,
-    private homeService: HomeService
+    private homeService: HomeService,
+    private notificationService: NotificationService
   ) {
     this.modalInstance = this.modalRef;
     this.form = this.fb.group({
@@ -119,32 +118,38 @@ export class OperationComponent implements OnInit {
       if (this.mode === 'add') {
         this.homeService.getProjects().subscribe({
           next: (projects: Project[]) => {
-            const projectNames = projects.map((project) => project.name);
-            if (projectNames.includes(formData.name)) {
-              alert(
-                'Error adding project: Project with the same name already exists'
-              );
-            } else {
-              this.homeService.addProject(formData).subscribe({
-                next: (response) => {
-                  this.modalInstance.close(response);
-                  this.form.reset();
-                  console.log('Project added:', response);
-                  this.refreshList.emit(); // Emit event to refresh the list
-                },
-                error: (error) => {
-                  console.error('Error adding project:', error);
-                },
-              });
-            }
+            this.homeService.addProject(formData).subscribe({
+              next: (response) => {
+                this.modalInstance.close(response);
+                this.form.reset();
+
+                // Show success notification
+                this.notificationService.successNotification(
+                  'Project added successfully!'
+                );
+                this.refreshList.emit();
+              },
+              error: (error) => {
+                console.error('Error adding project:', error);
+                // Show error notification
+                this.notificationService.customErrorNotification(
+                  'Failed to add project.'
+                );
+              },
+            });
           },
           error: (err: any) => {
             console.error('Error fetching projects:', err);
+            // Show error notification
+            this.notificationService.customErrorNotification(
+              'Failed to fetch projects.'
+            );
           },
         });
       }
     }
   }
+
   onEdit(): void {
     if (this.form.valid && this.project) {
       const formData = this.form.value;
@@ -159,11 +164,19 @@ export class OperationComponent implements OnInit {
         .subscribe({
           next: (response) => {
             this.modalInstance.close(response);
-            console.log('Project updated:', response);
+
+            // Show success notification
+            this.notificationService.successNotification(
+              'Project updated successfully!'
+            );
             this.refreshList.emit();
           },
           error: (error) => {
             console.error('Error updating project:', error);
+            // Show error notification
+            this.notificationService.customErrorNotification(
+              'Failed to update project.'
+            );
           },
         });
     }
