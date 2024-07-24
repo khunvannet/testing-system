@@ -6,33 +6,33 @@ import {
   SimpleChanges,
   EventEmitter,
   ChangeDetectorRef,
+  OnDestroy,
 } from '@angular/core';
 import { MainTest, MainTestService } from './main-test.service';
 import { MainUiService } from './main-ui.service';
 import { SessionService } from 'src/app/helper/session.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-main-list',
   template: `
     <ng-container>
       <ng-container *ngIf="main.length > 0; else noMain">
-        <ul nz-menu nzMode="inline" class="sider-menu" cdkDropList>
+        <ul nz-menu nzMode="inline">
           <li
-            cdkDrag
-            class="block-ordering"
-            *ngFor="let data of main"
+            *ngFor="let data of main; trackBy: trackById"
             [class.active]="data.id === activeItemId"
+            class="block-ordering"
           >
             <span class="move">
               <i nz-icon nzType="holder" nzTheme="outline"></i>
             </span>
             <a
               nz-menu-item
-              style="margin-left: 10px;"
               (click)="clickItem(data.id)"
+              style="margin-left: 10px;"
+              >{{ data.name }}</a
             >
-              {{ data.name }}
-            </a>
             <a
               [nzDropdownMenu]="menu"
               class="action-button menu-dropdown"
@@ -44,7 +44,7 @@ import { SessionService } from 'src/app/helper/session.service';
                 nz-icon
                 nzType="ellipsis"
                 nzTheme="outline"
-                style="font-size: 22px"
+                style="font-size: 16px"
               ></i>
             </a>
             <nz-dropdown-menu #menu="nzDropdownMenu">
@@ -115,6 +115,11 @@ import { SessionService } from 'src/app/helper/session.service';
         margin-bottom: 4px;
       }
       .block-ordering {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: relative;
+        margin-top: -8px;
         .move {
           position: absolute;
           z-index: 1000;
@@ -122,11 +127,6 @@ import { SessionService } from 'src/app/helper/session.service';
           cursor: move;
           margin-left: 10px;
         }
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        position: relative;
-        margin-top: -8px;
       }
       .block-ordering.active {
         background-color: #e6f7ff;
@@ -134,11 +134,12 @@ import { SessionService } from 'src/app/helper/session.service';
     `,
   ],
 })
-export class MainTestListComponent implements OnInit {
+export class MainTestListComponent implements OnInit, OnDestroy {
   @Input() projectId: number | null = null;
-  @Output() mainId: EventEmitter<number> = new EventEmitter();
+  @Input() activeItemId: number | null = null;
+  @Output() mainId = new EventEmitter<number>();
   main: MainTest[] = [];
-  activeItemId: number | null = null;
+  private subscriptions = new Subscription();
 
   constructor(
     private service: MainTestService,
@@ -152,18 +153,24 @@ export class MainTestListComponent implements OnInit {
       this.getAllMain(this.projectId);
     }
 
-    this.activeItemId = this.sessionService.getSession('activeItemId');
-    this.uiservice.dataChanged.subscribe((newMainTest: MainTest) => {
-      if (this.projectId !== null && newMainTest.projectId === this.projectId) {
-        const index = this.main.findIndex((item) => item.id === newMainTest.id);
-        if (index !== -1) {
-          this.main[index] = newMainTest;
-        } else {
-          this.main.push(newMainTest);
+    this.subscriptions.add(
+      this.uiservice.dataChanged.subscribe((newMainTest: MainTest) => {
+        if (
+          this.projectId !== null &&
+          newMainTest.projectId === this.projectId
+        ) {
+          const index = this.main.findIndex(
+            (item) => item.id === newMainTest.id
+          );
+          if (index !== -1) {
+            this.main[index] = newMainTest;
+          } else {
+            this.main.push(newMainTest);
+          }
+          this.cdr.markForCheck();
         }
-        this.cdr.markForCheck();
-      }
-    });
+      })
+    );
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -173,18 +180,24 @@ export class MainTestListComponent implements OnInit {
   }
 
   getAllMain(projectId: number): void {
-    this.service.getMainByProjectId(projectId).subscribe({
-      next: (data: MainTest[]) => {
-        this.main = data;
-      },
-      error: (err: any) => {
-        if (err.status === 404) {
-          this.main = [];
-        } else {
-          console.error('Error fetching MainTest data:', err);
-        }
-      },
-    });
+    this.subscriptions.add(
+      this.service.getMainByProjectId(projectId).subscribe({
+        next: (data: MainTest[]) => {
+          this.main = data;
+          if (this.activeItemId === null && this.main.length > 0) {
+            // Set the first item as active if no item is active
+            this.clickItem(this.main[0].id);
+          }
+        },
+        error: (err: any) => {
+          if (err.status === 404) {
+            this.main = [];
+          } else {
+            console.error('Error fetching MainTest data:', err);
+          }
+        },
+      })
+    );
   }
 
   deleteItem(id: number): void {
@@ -203,5 +216,13 @@ export class MainTestListComponent implements OnInit {
     this.activeItemId = id;
     this.mainId.emit(id);
     this.sessionService.setSession('activeItemId', id);
+  }
+
+  trackById(index: number, item: MainTest): number {
+    return item.id;
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
   }
 }

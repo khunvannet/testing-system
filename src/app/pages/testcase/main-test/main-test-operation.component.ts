@@ -13,7 +13,6 @@ import { HomeService, Project } from '../../home/home.service';
 import { ProjectSelectionService } from 'src/app/helper/projectselection.service';
 import { Observable, Subscription } from 'rxjs';
 import { MainUiService } from './main-ui.service';
-import { NotificationService } from 'src/app/helper/notification.service';
 
 @Component({
   selector: 'app-main-test-operation',
@@ -48,26 +47,24 @@ import { NotificationService } from 'src/app/helper/notification.service';
       </form>
     </div>
     <div *nzModalFooter>
-      <div>
-        <button
-          *ngIf="mode === 'edit'"
-          nz-button
-          nzType="primary"
-          (click)="onEdit()"
-        >
-          Edit
-        </button>
-        <button
-          *ngIf="mode === 'add'"
-          nz-button
-          [disabled]="!form.valid"
-          nzType="primary"
-          (click)="onAdd()"
-        >
-          Add
-        </button>
-        <button nz-button nzType="default" (click)="onCancel()">Cancel</button>
-      </div>
+      <button
+        *ngIf="mode === 'edit'"
+        nz-button
+        nzType="primary"
+        (click)="onEdit()"
+      >
+        Edit
+      </button>
+      <button
+        *ngIf="mode === 'add'"
+        nz-button
+        [disabled]="!form.valid"
+        nzType="primary"
+        (click)="onAdd()"
+      >
+        Add
+      </button>
+      <button nz-button nzType="default" (click)="onCancel()">Cancel</button>
     </div>
   `,
   styles: [
@@ -85,26 +82,24 @@ import { NotificationService } from 'src/app/helper/notification.service';
 export class MainTestOperationComponent implements OnInit, OnDestroy {
   @Input() mode: 'add' | 'edit' | undefined;
   @Input() mainTest: MainTest | undefined;
-  form: FormGroup;
   @Output() refreshList = new EventEmitter<void>();
+  form: FormGroup;
   projects$: Observable<Project[]>;
-  selectedValue: number | null = null;
   private subscription: Subscription = new Subscription();
 
   constructor(
     private fb: FormBuilder,
     private modalInstance: NzModalRef,
-    private service: HomeService,
+    private homeService: HomeService,
     private projectSelectionService: ProjectSelectionService,
-    private mainService: MainTestService,
-    public uiservice: MainUiService,
-    private notificationService: NotificationService
+    private mainTestService: MainTestService,
+    private uiService: MainUiService
   ) {
     this.form = this.fb.group({
       name: ['', Validators.required],
       projectId: [null, Validators.required],
     });
-    this.projects$ = this.service.getProjects();
+    this.projects$ = this.homeService.getProjects();
   }
 
   ngOnInit(): void {
@@ -116,8 +111,7 @@ export class MainTestOperationComponent implements OnInit, OnDestroy {
     }
     this.subscription.add(
       this.projectSelectionService.selectedProject$.subscribe((project) => {
-        this.selectedValue = project ? project.id : null;
-        this.form.controls['projectId'].setValue(this.selectedValue);
+        this.form.controls['projectId'].setValue(project ? project.id : null);
       })
     );
   }
@@ -128,24 +122,13 @@ export class MainTestOperationComponent implements OnInit, OnDestroy {
 
   onAdd(): void {
     if (this.form.valid) {
-      const formData = this.form.value;
-      this.mainService.addMain(formData).subscribe({
+      this.mainTestService.addMain(this.form.value).subscribe({
         next: (data) => {
           this.modalInstance.close(data);
           this.form.reset();
-          this.uiservice.dataChanged.emit(data);
-          // Show success notification
-          this.notificationService.successNotification(
-            'Main added successfully!'
-          );
+          this.uiService.dataChanged.emit(data);
         },
-        error: (error) => {
-          console.error('Error adding MainTest:', error);
-          // Show error notification
-          this.notificationService.customErrorNotification(
-            'Failed to add Main .'
-          );
-        },
+        error: (error) => console.error('Error adding MainTest:', error),
       });
     } else {
       this.form.markAllAsTouched();
@@ -155,35 +138,21 @@ export class MainTestOperationComponent implements OnInit, OnDestroy {
 
   onEdit(): void {
     if (this.form.valid && this.mainTest) {
-      const formData = this.form.value;
-      const updatedMain: MainTest = {
-        ...this.mainTest,
-        name: formData.name,
-        projectId: formData.projectId,
-      };
-      this.mainService.updateMain(this.mainTest.id, updatedMain).subscribe({
+      const updatedMain: MainTest = { ...this.mainTest, ...this.form.value };
+      this.mainTestService.updateMain(this.mainTest.id, updatedMain).subscribe({
         next: (data) => {
           this.modalInstance.close(data);
           this.refreshList.emit();
-          this.uiservice.dataChanged.emit(data);
-          // Show success notification
-          this.notificationService.successNotification(
-            'Main updated successfully!'
-          );
+          this.uiService.dataChanged.emit(data);
         },
-        error: (error) => {
-          console.error('Error updating MainTest:', error);
-          // Show error notification
-          this.notificationService.customErrorNotification(
-            'Failed to update Main .'
-          );
-        },
+        error: (error) => console.error('Error updating MainTest:', error),
       });
     } else {
       this.form.markAllAsTouched();
       console.log('Form is invalid');
     }
   }
+
   onCancel(): void {
     this.modalInstance.close();
   }

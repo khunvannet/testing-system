@@ -2,13 +2,14 @@ import {
   Component,
   Input,
   OnInit,
-  TemplateRef,
   OnChanges,
   SimpleChanges,
   ChangeDetectorRef,
   Output,
+  TemplateRef,
+  OnDestroy,
 } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { TestCase, TestCaseService } from './test-case.service';
 import { TestCaseUiService } from './test-case-ui.service';
 import { SessionService } from 'src/app/helper/session.service';
@@ -16,19 +17,21 @@ import { SessionService } from 'src/app/helper/session.service';
 @Component({
   selector: 'app-test-case-list',
   template: `
-    <ng-container *ngIf="searchFilter.length > 0; else noTestCase">
+    <ng-container
+      *ngIf="mainId !== null && searchFilter.length > 0; else noTestCase"
+    >
       <div class="table-case">
         <nz-table
           #tabletest
           nzShowSizeChanger
           [nzNoResult]="noResult"
-          [nzData]="searchFilter"
+          [nzData]="paginatedTests"
           [nzPageSize]="pageSize"
           [nzPageIndex]="pageIndex"
           (nzPageIndexChange)="onPageIndexChange($event)"
           (nzPageSizeChange)="onPageSizeChange($event)"
           nzSize="small"
-          [nzTotal]="total"
+          [nzTotal]="searchFilter.length"
           nzTableLayout="fixed"
         >
           <thead>
@@ -47,12 +50,8 @@ import { SessionService } from 'src/app/helper/session.service';
               <td nzEllipsis>
                 <a (click)="uiservice.showDetail()">{{ test.code }}</a>
               </td>
-              <td nzEllipsis>
-                {{ test.name }}
-              </td>
-              <td nzEllipsis>
-                {{ test.description }}
-              </td>
+              <td nzEllipsis>{{ test.name }}</td>
+              <td nzEllipsis>{{ test.description }}</td>
               <td nzEllipsis>{{ test.notes }}</td>
               <td class="action-buttons">
                 <nz-space [nzSplit]="spaceSplit">
@@ -92,27 +91,6 @@ import { SessionService } from 'src/app/helper/session.service';
           </tbody>
         </nz-table>
       </div>
-
-      <div class="input-add">
-        <form nz-form [formGroup]="addTestForm" (ngSubmit)="onAddTest()">
-          <nz-input-group nzSearch [nzAddOnAfter]="suffixIconButton">
-            <input
-              type="text"
-              id="name"
-              name="name"
-              nz-input
-              placeholder="Add new test case"
-              formControlName="name"
-              aria-label="Add new test case"
-            />
-          </nz-input-group>
-          <ng-template #suffixIconButton>
-            <button nz-button nzType="primary" [disabled]="addTestForm.invalid">
-              <span nz-icon nzType="plus"></span> Add
-            </button>
-          </ng-template>
-        </form>
-      </div>
     </ng-container>
 
     <ng-template #noTestCase>
@@ -138,15 +116,10 @@ import { SessionService } from 'src/app/helper/session.service';
         max-height: 495px;
         overflow-y: auto;
       }
-      .title-menu {
-        font-size: 14px;
-        font-weight: bold;
-        margin: -35px;
-      }
       .input-add {
         max-width: 970px;
-        margin-top: 40px;
         margin: 10px;
+        margin-top: 40px;
       }
       nz-header {
         background: #fff;
@@ -165,65 +138,57 @@ import { SessionService } from 'src/app/helper/session.service';
     `,
   ],
 })
-export class TestCaseListComponent implements OnInit, OnChanges {
+export class TestCaseListComponent implements OnInit, OnChanges, OnDestroy {
   tests: TestCase[] = [];
   searchFilter: TestCase[] = [];
+  paginatedTests: TestCase[] = [];
   pageIndex = 1;
   pageSize = 10;
-  total = 999;
-  noResult: string | TemplateRef<any> | undefined = 'No Test Cases Available';
+  total = 0;
+  noResult: string | TemplateRef<any> = 'No Test Cases Available';
   @Input() mainId: number | null = null;
   @Input() searchTerm: string = '';
-
-  addTestForm: FormGroup;
+  private subscriptions = new Subscription();
 
   constructor(
-    private fb: FormBuilder,
     private service: TestCaseService,
     public uiservice: TestCaseUiService,
     private cdr: ChangeDetectorRef,
     private session: SessionService
-  ) {
-    this.addTestForm = this.fb.group({
-      name: ['', Validators.required],
-    });
-  }
+  ) {}
 
   ngOnInit(): void {
     this.mainId = this.session.getSession('mainId');
-    this.uiservice.dataChanged.subscribe(() => {
-      if (this.mainId != null) {
+    const dataChangeSub = this.uiservice.dataChanged.subscribe(() => {
+      if (this.mainId !== null) {
         this.fetchTestsByMainId();
       }
     });
 
-    if (this.mainId != null) {
+    this.subscriptions.add(dataChangeSub);
+
+    if (this.mainId !== null) {
       this.fetchTestsByMainId();
     }
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['mainId'] && this.mainId != null) {
+    if (changes['mainId']) {
       this.session.setSession('mainId', this.mainId);
-      this.fetchTestsByMainId();
+      if (this.mainId !== null) {
+        this.fetchTestsByMainId();
+      } else {
+        this.searchFilter = [];
+        this.total = 0;
+      }
     }
     if (changes['searchTerm']) {
       this.search();
     }
   }
 
-  onPageIndexChange(pageIndex: number): void {
-    this.pageIndex = pageIndex;
-    this.fetchTestsByMainId();
-  }
-
-  onPageSizeChange(pageSize: number): void {
-    this.pageSize = pageSize;
-    this.fetchTestsByMainId();
-  }
-
   fetchTestsByMainId(): void {
-    if (this.mainId != null) {
+    if (this.mainId !== null) {
       this.service.getTestByMainId(this.mainId).subscribe({
         next: (tests) => {
           setTimeout(() => {
@@ -239,24 +204,18 @@ export class TestCaseListComponent implements OnInit, OnChanges {
     }
   }
 
-  onAddTest(): void {
-    if (this.addTestForm.valid) {
-      const newTest: Partial<TestCase> = {
-        name: this.addTestForm.value.name,
-        mainId: this.mainId!,
-      };
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
+  }
 
-      this.service.addTest(newTest as TestCase).subscribe({
-        next: (result: TestCase) => {
-          this.uiservice.dataChanged.emit();
-          this.addTestForm.reset();
-          this.cdr.markForCheck();
-        },
-        error: (err) => {
-          console.error('Failed to add test:', err);
-        },
-      });
-    }
+  onPageIndexChange(pageIndex: number): void {
+    this.pageIndex = pageIndex;
+    this.updatePageData();
+  }
+
+  onPageSizeChange(pageSize: number): void {
+    this.pageSize = pageSize;
+    this.updatePageData();
   }
 
   deleteItem(id: number): void {
@@ -282,5 +241,13 @@ export class TestCaseListComponent implements OnInit, OnChanges {
     } else {
       this.searchFilter = [...this.tests];
     }
+    this.updatePageData();
+  }
+
+  private updatePageData(): void {
+    const start = (this.pageIndex - 1) * this.pageSize;
+    const end = start + this.pageSize;
+    this.paginatedTests = this.searchFilter.slice(start, end);
+    this.cdr.markForCheck();
   }
 }

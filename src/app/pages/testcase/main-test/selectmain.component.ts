@@ -19,7 +19,6 @@ import { MainTest, MainTestService } from './main-test.service';
       ></nz-option>
     </nz-select>
   `,
-  styles: [``],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -35,14 +34,9 @@ export class SelectMainComponent implements OnInit, ControlValueAccessor {
   constructor(private service: MainTestService) {}
 
   ngOnInit(): void {
-    this.getAll();
-  }
-
-  getAll() {
     this.service.getMain().subscribe({
-      next: (result) => {
-        this.main = result;
-      },
+      next: (result) => (this.main = result),
+      error: (err) => console.error('Error fetching MainTest data:', err),
     });
   }
 

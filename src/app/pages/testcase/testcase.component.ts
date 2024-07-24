@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { TestCaseUiService } from './test-case-ui.service';
 import { HomeService, Project } from '../home/home.service';
 import { ProjectSelectionService } from 'src/app/helper/projectselection.service';
 import { HomeUiService } from '../home/home-ui.service';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-testcase',
@@ -16,6 +17,7 @@ import { HomeUiService } from '../home/home-ui.service';
                 [(ngModel)]="selectedValue"
                 (ngModelChange)="onProjectChange($event)"
                 [nzDropdownRender]="actionItem"
+                [nzDisabled]="loading"
               >
                 <nz-option
                   *ngFor="let data of projects"
@@ -25,18 +27,18 @@ import { HomeUiService } from '../home/home-ui.service';
                   {{ data.name }}
                 </nz-option>
                 <ng-template #actionItem>
-                  <a class="item-action" (click)="this.uiProject.showAdd()">
+                  <a class="item-action" (click)="showAddProjectModal()">
                     <i nz-icon nzType="plus"></i> Add
                   </a>
                 </ng-template>
               </nz-select>
             </div>
-            <div>
-              <app-main-list
-                [projectId]="selectedValue"
-                (mainId)="handleMainId($event)"
-              ></app-main-list>
-            </div>
+
+            <app-main-list
+              [projectId]="selectedValue"
+              [activeItemId]="selectedMainId"
+              (mainId)="handleMainId($event)"
+            ></app-main-list>
           </nz-sider>
         </nz-layout>
 
@@ -55,7 +57,7 @@ import { HomeUiService } from '../home/home-ui.service';
             </ng-template>
 
             <button
-              (click)="this.uiService.showAdd(selectedMainId)"
+              (click)="uiService.showAdd(selectedMainId)"
               class="create-project"
               nz-button
               nzType="primary"
@@ -70,6 +72,8 @@ import { HomeUiService } from '../home/home-ui.service';
         </div>
       </nz-content>
     </nz-layout>
+
+    <div *ngIf="loading">Loading projects...</div>
   `,
   styles: [
     `
@@ -79,7 +83,6 @@ import { HomeUiService } from '../home/home-ui.service';
       nz-select {
         width: 235px;
       }
-
       .select-project {
         margin: 10px;
         margin-top: 17px;
@@ -101,11 +104,9 @@ import { HomeUiService } from '../home/home-ui.service';
         justify-content: space-between;
         background: #fff;
       }
-
       .content-test {
         width: 100%;
       }
-
       .sub-sidebar {
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         position: relative;
@@ -120,11 +121,9 @@ import { HomeUiService } from '../home/home-ui.service';
         background: #fff;
         width: 98%;
       }
-
       #text {
         color: #7d8597;
       }
-
       #text #get-start {
         margin-left: 60px;
       }
@@ -138,13 +137,13 @@ import { HomeUiService } from '../home/home-ui.service';
           margin-top: 5%;
         }
         .input-search {
-          width: 100%; /* Full width for small phones */
+          width: 100%;
         }
         .large-icon {
-          font-size: 20px; /* Further adjust icon size for small phones */
+          font-size: 20px;
         }
         .text1 {
-          font-size: 10px; /* Further adjust text size for small phones */
+          font-size: 10px;
         }
         @media (max-width: 768px) {
           nz-header {
@@ -160,12 +159,13 @@ import { HomeUiService } from '../home/home-ui.service';
     `,
   ],
 })
-export class TestcaseComponent implements OnInit {
+export class TestcaseComponent implements OnInit, OnDestroy {
   projects: Project[] = [];
   selectedValue: number | null = null;
   selectedMainId: number | null = null;
-  mainId: number = 0;
   searchTerm: string = '';
+  loading: boolean = false;
+  private destroy$ = new Subject<void>();
 
   constructor(
     public uiService: TestCaseUiService,
@@ -176,45 +176,66 @@ export class TestcaseComponent implements OnInit {
 
   ngOnInit(): void {
     this.getAllProjects();
-    const storedProject = this.projectSelectionService.getSelectedProject();
-    if (storedProject) {
-      this.selectedValue = storedProject.id;
-    }
+    this.projectSelectionService.selectedProject$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((project) => {
+        this.selectedValue = project ? project.id : null;
+      });
+  }
 
-    this.projectSelectionService.selectedProject$.subscribe((project) => {
-      this.selectedValue = project ? project.id : null;
-    });
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   onProjectChange(selectedValue: number | null): void {
+    const selectedProjectName = this.getProjectName(selectedValue);
     this.projectSelectionService.setSelectedProject({
       id: selectedValue,
-      name: this.getProjectName(selectedValue),
+      name: selectedProjectName,
     });
+
+    this.selectedMainId = null;
   }
 
   private getProjectName(projectId: number | null): string {
-    const selectedProject = this.projects.find(
-      (project) => project.id === projectId
-    );
-    return selectedProject ? selectedProject.name : '';
+    const project = this.projects.find((proj) => proj.id === projectId);
+    return project ? project.name : '';
   }
 
-  getAllProjects() {
+  getAllProjects(): void {
+    this.loading = true;
     this.service.getProjects().subscribe({
       next: (projects: Project[]) => {
         this.projects = projects;
-        this.uiService.dataChanged.emit();
+        this.loading = false;
       },
-      error: (err: any) => {
+      error: (err) => {
         console.error('Error fetching projects:', err);
+        this.loading = false;
       },
     });
   }
 
-  handleMainId(id: number): void {
-    this.selectedMainId = id;
+  showAddProjectModal(): void {
+    this.uiProject.showAdd().afterClose.subscribe((newProject) => {
+      if (newProject) {
+        this.projects.push(newProject);
+        this.selectedValue = newProject.id;
+        this.projectSelectionService.setSelectedProject(newProject);
+      }
+    });
   }
 
-  onSearch(): void {}
+  handleMainId(mainId: number): void {
+    this.selectedMainId = mainId;
+  }
+
+  onSearch(): void {
+    // Implement search logic here if needed
+  }
+
+  addNewProject(project: Project): void {
+    this.projectSelectionService.addProject(project);
+  }
 }

@@ -12,7 +12,7 @@ export interface MainTest {
   providedIn: 'root',
 })
 export class MainTestService {
-  private url: string = 'http://localhost:8080/api/main';
+  private readonly url = 'http://localhost:8080/api/main';
 
   constructor(private http: HttpClient) {}
 
@@ -27,9 +27,11 @@ export class MainTestService {
   addMain(main: MainTest): Observable<MainTest> {
     return this.http.post<MainTest>(this.url, main);
   }
+
   updateMain(id: number, mainTest: MainTest): Observable<MainTest> {
     return this.http.put<MainTest>(`${this.url}/${id}`, mainTest);
   }
+
   deleteMain(id: number): Observable<string> {
     return this.http.delete(`${this.url}/${id}`, { responseType: 'text' });
   }

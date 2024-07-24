@@ -2,7 +2,6 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NzModalRef } from 'ng-zorro-antd/modal';
 import { Project, HomeService } from './home.service';
-import { NotificationService } from 'src/app/helper/notification.service';
 
 @Component({
   selector: 'app-operation',
@@ -11,7 +10,7 @@ import { NotificationService } from 'src/app/helper/notification.service';
       <span>{{ mode === 'add' ? 'Add ' : 'Edit ' }}</span>
     </div>
     <div class="modal-content">
-      <form nz-form [formGroup]="form" onsubmit="">
+      <form nz-form [formGroup]="form">
         <nz-form-item>
           <nz-form-label [nzSpan]="8" nzFor="name" nzRequired>
             Name
@@ -75,19 +74,17 @@ import { NotificationService } from 'src/app/helper/notification.service';
   ],
 })
 export class OperationComponent implements OnInit {
-  @Input() mode: 'add' | 'edit' | undefined;
-  @Input() project: Project | undefined;
-  @Output() refreshList = new EventEmitter<void>();
+  @Input() mode: 'add' | 'edit' = 'add';
+  @Input() project: Project | null = null;
+  @Output() refreshList = new EventEmitter<Project>();
   form: FormGroup;
-  modalInstance: NzModalRef;
+  errorMessage: string = '';
 
   constructor(
     private fb: FormBuilder,
     private modalRef: NzModalRef,
-    private homeService: HomeService,
-    private notificationService: NotificationService
+    private homeService: HomeService
   ) {
-    this.modalInstance = this.modalRef;
     this.form = this.fb.group({
       name: ['', [Validators.required]],
       description: [''],
@@ -104,7 +101,7 @@ export class OperationComponent implements OnInit {
   }
 
   closeModal(): void {
-    this.modalInstance.close();
+    this.modalRef.close();
     this.form.reset();
   }
 
@@ -115,38 +112,17 @@ export class OperationComponent implements OnInit {
   onAdd(): void {
     if (this.form.valid) {
       const formData = this.form.value;
-      if (this.mode === 'add') {
-        this.homeService.getProjects().subscribe({
-          next: (projects: Project[]) => {
-            this.homeService.addProject(formData).subscribe({
-              next: (response) => {
-                this.modalInstance.close(response);
-                this.form.reset();
-
-                // Show success notification
-                this.notificationService.successNotification(
-                  'Project added successfully!'
-                );
-                this.refreshList.emit();
-              },
-              error: (error) => {
-                console.error('Error adding project:', error);
-                // Show error notification
-                this.notificationService.customErrorNotification(
-                  'Failed to add project.'
-                );
-              },
-            });
-          },
-          error: (err: any) => {
-            console.error('Error fetching projects:', err);
-            // Show error notification
-            this.notificationService.customErrorNotification(
-              'Failed to fetch projects.'
-            );
-          },
-        });
-      }
+      this.homeService.addProject(formData).subscribe({
+        next: (newProject) => {
+          this.modalRef.close(newProject);
+          this.form.reset();
+          this.refreshList.emit(newProject);
+        },
+        error: (error) => {
+          console.error('Error adding project:', error);
+          this.errorMessage = 'Failed to add project. Please try again.';
+        },
+      });
     }
   }
 
@@ -163,20 +139,12 @@ export class OperationComponent implements OnInit {
         .updateProject(this.project.id, updatedProject)
         .subscribe({
           next: (response) => {
-            this.modalInstance.close(response);
-
-            // Show success notification
-            this.notificationService.successNotification(
-              'Project updated successfully!'
-            );
-            this.refreshList.emit();
+            this.modalRef.close(response);
+            this.refreshList.emit(response);
           },
           error: (error) => {
             console.error('Error updating project:', error);
-            // Show error notification
-            this.notificationService.customErrorNotification(
-              'Failed to update project.'
-            );
+            this.errorMessage = 'Failed to update project. Please try again.';
           },
         });
     }

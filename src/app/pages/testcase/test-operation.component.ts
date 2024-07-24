@@ -2,7 +2,6 @@ import {
   Component,
   EventEmitter,
   Inject,
-  inject,
   Input,
   OnDestroy,
   OnInit,
@@ -19,7 +18,7 @@ import { NotificationService } from 'src/app/helper/notification.service';
   selector: 'app-test-operation',
   template: `
     <div *nzModalTitle class="modal-header-ellipsis">
-      <span>{{ mode === 'add' ? 'Add ' : 'Edit ' }}</span>
+      <span>{{ mode === 'add' ? 'Add ' : 'Edit ' }} Test Case</span>
     </div>
     <div class="modal-content">
       <form nz-form [formGroup]="form">
@@ -28,7 +27,7 @@ import { NotificationService } from 'src/app/helper/notification.service';
             >Code</nz-form-label
           >
           <nz-form-control [nzSpan]="16" nzErrorTip="Code is required">
-            <input nz-input formControlName="code" type="text" id="code" />
+            <input nz-input formControlName="code" id="code" />
           </nz-form-control>
         </nz-form-item>
         <nz-form-item>
@@ -36,7 +35,7 @@ import { NotificationService } from 'src/app/helper/notification.service';
             >Name</nz-form-label
           >
           <nz-form-control [nzSpan]="16" nzErrorTip="Name is required">
-            <input nz-input formControlName="name" type="text" id="name" />
+            <input nz-input formControlName="name" id="name" />
           </nz-form-control>
         </nz-form-item>
         <nz-form-item>
@@ -61,158 +60,127 @@ import { NotificationService } from 'src/app/helper/notification.service';
           </nz-form-control>
         </nz-form-item>
         <nz-form-item>
-          <nz-form-label [nzSpan]="6" nzFor="note">Notes</nz-form-label>
+          <nz-form-label [nzSpan]="6" nzFor="notes">Notes</nz-form-label>
           <nz-form-control [nzSpan]="16">
             <textarea
               rows="3"
               nz-input
               formControlName="notes"
-              id="note"
+              id="notes"
             ></textarea>
           </nz-form-control>
         </nz-form-item>
       </form>
     </div>
     <div *nzModalFooter>
-      <div>
-        <button
-          *ngIf="mode === 'add'"
-          [disabled]="!form.valid"
-          nz-button
-          nzType="primary"
-          (click)="onSave()"
-        >
-          Add
-        </button>
-        <button
-          *ngIf="mode === 'edit'"
-          nz-button
-          nzType="primary"
-          (click)="onEdit()"
-        >
-          Edit
-        </button>
-        <button nz-button nzType="default" (click)="onCancel()">Cancel</button>
-      </div>
+      <button
+        *ngIf="mode === 'add'"
+        [disabled]="!form.valid"
+        nz-button
+        nzType="primary"
+        (click)="onSave()"
+      >
+        Add
+      </button>
+      <button
+        *ngIf="mode === 'edit'"
+        nz-button
+        nzType="primary"
+        (click)="onEdit()"
+      >
+        Edit
+      </button>
+      <button nz-button nzType="default" (click)="onCancel()">Cancel</button>
     </div>
   `,
   styles: [
     `
       .modal-header-ellipsis {
-        display: block;
         text-align: center;
-      }
-      .modal-content {
-        padding-top: 20px;
-      }
-      .modal-header-ellipsis {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+      }
+      .modal-content {
+        padding-top: 20px;
       }
     `,
   ],
 })
 export class TestOperationComponent implements OnInit, OnDestroy {
   @Input() mode: 'add' | 'edit' = 'add';
-  @Input() testCase: TestCase | undefined;
-  @Input() mainId: number | undefined;
+  @Input() testCase?: TestCase;
   @Output() refreshList = new EventEmitter<void>();
   form: FormGroup;
-  subscription: Subscription = new Subscription();
+  private subscription: Subscription = new Subscription();
+
   constructor(
     private fb: FormBuilder,
     private modalInstance: NzModalRef,
     private service: TestCaseService,
-    public uiservice: TestCaseUiService,
+    public uiService: TestCaseUiService,
     private notificationService: NotificationService,
     @Inject(NZ_MODAL_DATA) public data: any
   ) {
-    this.mainId = data.mainId;
     this.form = this.fb.group({
       code: ['', Validators.required],
       name: ['', Validators.required],
       description: [''],
       notes: [''],
-      mainId: [this.mainId, Validators.required],
+      mainId: [data.mainId, Validators.required],
     });
   }
 
   ngOnInit(): void {
     if (this.mode === 'edit' && this.testCase) {
-      this.form.patchValue({
-        code: this.testCase.code,
-        name: this.testCase.name,
-        description: this.testCase.description,
-        notes: this.testCase.notes,
-        mainId: this.testCase.mainId,
-      });
+      this.form.patchValue(this.testCase);
     }
-  }
-
-  onCancel(): void {
-    this.modalInstance.close();
   }
 
   ngOnDestroy(): void {
     this.subscription.unsubscribe();
   }
 
+  onCancel(): void {
+    this.modalInstance.close();
+  }
+
   onSave(): void {
     if (this.form.valid) {
-      const formValue = this.form.value;
-      this.service.addTest(formValue).subscribe({
+      this.service.addTest(this.form.value).subscribe({
         next: (result) => {
-          this.modalInstance.close(formValue);
-          console.log(result);
-          this.uiservice.dataChanged.emit(result);
+          this.modalInstance.close(result);
+          this.uiService.dataChanged.emit(result);
           this.form.reset();
-          // Show success notification
-          this.notificationService.successNotification(
-            'Test Case added successfully!'
-          );
         },
         error: (error) => {
-          console.error('Error adding Test cast:', error);
-          // Show error notification
+          console.error('Error adding TestCase:', error);
           this.notificationService.customErrorNotification(
-            'Failed to add Main .'
+            'Failed to add Test Case.'
           );
         },
       });
     } else {
-      console.error('failed to save');
+      this.form.markAllAsTouched();
     }
   }
 
   onEdit(): void {
     if (this.form.valid && this.testCase) {
-      const formData = this.form.value;
-      const updateTest: TestCase = {
-        ...this.testCase,
-        code: formData.code,
-        name: formData.name,
-        description: formData.description,
-        notes: formData.notes,
-        mainId: formData.mainId,
-      };
-      this.service.editTest(this.testCase.id, updateTest).subscribe({
+      this.service.editTest(this.testCase.id, this.form.value).subscribe({
         next: (data) => {
           this.modalInstance.close(data);
-          this.uiservice.dataChanged.emit(data);
-          // Show success notification
-          this.notificationService.successNotification(
-            'Test Case updated successfully!'
-          );
+          this.uiService.dataChanged.emit(data);
         },
         error: (error) => {
-          console.error('Error update Test cast:', error);
-          // Show error notification
+          console.error('Error updating TestCase:', error);
           this.notificationService.customErrorNotification(
-            'Failed to update Main .'
+            'Failed to update Test Case.'
           );
         },
       });
+    } else {
+      this.form.markAllAsTouched();
     }
   }
 }

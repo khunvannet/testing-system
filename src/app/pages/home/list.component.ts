@@ -1,7 +1,8 @@
-import { Component, OnInit, TemplateRef } from '@angular/core';
+import { Component, OnInit, TemplateRef, OnDestroy } from '@angular/core';
 import { HomeService, Project } from './home.service';
 import { HomeUiService } from './home-ui.service';
 import { ProjectSelectionService } from 'src/app/helper/projectselection.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-list',
@@ -58,38 +59,34 @@ import { ProjectSelectionService } from 'src/app/helper/projectselection.service
               <td nzEllipsis>{{ project.description }}</td>
               <td nzEllipsis>0</td>
               <td nzEllipsis>0</td>
-              <td style="display: flex;justify-content:end;">
+              <td style="display: flex; justify-content: end;">
                 <nz-space [nzSplit]="spaceSplit">
                   <ng-template #spaceSplit>
                     <nz-divider nzType="vertical"></nz-divider>
                   </ng-template>
-                  <ng-container>
-                    <a *nzSpaceItem nz-typography (click)="showEdit(project)">
-                      <i
-                        nz-icon
-                        nzType="edit"
-                        nzTheme="outline"
-                        style="padding-right: 5px"
-                      ></i>
-                      Edit
-                    </a>
-                  </ng-container>
-                  <ng-container>
-                    <a
-                      *nzSpaceItem
-                      nz-typography
-                      style="color: #F31313"
-                      (click)="deleteProject(project.id)"
-                    >
-                      <i
-                        nz-icon
-                        nzType="delete"
-                        nzTheme="outline"
-                        style="padding-right: 5px"
-                      ></i>
-                      Delete
-                    </a>
-                  </ng-container>
+                  <a *nzSpaceItem nz-typography (click)="showEdit(project)">
+                    <i
+                      nz-icon
+                      nzType="edit"
+                      nzTheme="outline"
+                      style="padding-right: 5px"
+                    ></i>
+                    Edit
+                  </a>
+                  <a
+                    *nzSpaceItem
+                    nz-typography
+                    style="color: #F31313"
+                    (click)="deleteProject(project.id)"
+                  >
+                    <i
+                      nz-icon
+                      nzType="delete"
+                      nzTheme="outline"
+                      style="padding-right: 5px"
+                    ></i>
+                    Delete
+                  </a>
                 </nz-space>
               </td>
             </tr>
@@ -103,7 +100,7 @@ import { ProjectSelectionService } from 'src/app/helper/projectselection.service
           </h5>
           <span class="title-menu">No Projects</span>
           <p id="text">
-            No Project data available. Create a project to get started.
+            No project data available. Create a project to get started.
           </p>
           <button nz-button nzType="dashed" (click)="showAdd()">
             Create Project
@@ -129,11 +126,9 @@ import { ProjectSelectionService } from 'src/app/helper/projectselection.service
         background-color: #fff;
         z-index: 1;
       }
-
       #text {
         color: #7d8597;
       }
-
       .title-menu {
         margin-left: 10px;
         font-size: 14px;
@@ -169,16 +164,17 @@ import { ProjectSelectionService } from 'src/app/helper/projectselection.service
     `,
   ],
 })
-export class ListComponent implements OnInit {
+export class ListComponent implements OnInit, OnDestroy {
   projects: Project[] = [];
-  noResult: string | TemplateRef<any> | undefined = 'No Projects Found';
-  loading: boolean = true;
+  noResult: string | TemplateRef<any> = 'No Projects Found';
+  loading = true;
   pageIndex = 1;
   pageSize = 10;
-  total = 999999;
+  private subscriptions = new Subscription();
+
   constructor(
-    private service: HomeService,
-    public uiservice: HomeUiService,
+    private homeService: HomeService,
+    private uiService: HomeUiService,
     private projectSelectionService: ProjectSelectionService
   ) {}
 
@@ -188,38 +184,42 @@ export class ListComponent implements OnInit {
 
   getAllProjects(): void {
     this.loading = true;
-    this.service.getProjects().subscribe({
-      next: (projects: Project[]) => {
-        setTimeout(() => {
-          this.projects = projects;
-          this.total = projects.length;
+    this.subscriptions.add(
+      this.homeService.getProjects().subscribe({
+        next: (projects: Project[]) => {
+          setTimeout(() => {
+            this.projects = projects;
+            this.loading = false;
+          }, 350);
+        },
+        error: (err: any) => {
+          console.error('Error fetching projects:', err);
           this.loading = false;
-        }, 350);
-      },
-      error: (err: any) => {
-        console.error('Error fetching projects:', err);
-        this.loading = false;
-      },
-    });
+        },
+      })
+    );
   }
 
   deleteProject(id: number): void {
-    this.uiservice.showDelete(id, () => this.getAllProjects());
+    this.uiService.showDelete(id, () => this.getAllProjects());
   }
 
   showAdd(): void {
-    const modalRef = this.uiservice.showAdd();
-    modalRef.afterClose.subscribe((result) => {
-      if (result) {
-        this.getAllProjects();
-      }
-    });
+    const modalRef = this.uiService.showAdd();
+    this.subscriptions.add(
+      modalRef.afterClose.subscribe((result) => {
+        if (result) {
+          this.getAllProjects();
+        }
+      })
+    );
   }
 
   showEdit(project: Project): void {
-    this.uiservice.showEdit(project).afterClose.subscribe(() => {
-      this.getAllProjects();
-    });
+    const modalRef = this.uiService.showEdit(project);
+    this.subscriptions.add(
+      modalRef.afterClose.subscribe(() => this.getAllProjects())
+    );
   }
 
   onPageIndexChange(pageIndex: number): void {
@@ -229,11 +229,16 @@ export class ListComponent implements OnInit {
   onPageSizeChange(pageSize: number): void {
     this.pageSize = pageSize;
   }
-  selectProject(projectId: number, projectName: string) {
+
+  selectProject(projectId: number, projectName: string): void {
     this.projectSelectionService.setSelectedProject({
       id: projectId,
       name: projectName,
     });
-    console.log('id :' + projectId + '  ' + 'project name:' + projectName);
+    console.log(`Project selected: ID = ${projectId}, Name = ${projectName}`);
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
   }
 }

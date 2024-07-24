@@ -1,11 +1,9 @@
 import { EventEmitter, Injectable } from '@angular/core';
 import { NzModalService } from 'ng-zorro-antd/modal';
-
 import { TestOperationComponent } from './test-operation.component';
 import { DetailModalComponent } from './detail-modal.component';
 import { TestCase, TestCaseService } from './test-case.service';
 import { Subject } from 'rxjs';
-import { SafeHtml } from '@angular/platform-browser';
 import { NotificationService } from 'src/app/helper/notification.service';
 
 @Injectable({
@@ -14,14 +12,15 @@ import { NotificationService } from 'src/app/helper/notification.service';
 export class TestCaseUiService {
   dataChanged = new EventEmitter<TestCase>();
   dataUpdated = new Subject<TestCase>();
-  sanitizer: any;
+  searchTerm: any;
+
   constructor(
     private modalService: NzModalService,
     private service: TestCaseService,
     private notificationService: NotificationService
   ) {}
 
-  showAdd(mainId: any, componentId: any = ''): void {
+  showAdd(mainId: any, componentId: string = ''): void {
     this.modalService.create({
       nzContent: TestOperationComponent,
       nzData: { mainId },
@@ -35,7 +34,8 @@ export class TestCaseUiService {
       },
     });
   }
-  showEdit(testCase: TestCase, mainId: any, componentId: any = ''): void {
+
+  showEdit(testCase: TestCase, mainId: number, componentId: string = ''): void {
     this.modalService.create({
       nzContent: TestOperationComponent,
       nzData: { mainId },
@@ -46,7 +46,7 @@ export class TestCaseUiService {
       nzBodyStyle: { padding: '0 ' },
       nzComponentParams: {
         mode: 'edit',
-        testCase: testCase,
+        testCase,
       },
     });
   }
@@ -60,27 +60,25 @@ export class TestCaseUiService {
       nzMaskClosable: false,
       nzOnOk: () => {
         this.service.deleteTest(id).subscribe({
-          next: (response: any) => {
-            // Show success notification
+          next: () => {
             this.notificationService.successNotification(
               'Test case deleted successfully!'
             );
             refreshCallback();
           },
-          error: (error: any) => {
-            console.error('Error deleting Main:', error);
-            // Show error notification
+          error: (error) => {
+            console.error('Error deleting test case:', error);
             this.notificationService.customErrorNotification(
-              'Failed to delete Test case.'
+              'Failed to delete test case.'
             );
           },
         });
       },
       nzCancelText: 'No',
-      nzOnCancel: () => console.log('Cancel'),
     });
   }
-  showDetail(componentId: any = ''): void {
+
+  showDetail(componentId: string = ''): void {
     this.modalService.create({
       nzContent: DetailModalComponent,
       nzMaskClosable: false,

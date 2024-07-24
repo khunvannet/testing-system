@@ -1,14 +1,17 @@
-import { Injectable } from '@angular/core';
+import { EventEmitter, Injectable } from '@angular/core';
 import { NzModalRef, NzModalService } from 'ng-zorro-antd/modal';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { OperationComponent } from './home-operation.component';
 import { HomeService, Project } from './home.service';
 import { NotificationService } from 'src/app/helper/notification.service';
+import { Subject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
 })
 export class HomeUiService {
+  dataChanged = new EventEmitter<void>();
+  projectAdded$ = new Subject<void>();
   constructor(
     private modalService: NzModalService,
     private service: HomeService,

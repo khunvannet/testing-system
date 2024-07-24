@@ -1,7 +1,8 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Router } from '@angular/router';
 import { HomeService, Project } from '../home/home.service';
 import { ProjectSelectionService } from 'src/app/helper/projectselection.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-layout',
@@ -18,7 +19,6 @@ import { ProjectSelectionService } from 'src/app/helper/projectselection.service
         <div class="select-project">
           <nz-select
             nzShowSearch
-            nzPlaceHolder="Select Project"
             [(ngModel)]="selectedValue"
             (ngModelChange)="onProjectChange($event)"
           >
@@ -166,17 +166,20 @@ import { ProjectSelectionService } from 'src/app/helper/projectselection.service
   `,
   styleUrls: ['../../../assets/scss/layout.component.scss'],
 })
-export class LayoutComponent implements OnInit {
+export class LayoutComponent implements OnInit, OnDestroy {
   isCollapsed = false;
-  selectedValue: string | number | null = null; // Update the type to accept string or number
+  selectedValue: string | number | null = null;
   selectedImageSrc: string = '../../../assets/images/kh_FLAG.png';
   isFullScreen = false;
   projects: Project[] = [];
+  isLoading = false;
+  private subscriptions = new Subscription();
 
   constructor(
     private router: Router,
     private service: HomeService,
-    private projectSelectionService: ProjectSelectionService
+    private projectSelectionService: ProjectSelectionService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -185,28 +188,34 @@ export class LayoutComponent implements OnInit {
     if (storedProject) {
       this.selectedValue = storedProject.id;
     }
-    this.projectSelectionService.selectedProject$.subscribe((project) => {
-      this.selectedValue = project ? project.id : null;
-    });
+    this.subscriptions.add(
+      this.projectSelectionService.selectedProject$.subscribe((project) => {
+        this.selectedValue = project ? project.id : null;
+      })
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
   }
 
   onProjectChange(selectedValue: string | number | null): void {
-    this.projectSelectionService.setSelectedProject({
-      id: typeof selectedValue === 'number' ? selectedValue : null,
-      name:
-        typeof selectedValue === 'string'
-          ? selectedValue
-          : this.getProjectName(selectedValue as number),
-    });
+    const id = typeof selectedValue === 'number' ? selectedValue : null;
+    const name =
+      typeof selectedValue === 'string'
+        ? selectedValue
+        : this.getProjectName(selectedValue as number);
+
+    this.projectSelectionService.setSelectedProject({ id, name });
+
     if (selectedValue === 'All Projects' || selectedValue === null) {
       this.router.navigate(['home']);
     }
   }
+
   private getProjectName(projectId: number | null): string {
-    const selectedProject = this.projects.find(
-      (project) => project.id === projectId
-    );
-    return selectedProject ? selectedProject.name : '';
+    const project = this.projects.find((proj) => proj.id === projectId);
+    return project ? project.name : '';
   }
 
   onLanguageChange(imageSrc: string): void {
@@ -218,34 +227,26 @@ export class LayoutComponent implements OnInit {
     if (!document.fullscreenElement) {
       elem
         .requestFullscreen()
-        .then(() => {
-          this.isFullScreen = true;
-        })
-        .catch((err) => {
-          console.log(
-            `Error attempting to enable full-screen mode: ${err.message} (${err.name})`
-          );
-        });
+        .then(() => (this.isFullScreen = true))
+        .catch((err) => console.log(`Error: ${err.message}`));
     } else {
       document
         .exitFullscreen()
-        .then(() => {
-          this.isFullScreen = false;
-        })
-        .catch((err) => {
-          console.log(
-            `Error attempting to disable full-screen mode: ${err.message} (${err.name})`
-          );
-        });
+        .then(() => (this.isFullScreen = false))
+        .catch((err) => console.log(`Error: ${err.message}`));
     }
   }
-  getAllProjects() {
+
+  getAllProjects(): void {
+    this.isLoading = true;
     this.service.getProjects().subscribe({
       next: (projects: Project[]) => {
         this.projects = projects;
+        this.isLoading = false;
       },
-      error: (err: any) => {
+      error: (err) => {
         console.error('Error fetching projects:', err);
+        this.isLoading = false;
       },
     });
   }

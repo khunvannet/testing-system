@@ -12,25 +12,6 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
         nzTheme="outline"
       ></span>
       <span class="text1">Create New Test Case</span>
-      <div class="input-add">
-        <form nz-form [formGroup]="form" (ngSubmit)="onSubmit()">
-          <nz-input-group nzSearch [nzAddOnAfter]="suffixIconButton">
-            <input
-              type="text"
-              id="title"
-              name="title"
-              nz-input
-              placeholder="Add new test case"
-              formControlName="title"
-            />
-          </nz-input-group>
-          <ng-template #suffixIconButton>
-            <button nz-button nzType="primary" [disabled]="!form.valid">
-              <span nz-icon nzType="plus"></span> Add
-            </button>
-          </ng-template>
-        </form>
-      </div>
     </div>
   `,
   styles: [
@@ -54,34 +35,11 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
         font-weight: bold;
         color: #003049;
         margin-top: 10px;
-        text-align: center; /* Center text for smaller screens */
-      }
-
-      .input-add {
-        width: 100%;
-        max-width: 700px;
-        margin-top: 10px;
+        text-align: center;
       }
     `,
   ],
 })
 export class NoTestCaseComponent {
-  @Output() testCaseAdded = new EventEmitter<string>();
-  form: FormGroup;
-
-  constructor(private fb: FormBuilder) {
-    this.form = this.fb.group({
-      title: ['', Validators.required],
-    });
-  }
-
-  onSubmit(): void {
-    if (this.form.valid) {
-      const newTestCase = this.form.value.title;
-      console.log('New Test Case:', newTestCase);
-      this.testCaseAdded.emit(newTestCase);
-
-      this.form.reset();
-    }
-  }
+  constructor() {}
 }

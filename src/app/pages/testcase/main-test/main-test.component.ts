@@ -17,6 +17,7 @@ import { ProjectSelectionService } from 'src/app/helper/projectselection.service
         ></nz-option>
       </nz-select>
     </div>
+
     <div>
       <app-main-list
         [projectId]="selectedValue"
