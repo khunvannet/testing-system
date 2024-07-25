@@ -1,61 +1,84 @@
-import { Component, OnInit, Output } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  OnDestroy,
+  OnInit,
+  Output,
+} from '@angular/core';
 import { HomeService, Project } from '../home/home.service';
 import { ProjectSelectionService } from 'src/app/helper/projectselection.service';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-selection',
   template: `
-    <nz-select [(ngModel)]="selectedValue" nzDisabled="true">
+    <nz-select
+      [(ngModel)]="selectedValue"
+      (ngModelChange)="onProjectChange($event)"
+      [nzDisabled]="loading"
+    >
       <nz-option
         *ngFor="let data of projects"
         [nzValue]="data.id"
         [nzLabel]="data.name"
-      ></nz-option>
+      >
+        {{ data.name }}
+      </nz-option>
     </nz-select>
   `,
-  styles: [
-    `
-      ::ng-deep.ant-select-disabled.ant-select .ant-select-selector {
-        width: 270px;
-      }
-    `,
-  ],
 })
-export class SelecionComponent implements OnInit {
+export class SelecionComponent implements OnInit, OnDestroy {
+  @Output() selectedProjectId = new EventEmitter<number | null>();
   projects: Project[] = [];
   selectedValue: number | null = null;
+  searchTerm: string = '';
+  loading: boolean = false;
+  private destroy$ = new Subject<void>();
+
   constructor(
     private service: HomeService,
     private projectSelectionService: ProjectSelectionService
   ) {}
+
   ngOnInit(): void {
     this.getAllProjects();
-    const storedProject = this.projectSelectionService.getSelectedProject();
-    if (storedProject) {
-      this.selectedValue = storedProject.id;
-    }
+    this.projectSelectionService.selectedProject$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((project) => {
+        this.selectedValue = project ? project.id : null;
+        this.selectedProjectId.emit(this.selectedValue);
+      });
+  }
 
-    // Subscribe to changes in selected project
-    this.projectSelectionService.selectedProject$.subscribe((project) => {
-      this.selectedValue = project ? project.id : null;
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  onProjectChange(selectedValue: number | null): void {
+    const selectedProjectName = this.getProjectName(selectedValue);
+    this.projectSelectionService.setSelectedProject({
+      id: selectedValue,
+      name: selectedProjectName,
     });
+    this.selectedProjectId.emit(selectedValue);
   }
 
   private getProjectName(projectId: number | null): string {
-    const selectedProject = this.projects.find(
-      (project) => project.id === projectId
-    );
-    return selectedProject ? selectedProject.name : '';
+    const project = this.projects.find((proj) => proj.id === projectId);
+    return project ? project.name : '';
   }
 
-  getAllProjects() {
+  getAllProjects(): void {
+    this.loading = true;
     this.service.getProjects().subscribe({
       next: (projects: Project[]) => {
         this.projects = projects;
-        console.log(this.projects);
+        this.loading = false;
       },
-      error: (err: any) => {
+      error: (err) => {
         console.error('Error fetching projects:', err);
+        this.loading = false;
       },
     });
   }

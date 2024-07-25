@@ -38,6 +38,7 @@ import { BreadcrumbComponent } from './pages/shared/breadcrumb.component';
 import { SettingComponent } from './pages/setting/setting.component';
 import { SelecionComponent } from './pages/shared/selection.component';
 import { SelectMainComponent } from './pages/testcase/main-test/selectmain.component';
+import { TreeSelection } from './pages/shared/tree.component';
 registerLocaleData(en);
 
 @NgModule({
@@ -68,6 +69,7 @@ registerLocaleData(en);
     RunOperationComponent,
     ActiveRunComponent,
     CloseRunComponent,
+    TreeSelection,
 
     RunResultsComponent,
     BreadcrumbComponent,

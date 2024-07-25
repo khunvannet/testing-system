@@ -1,7 +1,6 @@
-import { Injectable } from '@angular/core';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { RunOperationComponent } from './run-operation.component';
-import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { Injectable } from '@angular/core';
 
 @Injectable({
   providedIn: 'root',
@@ -9,27 +8,29 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
 export class TestRunUiService {
   constructor(private modalService: NzModalService) {}
 
-  showAdd(componentId: any = ''): void {
+  showAdd(projectId: number | null): void {
     this.modalService.create({
       nzContent: RunOperationComponent,
+      nzData: { projectId },
       nzFooter: null,
       nzClosable: true,
-      nzWidth: 900,
+      nzWidth: 500,
       nzMaskClosable: false,
-      nzBodyStyle: { height: '530px' },
+      nzBodyStyle: { padding: '0 ' },
       nzComponentParams: {
         mode: 'add',
       },
     });
   }
+
   showEdit(componentId: any = ''): void {
     this.modalService.create({
       nzContent: RunOperationComponent,
       nzFooter: null,
       nzClosable: true,
       nzMaskClosable: false,
-      nzWidth: 900,
-      nzBodyStyle: { height: '500px' },
+      nzWidth: 500,
+      nzBodyStyle: { padding: '0 ' },
       nzComponentParams: {
         mode: 'edit',
       },

@@ -7,9 +7,11 @@ export interface TestCase {
   code: string;
   name: string;
   description: string;
-  notes: string;
-  attachment: string;
+  notes?: string;
+  attachment?: string;
   mainId: number;
+  statusId?: number;
+  resultId?: number;
 }
 
 @Injectable({

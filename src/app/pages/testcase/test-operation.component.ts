@@ -23,11 +23,14 @@ import { NotificationService } from 'src/app/helper/notification.service';
     <div class="modal-content">
       <form nz-form [formGroup]="form">
         <nz-form-item>
-          <nz-form-label [nzSpan]="6" nzFor="code" nzRequired
-            >Code</nz-form-label
-          >
-          <nz-form-control [nzSpan]="16" nzErrorTip="Code is required">
-            <input nz-input formControlName="code" id="code" />
+          <nz-form-label [nzSpan]="6" nzFor="code">Code</nz-form-label>
+          <nz-form-control [nzSpan]="16">
+            <input
+              nz-input
+              formControlName="code"
+              id="code"
+              placeholder="New Code"
+            />
           </nz-form-control>
         </nz-form-item>
         <nz-form-item>
@@ -123,7 +126,7 @@ export class TestOperationComponent implements OnInit, OnDestroy {
     @Inject(NZ_MODAL_DATA) public data: any
   ) {
     this.form = this.fb.group({
-      code: ['', Validators.required],
+      code: [{ value: '', disabled: true }],
       name: ['', Validators.required],
       description: [''],
       notes: [''],
@@ -134,6 +137,7 @@ export class TestOperationComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     if (this.mode === 'edit' && this.testCase) {
       this.form.patchValue(this.testCase);
+      this.form.get('code')?.disable();
     }
   }
 
