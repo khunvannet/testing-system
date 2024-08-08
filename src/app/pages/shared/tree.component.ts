@@ -5,12 +5,14 @@ import {
   OnDestroy,
   SimpleChanges,
   ViewChild,
-  ViewContainerRef,
+  Output,
+  EventEmitter,
 } from '@angular/core';
 import {
   NzFormatEmitEvent,
   NzTreeComponent,
   NzTreeNodeOptions,
+  NzTreeNode,
 } from 'ng-zorro-antd/tree';
 import {
   MainTest,
@@ -24,6 +26,7 @@ import {
 import { MainUiService } from '../testcase/main-test/main-ui.service';
 import { TestCaseUiService } from '../testcase/test-case-ui.service';
 import { Subscription } from 'rxjs';
+import { FormArray } from '@angular/forms';
 
 @Component({
   selector: 'app-tree',
@@ -33,7 +36,9 @@ import { Subscription } from 'rxjs';
         #nzTreeComponent
         [nzData]="nodes"
         nzCheckable
+        nzMultiple
         (nzContextMenu)="nzContextMenu($event, menu)"
+        (nzCheckBoxChange)="onCheckBoxChange($event)"
       ></nz-tree>
 
       <nz-dropdown-menu #menu="nzDropdownMenu">
@@ -60,6 +65,8 @@ import { Subscription } from 'rxjs';
 })
 export class TreeSelection implements OnChanges, OnDestroy {
   @Input() projectId!: number | null;
+  @Input() formArray: FormArray | null = null;
+  @Output() selectedTestCases = new EventEmitter<TestCase[]>();
   @ViewChild('nzTreeComponent', { static: false })
   nzTreeComponent!: NzTreeComponent;
 
@@ -67,7 +74,7 @@ export class TreeSelection implements OnChanges, OnDestroy {
   main: MainTest[] = [];
   test: TestCase[] = [];
   currentNode: NzTreeNodeOptions | null = null;
-
+  selectedTestCasesList: TestCase[] = [];
   private subscriptions: Subscription = new Subscription();
 
   constructor(
@@ -102,7 +109,7 @@ export class TreeSelection implements OnChanges, OnDestroy {
   }
 
   getTest() {
-    const testSubscription = this.testService.getTest().subscribe({
+    const testSubscription = this.testService.getTree().subscribe({
       next: (data) => {
         this.test = data;
         this.updateNodes();
@@ -133,6 +140,50 @@ export class TreeSelection implements OnChanges, OnDestroy {
   nzContextMenu(event: NzFormatEmitEvent, menu: NzDropdownMenuComponent): void {
     this.nzContextMenuService.create(event.event!, menu);
     this.currentNode = event.node ? event.node.origin : null;
+  }
+
+  onCheckBoxChange(event: NzFormatEmitEvent): void {
+    const node = event.node as NzTreeNode;
+    const checked = node?.isChecked;
+
+    if (node) {
+      const nodeKey = node.origin.key;
+
+      if (nodeKey.startsWith('main-')) {
+        // It's a main node, apply the checked state to all its children
+        node.children.forEach((childNode) => {
+          childNode.isChecked = checked;
+          this.updateSelectedTestCases(childNode, checked);
+        });
+      } else if (nodeKey.startsWith('test-')) {
+        // It's a test node, update its state
+        this.updateSelectedTestCases(node, checked);
+      }
+    }
+
+    // Emit the updated list of selected test cases
+    this.selectedTestCases.emit(this.selectedTestCasesList);
+  }
+
+  updateSelectedTestCases(node: NzTreeNode, checked: boolean): void {
+    const nodeKey = node.origin.key;
+
+    if (nodeKey.startsWith('test-')) {
+      const testId = parseInt(nodeKey.split('-')[1], 10);
+      const testItem = this.test.find((item) => item.id === testId);
+
+      if (testItem) {
+        if (checked) {
+          if (!this.selectedTestCasesList.some((tc) => tc.id === testId)) {
+            this.selectedTestCasesList.push(testItem);
+          }
+        } else {
+          this.selectedTestCasesList = this.selectedTestCasesList.filter(
+            (tc) => tc.id !== testId
+          );
+        }
+      }
+    }
   }
 
   editNode(): void {
@@ -203,6 +254,6 @@ export class TreeSelection implements OnChanges, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.subscriptions.unsubscribe(); // Clean up subscriptions
+    this.subscriptions.unsubscribe();
   }
 }

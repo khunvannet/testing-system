@@ -41,11 +41,6 @@ nz-header {
   padding: 0px 20px;
 }
 @media (max-width: 575px) {
-  ::ng-deep
-    .ant-select-single.ant-select-show-arrow
-    .ant-select-selection-item {
-    width: 200px;
-  }
   nz-input-group {
     width: 200px;
   }
@@ -54,11 +49,6 @@ nz-header {
   }
 }
 @media (min-width: 576px) and (max-width: 767px) {
-  ::ng-deep
-    .ant-select-single.ant-select-show-arrow
-    .ant-select-selection-item {
-    width: 200px;
-  }
   nz-input-group {
     width: 200px;
   }
@@ -67,11 +57,6 @@ nz-header {
   }
 }
 @media (min-width: 768px) and (max-width: 991px) {
-  ::ng-deep
-    .ant-select-single.ant-select-show-arrow
-    .ant-select-selection-item {
-    width: 200px;
-  }
   nz-input-group {
     width: 200px;
   }
@@ -80,11 +65,6 @@ nz-header {
   }
 }
 @media (min-width: 992px) and (max-width: 1300px) {
-  ::ng-deep
-    .ant-select-single.ant-select-show-arrow
-    .ant-select-selection-item {
-    width: 200px;
-  }
   nz-input-group {
     width: 250px;
   }
@@ -94,11 +74,6 @@ nz-header {
   }
 }
 @media (min-width: 1301px) and (max-width: 1499px) {
-  ::ng-deep
-    .ant-select-single.ant-select-show-arrow
-    .ant-select-selection-item {
-    width: 200px;
-  }
   nz-input-group {
     width: 250px;
   }

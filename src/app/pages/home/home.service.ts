@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 export interface Project {
@@ -13,14 +13,20 @@ export interface Project {
 })
 export class HomeService {
   constructor(private http: HttpClient) {}
-  private url: string = 'http://localhost:8080/api/project';
-
-  getProjects(): Observable<Project[]> {
-    return this.http.get<Project[]>(this.url);
+  private url: string = 'http://127.0.0.1:8000/api/projects';
+  private url_select = 'http://127.0.0.1:8000/api/SelectProject';
+  getProjects(pageIndex: number, pageSize: number): Observable<any> {
+    const params = new HttpParams()
+      .set('pageIndex', pageIndex.toString())
+      .set('pageSize', pageSize.toString());
+    return this.http.get<any>(this.url, { params });
   }
 
   getProjectById(id: number): Observable<Project> {
     return this.http.get<Project>(`${this.url}/${id}`);
+  }
+  getSelect(): Observable<Project[]> {
+    return this.http.get<Project[]>(this.url_select);
   }
 
   addProject(project: Project): Observable<Project> {

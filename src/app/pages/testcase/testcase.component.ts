@@ -17,7 +17,6 @@ import { Subject, takeUntil } from 'rxjs';
                 [(ngModel)]="selectedValue"
                 (ngModelChange)="onProjectChange($event)"
                 [nzDropdownRender]="actionItem"
-                [nzDisabled]="loading"
               >
                 <nz-option
                   *ngFor="let data of projects"
@@ -27,9 +26,7 @@ import { Subject, takeUntil } from 'rxjs';
                   {{ data.name }}
                 </nz-option>
                 <ng-template #actionItem>
-                  <a class="item-action" (click)="showAddProjectModal()">
-                    <i nz-icon nzType="plus"></i> Add
-                  </a>
+                  <a class="item-action"> <i nz-icon nzType="plus"></i> Add </a>
                 </ng-template>
               </nz-select>
             </div>
@@ -72,8 +69,6 @@ import { Subject, takeUntil } from 'rxjs';
         </div>
       </nz-content>
     </nz-layout>
-
-    <div *ngIf="loading">Loading projects...</div>
   `,
   styles: [
     `
@@ -164,7 +159,6 @@ export class TestcaseComponent implements OnInit, OnDestroy {
   selectedValue: number | null = null;
   selectedMainId: number | null = null;
   searchTerm: string = '';
-  loading: boolean = false;
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -204,26 +198,13 @@ export class TestcaseComponent implements OnInit, OnDestroy {
   }
 
   getAllProjects(): void {
-    this.loading = true;
-    this.service.getProjects().subscribe({
+    this.service.getSelect().subscribe({
       next: (projects: Project[]) => {
         this.projects = projects;
-        this.loading = false;
       },
       error: (err) => {
         console.error('Error fetching projects:', err);
-        this.loading = false;
       },
-    });
-  }
-
-  showAddProjectModal(): void {
-    this.uiProject.showAdd().afterClose.subscribe((newProject) => {
-      if (newProject) {
-        this.projects.push(newProject);
-        this.selectedValue = newProject.id;
-        this.projectSelectionService.setSelectedProject(newProject);
-      }
     });
   }
 

@@ -92,14 +92,14 @@ export class MainTestOperationComponent implements OnInit, OnDestroy {
     private modalInstance: NzModalRef,
     private homeService: HomeService,
     private projectSelectionService: ProjectSelectionService,
-    private mainTestService: MainTestService,
+    private service: MainTestService,
     private uiService: MainUiService
   ) {
     this.form = this.fb.group({
       name: ['', Validators.required],
       projectId: [null, Validators.required],
     });
-    this.projects$ = this.homeService.getProjects();
+    this.projects$ = this.homeService.getSelect();
   }
 
   ngOnInit(): void {
@@ -122,11 +122,11 @@ export class MainTestOperationComponent implements OnInit, OnDestroy {
 
   onAdd(): void {
     if (this.form.valid) {
-      this.mainTestService.addMain(this.form.value).subscribe({
+      this.service.addMain(this.form.value).subscribe({
         next: (data) => {
           this.modalInstance.close(data);
+          this.uiService.refresher.emit();
           this.form.reset();
-          this.uiService.dataChanged.emit(data);
         },
         error: (error) => console.error('Error adding MainTest:', error),
       });
@@ -139,11 +139,11 @@ export class MainTestOperationComponent implements OnInit, OnDestroy {
   onEdit(): void {
     if (this.form.valid && this.mainTest) {
       const updatedMain: MainTest = { ...this.mainTest, ...this.form.value };
-      this.mainTestService.updateMain(this.mainTest.id, updatedMain).subscribe({
+      this.service.updateMain(this.mainTest.id, updatedMain).subscribe({
         next: (data) => {
           this.modalInstance.close(data);
           this.refreshList.emit();
-          this.uiService.dataChanged.emit(data);
+          this.uiService.refresher.emit();
         },
         error: (error) => console.error('Error updating MainTest:', error),
       });

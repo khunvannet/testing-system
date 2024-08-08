@@ -81,7 +81,7 @@ export class MainTestComponent implements OnInit {
   }
 
   getAllProjects() {
-    this.service.getProjects().subscribe({
+    this.service.getSelect().subscribe({
       next: (projects: Project[]) => {
         this.projects = projects;
       },

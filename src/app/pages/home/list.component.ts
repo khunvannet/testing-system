@@ -16,7 +16,7 @@ import { Subscription } from 'rxjs';
                 class="create-project"
                 nz-button
                 nzType="primary"
-                (click)="showAdd()"
+                (click)="uiService.showAdd()"
               >
                 Create Project
               </button>
@@ -24,16 +24,17 @@ import { Subscription } from 'rxjs';
           </div>
         </nz-header>
         <nz-table
-          #tabletest
           nzShowSizeChanger
           [nzNoResult]="noResult"
           [nzData]="projects"
           [nzPageSize]="pageSize"
           [nzPageIndex]="pageIndex"
+          [nzTotal]="totalCount"
           nzSize="small"
           (nzPageIndexChange)="onPageIndexChange($event)"
           (nzPageSizeChange)="onPageSizeChange($event)"
           nzTableLayout="fixed"
+          [nzFrontPagination]="false"
         >
           <thead>
             <tr>
@@ -46,7 +47,7 @@ import { Subscription } from 'rxjs';
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let project of tabletest.data; let i = index">
+            <tr *ngFor="let project of projects; let i = index">
               <td nzEllipsis>{{ (pageIndex - 1) * pageSize + i + 1 }}</td>
               <td nzEllipsis>
                 <a
@@ -64,7 +65,11 @@ import { Subscription } from 'rxjs';
                   <ng-template #spaceSplit>
                     <nz-divider nzType="vertical"></nz-divider>
                   </ng-template>
-                  <a *nzSpaceItem nz-typography (click)="showEdit(project)">
+                  <a
+                    *nzSpaceItem
+                    nz-typography
+                    (click)="uiService.showEdit(project)"
+                  >
                     <i
                       nz-icon
                       nzType="edit"
@@ -102,7 +107,7 @@ import { Subscription } from 'rxjs';
           <p id="text">
             No project data available. Create a project to get started.
           </p>
-          <button nz-button nzType="dashed" (click)="showAdd()">
+          <button nz-button nzType="dashed" (click)="uiService.showAdd()">
             Create Project
           </button>
         </div>
@@ -170,31 +175,40 @@ export class ListComponent implements OnInit, OnDestroy {
   loading = true;
   pageIndex = 1;
   pageSize = 10;
+  totalCount = 0;
   private subscriptions = new Subscription();
+  private refreshSub$!: Subscription;
 
   constructor(
-    private homeService: HomeService,
-    private uiService: HomeUiService,
+    private service: HomeService,
+    public uiService: HomeUiService,
     private projectSelectionService: ProjectSelectionService
   ) {}
 
   ngOnInit(): void {
     this.getAllProjects();
+    this.refreshSub$ = this.uiService.refresher.subscribe(() => {
+      this.getAllProjects();
+    });
+    this.subscriptions.add(this.refreshSub$);
   }
 
   getAllProjects(): void {
     this.loading = true;
     this.subscriptions.add(
-      this.homeService.getProjects().subscribe({
-        next: (projects: Project[]) => {
+      this.service.getProjects(this.pageIndex, this.pageSize).subscribe({
+        next: (response) => {
           setTimeout(() => {
-            this.projects = projects;
+            this.projects = response.results;
+            this.pageIndex = response.param.pageIndex;
+            this.pageSize = response.param.pageSize;
+            this.totalCount = response.param.totalCount;
             this.loading = false;
           }, 350);
         },
         error: (err: any) => {
-          console.error('Error fetching projects:', err);
           this.loading = false;
+          console.error('Error fetching projects', err);
         },
       })
     );
@@ -204,30 +218,14 @@ export class ListComponent implements OnInit, OnDestroy {
     this.uiService.showDelete(id, () => this.getAllProjects());
   }
 
-  showAdd(): void {
-    const modalRef = this.uiService.showAdd();
-    this.subscriptions.add(
-      modalRef.afterClose.subscribe((result) => {
-        if (result) {
-          this.getAllProjects();
-        }
-      })
-    );
-  }
-
-  showEdit(project: Project): void {
-    const modalRef = this.uiService.showEdit(project);
-    this.subscriptions.add(
-      modalRef.afterClose.subscribe(() => this.getAllProjects())
-    );
-  }
-
   onPageIndexChange(pageIndex: number): void {
     this.pageIndex = pageIndex;
+    this.getAllProjects();
   }
 
   onPageSizeChange(pageSize: number): void {
     this.pageSize = pageSize;
+    this.getAllProjects();
   }
 
   selectProject(projectId: number, projectName: string): void {
@@ -235,7 +233,6 @@ export class ListComponent implements OnInit, OnDestroy {
       id: projectId,
       name: projectName,
     });
-    console.log(`Project selected: ID = ${projectId}, Name = ${projectName}`);
   }
 
   ngOnDestroy(): void {

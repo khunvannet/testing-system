@@ -26,6 +26,13 @@ import { Subject, takeUntil } from 'rxjs';
       </nz-option>
     </nz-select>
   `,
+  styles: [
+    `
+      nz-select {
+        width: 250px;
+      }
+    `,
+  ],
 })
 export class SelecionComponent implements OnInit, OnDestroy {
   @Output() selectedProjectId = new EventEmitter<number | null>();
@@ -71,7 +78,7 @@ export class SelecionComponent implements OnInit, OnDestroy {
 
   getAllProjects(): void {
     this.loading = true;
-    this.service.getProjects().subscribe({
+    this.service.getProjects(1, 10).subscribe({
       next: (projects: Project[]) => {
         this.projects = projects;
         this.loading = false;

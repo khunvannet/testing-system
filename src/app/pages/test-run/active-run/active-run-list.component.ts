@@ -1,6 +1,7 @@
-import { Component, OnInit, TemplateRef } from '@angular/core';
+import { Component, OnDestroy, OnInit, TemplateRef } from '@angular/core';
 import { TestRunUiService } from '../test-run-ui.service';
 import { TestRun, TestRunService } from '../test-run.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-active-run',
@@ -8,7 +9,7 @@ import { TestRun, TestRunService } from '../test-run.service';
     <div class="table-case">
       <nz-table
         [nzNoResult]="noResult"
-        [nzData]="testRun"
+        [nzData]="filteredTestRun"
         [nzShowPagination]="true"
         nzSize="small"
         (nzPageIndexChange)="onPageIndexChange($event)"
@@ -36,15 +37,18 @@ import { TestRun, TestRunService } from '../test-run.service';
               <a routerLink="/test/test_run/run">{{ data.code }} </a>
             </td>
             <td nzEllipsis>{{ data.name }}</td>
-            <td nzEllipsis>{{ data.testCases.length }}</td>
-
+            <td nzEllipsis>{{ data.testCases?.length || 0 }}</td>
             <td nzEllipsis>{{ data.description }}</td>
             <td class="action-buttons">
               <nz-space [nzSplit]="spaceSplit">
                 <ng-template #spaceSplit>
                   <nz-divider nzType="vertical"></nz-divider>
                 </ng-template>
-                <a *nzSpaceItem nz-typography (click)="uiService.showEdit()">
+                <a
+                  *nzSpaceItem
+                  nz-typography
+                  (click)="uiService.showEdit(data, data.projectId)"
+                >
                   <i
                     nz-icon
                     nzType="edit"
@@ -91,11 +95,14 @@ import { TestRun, TestRunService } from '../test-run.service';
     `,
   ],
 })
-export class ActiveRunListComponent implements OnInit {
+export class ActiveRunListComponent implements OnInit, OnDestroy {
   noResult: string | TemplateRef<any> | undefined;
+  private subscriptions = new Subscription();
   testRun: TestRun[] = [];
+  filteredTestRun: TestRun[] = [];
   pageIndex = 1;
   pageSize = 10;
+
   constructor(
     public uiService: TestRunUiService,
     private service: TestRunService
@@ -103,18 +110,45 @@ export class ActiveRunListComponent implements OnInit {
 
   ngOnInit(): void {
     this.getAllTestRun();
+    this.fetchUpdateData();
   }
 
   getAllTestRun(): void {
     this.service.getTestRun().subscribe({
       next: (data) => {
-        this.testRun = data;
+        if (data) {
+          this.testRun = data.map((run) => ({
+            ...run,
+            testCases: run.testCases || [],
+          }));
+          this.filterActiveRuns();
+        }
       },
       error: (err) => {
         console.error('Failed to fetch test runs', err);
       },
     });
   }
+  fetchUpdateData(): void {
+    const dataChangeSub = this.uiService.dataChanged.subscribe(
+      (newTestRun: TestRun) => {
+        if (!this.testRun.find((run) => run.id === newTestRun.id)) {
+          this.testRun.push(newTestRun);
+          this.filterActiveRuns();
+        }
+      }
+    );
+
+    this.subscriptions.add(dataChangeSub);
+  }
+  filterActiveRuns(): void {
+    this.filteredTestRun = this.testRun.filter((run) => run.active);
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
+  }
+
   onPageIndexChange(pageIndex: number): void {
     this.pageIndex = pageIndex;
   }

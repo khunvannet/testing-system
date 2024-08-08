@@ -3,19 +3,18 @@ import { MainTest, MainTestService } from './main-test.service';
 import { MainTestOperationComponent } from './main-test-operation.component';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { NotificationService } from 'src/app/helper/notification.service';
+import { Subject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
 })
 export class MainUiService {
-  dataChanged = new EventEmitter<MainTest>();
-
   constructor(
     private modalService: NzModalService,
     private mainTestService: MainTestService,
     private notificationService: NotificationService
   ) {}
-
+  refresher = new EventEmitter<void>();
   showAdd(): void {
     this.modalService.create({
       nzContent: MainTestOperationComponent,

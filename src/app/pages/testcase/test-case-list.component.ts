@@ -5,7 +5,6 @@ import {
   OnChanges,
   SimpleChanges,
   ChangeDetectorRef,
-  Output,
   TemplateRef,
   OnDestroy,
 } from '@angular/core';
@@ -17,22 +16,23 @@ import { SessionService } from 'src/app/helper/session.service';
 @Component({
   selector: 'app-test-case-list',
   template: `
-    <ng-container
-      *ngIf="mainId !== null && searchFilter.length > 0; else noTestCase"
-    >
-      <div class="table-case">
+    <ng-container *ngIf="mainId !== null && tests.length > 0; else noTestCase">
+      <div *ngIf="loading" class="loading-container">
+        <nz-spin nzSize="large"></nz-spin>
+      </div>
+      <div class="table-case" *ngIf="!loading">
         <nz-table
-          #tabletest
           nzShowSizeChanger
           [nzNoResult]="noResult"
-          [nzData]="paginatedTests"
+          [nzData]="tests"
           [nzPageSize]="pageSize"
           [nzPageIndex]="pageIndex"
+          nzSize="small"
+          [nzTotal]="total"
           (nzPageIndexChange)="onPageIndexChange($event)"
           (nzPageSizeChange)="onPageSizeChange($event)"
-          nzSize="small"
-          [nzTotal]="searchFilter.length"
           nzTableLayout="fixed"
+          [nzFrontPagination]="false"
         >
           <thead>
             <tr>
@@ -45,7 +45,7 @@ import { SessionService } from 'src/app/helper/session.service';
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let test of tabletest.data; let i = index">
+            <tr *ngFor="let test of tests; let i = index">
               <td nzEllipsis>{{ (pageIndex - 1) * pageSize + i + 1 }}</td>
               <td nzEllipsis>
                 <a (click)="uiservice.showDetail()">{{ test.code }}</a>
@@ -138,13 +138,12 @@ import { SessionService } from 'src/app/helper/session.service';
     `,
   ],
 })
-export class TestCaseListComponent implements OnInit, OnChanges, OnDestroy {
+export class TestCaseListComponent implements OnInit, OnDestroy, OnChanges {
   tests: TestCase[] = [];
-  searchFilter: TestCase[] = [];
-  paginatedTests: TestCase[] = [];
   pageIndex = 1;
   pageSize = 10;
   total = 0;
+  loading = false;
   noResult: string | TemplateRef<any> = 'No Test Cases Available';
   @Input() mainId: number | null = null;
   @Input() searchTerm: string = '';
@@ -159,48 +158,55 @@ export class TestCaseListComponent implements OnInit, OnChanges, OnDestroy {
 
   ngOnInit(): void {
     this.mainId = this.session.getSession('mainId');
-    const dataChangeSub = this.uiservice.dataChanged.subscribe(() => {
-      if (this.mainId !== null) {
-        this.fetchTestsByMainId();
-      }
-    });
-
-    this.subscriptions.add(dataChangeSub);
-
+    this.fetchTestsOnDataChange();
     if (this.mainId !== null) {
-      this.fetchTestsByMainId();
+      this.fetchTests();
     }
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['mainId']) {
-      this.session.setSession('mainId', this.mainId);
-      if (this.mainId !== null) {
-        this.fetchTestsByMainId();
-      } else {
-        this.searchFilter = [];
-        this.total = 0;
-      }
+    if (changes['mainId'] && !changes['mainId'].isFirstChange()) {
+      this.fetchTests();
     }
-    if (changes['searchTerm']) {
+    if (changes['searchTerm'] && !changes['searchTerm'].isFirstChange()) {
       this.search();
     }
   }
 
-  fetchTestsByMainId(): void {
+  fetchTestsOnDataChange(): void {
+    const dataChangeSub = this.uiservice.dataChanged.subscribe(() => {
+      if (this.mainId !== null) {
+        this.fetchTests();
+      }
+    });
+    this.subscriptions.add(dataChangeSub);
+  }
+
+  fetchTests(): void {
     if (this.mainId !== null) {
-      this.service.getTestByMainId(this.mainId).subscribe({
-        next: (tests) => {
-          setTimeout(() => {
-            this.tests = tests;
-            this.total = tests.length;
-            this.search();
-          }, 350);
-        },
-        error: (err) => {
-          console.error('Failed to fetch tests:', err);
-        },
-      });
+      this.loading = true;
+      this.service
+        .getTest(this.pageIndex, this.pageSize, this.searchTerm, this.mainId)
+        .subscribe({
+          next: (response: any) => {
+            this.loading = false;
+            if (this.mainId) {
+              this.tests = response.results.filter(
+                (item: TestCase) => item.mainId === this.mainId
+              );
+              this.pageIndex = response.param.pageIndex;
+              this.pageSize = response.param.pageSize;
+              this.total = response.param.totalCount;
+              this.cdr.markForCheck();
+            }
+          },
+          error: (err) => {
+            this.loading = false;
+            console.error('Failed to fetch tests:', err);
+          },
+        });
+    } else {
+      this.tests = [];
     }
   }
 
@@ -210,44 +216,22 @@ export class TestCaseListComponent implements OnInit, OnChanges, OnDestroy {
 
   onPageIndexChange(pageIndex: number): void {
     this.pageIndex = pageIndex;
-    this.updatePageData();
+    this.fetchTests();
   }
 
   onPageSizeChange(pageSize: number): void {
     this.pageSize = pageSize;
-    this.updatePageData();
+    this.fetchTests();
   }
 
   deleteItem(id: number): void {
     this.uiservice.showDelete(id, () => {
-      this.refreshList();
+      this.fetchTests();
     });
   }
 
-  refreshList(): void {
-    if (this.mainId !== null) {
-      this.fetchTestsByMainId();
-    }
-  }
-
   search(): void {
-    if (this.searchTerm) {
-      this.searchFilter = this.tests.filter((test) => {
-        return (
-          test.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-          test.code.toLowerCase().includes(this.searchTerm.toLowerCase())
-        );
-      });
-    } else {
-      this.searchFilter = [...this.tests];
-    }
-    this.updatePageData();
-  }
-
-  private updatePageData(): void {
-    const start = (this.pageIndex - 1) * this.pageSize;
-    const end = start + this.pageSize;
-    this.paginatedTests = this.searchFilter.slice(start, end);
-    this.cdr.markForCheck();
+    this.pageIndex = 1;
+    this.fetchTests();
   }
 }

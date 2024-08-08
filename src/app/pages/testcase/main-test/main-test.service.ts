@@ -12,18 +12,13 @@ export interface MainTest {
   providedIn: 'root',
 })
 export class MainTestService {
-  private readonly url = 'http://localhost:8080/api/main';
+  private readonly url = 'http://127.0.0.1:8000/api/main';
 
   constructor(private http: HttpClient) {}
 
   getMain(): Observable<MainTest[]> {
     return this.http.get<MainTest[]>(this.url);
   }
-
-  getMainByProjectId(projectId: number): Observable<MainTest[]> {
-    return this.http.get<MainTest[]>(`${this.url}/project/${projectId}`);
-  }
-
   addMain(main: MainTest): Observable<MainTest> {
     return this.http.post<MainTest>(this.url, main);
   }

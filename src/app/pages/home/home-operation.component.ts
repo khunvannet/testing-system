@@ -2,15 +2,16 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NzModalRef } from 'ng-zorro-antd/modal';
 import { Project, HomeService } from './home.service';
+import { HomeUiService } from './home-ui.service';
 
 @Component({
   selector: 'app-operation',
   template: `
     <div *nzModalTitle class="modal-header-ellipsis">
-      <span>{{ mode === 'add' ? 'Add ' : 'Edit ' }}</span>
+      <span>{{ mode === 'add' ? 'Add Project' : 'Edit Project' }}</span>
     </div>
     <div class="modal-content">
-      <form nz-form [formGroup]="form">
+      <form nz-form [formGroup]="form" (ngSubmit)="onSubmit()">
         <nz-form-item>
           <nz-form-label [nzSpan]="8" nzFor="name" nzRequired>
             Name
@@ -35,27 +36,16 @@ import { Project, HomeService } from './home.service';
       </form>
     </div>
     <div *nzModalFooter>
-      <div>
-        <button
-          *ngIf="mode === 'add'"
-          [disabled]="!form.valid"
-          nz-button
-          nzType="primary"
-          (click)="onAdd()"
-        >
-          Add
-        </button>
-
-        <button
-          *ngIf="mode === 'edit'"
-          nz-button
-          nzType="primary"
-          (click)="onEdit()"
-        >
-          Edit
-        </button>
-        <button nz-button nzType="default" (click)="onCancel()">Cancel</button>
-      </div>
+      <button
+        [disabled]="!form.valid"
+        nz-button
+        nzType="primary"
+        [nzLoading]="loading"
+        (click)="onSubmit()"
+      >
+        {{ mode === 'add' ? 'Add' : 'Edit' }}
+      </button>
+      <button nz-button nzType="default" (click)="onCancel()">Cancel</button>
     </div>
   `,
   styles: [
@@ -70,6 +60,9 @@ import { Project, HomeService } from './home.service';
         display: block;
         text-align: center;
       }
+      .error-message {
+        color: red;
+      }
     `,
   ],
 })
@@ -78,12 +71,13 @@ export class OperationComponent implements OnInit {
   @Input() project: Project | null = null;
   @Output() refreshList = new EventEmitter<Project>();
   form: FormGroup;
-  errorMessage: string = '';
+  loading = false;
 
   constructor(
     private fb: FormBuilder,
     private modalRef: NzModalRef,
-    private homeService: HomeService
+    private service: HomeService,
+    public uiService: HomeUiService
   ) {
     this.form = this.fb.group({
       name: ['', [Validators.required]],
@@ -99,54 +93,44 @@ export class OperationComponent implements OnInit {
       });
     }
   }
-
-  closeModal(): void {
+  onCancel(): void {
     this.modalRef.close();
     this.form.reset();
   }
 
-  onCancel(): void {
-    this.closeModal();
-  }
-
-  onAdd(): void {
+  onSubmit(): void {
     if (this.form.valid) {
+      this.loading = true;
       const formData = this.form.value;
-      this.homeService.addProject(formData).subscribe({
-        next: (newProject) => {
-          this.modalRef.close(newProject);
-          this.form.reset();
-          this.refreshList.emit(newProject);
-        },
-        error: (error) => {
-          console.error('Error adding project:', error);
-          this.errorMessage = 'Failed to add project. Please try again.';
-        },
-      });
-    }
-  }
-
-  onEdit(): void {
-    if (this.form.valid && this.project) {
-      const formData = this.form.value;
-      const updatedProject: Project = {
-        ...this.project,
-        name: formData.name,
-        description: formData.description,
-      };
-
-      this.homeService
-        .updateProject(this.project.id, updatedProject)
-        .subscribe({
-          next: (response) => {
-            this.modalRef.close(response);
-            this.refreshList.emit(response);
+      if (this.mode === 'add') {
+        this.service.addProject(formData).subscribe({
+          next: () => {
+            this.modalRef.close(true);
+            this.uiService.refresher.emit();
+            this.loading = false;
+            this.form.reset();
           },
           error: (error) => {
-            console.error('Error updating project:', error);
-            this.errorMessage = 'Failed to update project. Please try again.';
+            this.loading = false;
           },
         });
+      } else if (this.mode === 'edit' && this.project) {
+        const updatedProject: Project = {
+          ...this.project,
+          name: formData.name,
+          description: formData.description,
+        };
+        this.service.updateProject(this.project.id, updatedProject).subscribe({
+          next: (response) => {
+            this.modalRef.close(response);
+            this.uiService.refresher.emit();
+            this.loading = false;
+          },
+          error: (error) => {
+            this.loading = false;
+          },
+        });
+      }
     }
   }
 }

@@ -2,8 +2,9 @@ import {
   Component,
   Input,
   OnInit,
-  Output,
+  OnChanges,
   SimpleChanges,
+  Output,
   EventEmitter,
   ChangeDetectorRef,
   OnDestroy,
@@ -20,7 +21,7 @@ import { Subscription } from 'rxjs';
       <ng-container *ngIf="main.length > 0; else noMain">
         <ul nz-menu nzMode="inline">
           <li
-            *ngFor="let data of main; trackBy: trackById"
+            *ngFor="let data of main"
             [class.active]="data.id === activeItemId"
             class="block-ordering"
           >
@@ -134,13 +135,13 @@ import { Subscription } from 'rxjs';
     `,
   ],
 })
-export class MainTestListComponent implements OnInit, OnDestroy {
+export class MainTestListComponent implements OnInit, OnChanges, OnDestroy {
   @Input() projectId: number | null = null;
   @Input() activeItemId: number | null = null;
   @Output() mainId = new EventEmitter<number>();
   main: MainTest[] = [];
   private subscriptions = new Subscription();
-
+  private refreshSub$!: Subscription;
   constructor(
     private service: MainTestService,
     public uiservice: MainUiService,
@@ -149,43 +150,32 @@ export class MainTestListComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    if (this.projectId !== null) {
-      this.getAllMain(this.projectId);
-    }
-
-    this.subscriptions.add(
-      this.uiservice.dataChanged.subscribe((newMainTest: MainTest) => {
-        if (
-          this.projectId !== null &&
-          newMainTest.projectId === this.projectId
-        ) {
-          const index = this.main.findIndex(
-            (item) => item.id === newMainTest.id
-          );
-          if (index !== -1) {
-            this.main[index] = newMainTest;
-          } else {
-            this.main.push(newMainTest);
-          }
-          this.cdr.markForCheck();
-        }
-      })
-    );
+    this.getAllMain();
+    this.refreshSub$ = this.uiservice.refresher.subscribe(() => {
+      if (this.projectId !== null) {
+        this.getAllMain();
+      }
+    });
+    this.subscriptions.add(this.refreshSub$);
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['projectId'] && this.projectId !== null) {
-      this.getAllMain(this.projectId);
+    if (changes['projectId'] && !changes['projectId'].isFirstChange()) {
+      this.getAllMain();
     }
   }
-
-  getAllMain(projectId: number): void {
+  getAllMain(): void {
     this.subscriptions.add(
-      this.service.getMainByProjectId(projectId).subscribe({
+      this.service.getMain().subscribe({
         next: (data: MainTest[]) => {
-          this.main = data;
+          if (this.projectId) {
+            this.main = data.filter(
+              (item) => item.projectId === this.projectId
+            );
+          } else {
+            this.main = data;
+          }
           if (this.activeItemId === null && this.main.length > 0) {
-            // Set the first item as active if no item is active
             this.clickItem(this.main[0].id);
           }
         },
@@ -202,24 +192,14 @@ export class MainTestListComponent implements OnInit, OnDestroy {
 
   deleteItem(id: number): void {
     this.uiservice.showDelete(id, () => {
-      this.refreshList();
+      this.getAllMain();
     });
-  }
-
-  refreshList(): void {
-    if (this.projectId !== null) {
-      this.getAllMain(this.projectId);
-    }
   }
 
   clickItem(id: number): void {
     this.activeItemId = id;
     this.mainId.emit(id);
     this.sessionService.setSession('activeItemId', id);
-  }
-
-  trackById(index: number, item: MainTest): number {
-    return item.id;
   }
 
   ngOnDestroy(): void {

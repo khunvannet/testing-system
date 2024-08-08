@@ -239,7 +239,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
   getAllProjects(): void {
     this.isLoading = true;
-    this.service.getProjects().subscribe({
+    this.service.getSelect().subscribe({
       next: (projects: Project[]) => {
         this.projects = projects;
         this.isLoading = false;
