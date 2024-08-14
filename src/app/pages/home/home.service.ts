@@ -13,8 +13,11 @@ export interface Project {
 })
 export class HomeService {
   constructor(private http: HttpClient) {}
+
   private url: string = 'http://127.0.0.1:8000/api/projects';
   private url_select = 'http://127.0.0.1:8000/api/SelectProject';
+  private url_exists = 'http://127.0.0.1:8000/api/projects/isExist';
+
   getProjects(pageIndex: number, pageSize: number): Observable<any> {
     const params = new HttpParams()
       .set('pageIndex', pageIndex.toString())
@@ -22,9 +25,6 @@ export class HomeService {
     return this.http.get<any>(this.url, { params });
   }
 
-  getProjectById(id: number): Observable<Project> {
-    return this.http.get<Project>(`${this.url}/${id}`);
-  }
   getSelect(): Observable<Project[]> {
     return this.http.get<Project[]>(this.url_select);
   }
@@ -39,5 +39,10 @@ export class HomeService {
 
   deleteProject(id: number): Observable<string> {
     return this.http.delete(`${this.url}/${id}`, { responseType: 'text' });
+  }
+
+  isExists(name: string): Observable<{ exists: boolean }> {
+    const params = new HttpParams().set('name', name);
+    return this.http.get<{ exists: boolean }>(this.url_exists, { params });
   }
 }

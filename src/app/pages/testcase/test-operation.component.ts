@@ -7,12 +7,17 @@ import {
   OnInit,
   Output,
 } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import {
+  AbstractControl,
+  FormBuilder,
+  FormGroup,
+  ValidationErrors,
+  Validators,
+} from '@angular/forms';
 import { NzModalRef, NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
 import { TestCase, TestCaseService } from './test-case.service';
-import { Subscription } from 'rxjs';
+import { catchError, map, Observable, of, Subscription } from 'rxjs';
 import { TestCaseUiService } from './test-case-ui.service';
-import { NotificationService } from 'src/app/helper/notification.service';
 
 @Component({
   selector: 'app-test-operation',
@@ -21,7 +26,7 @@ import { NotificationService } from 'src/app/helper/notification.service';
       <span>{{ mode === 'add' ? 'Add ' : 'Edit ' }} Test Case</span>
     </div>
     <div class="modal-content">
-      <form nz-form [formGroup]="form">
+      <form nz-form [formGroup]="form" (ngSubmit)="onSubmit()">
         <nz-form-item>
           <nz-form-label [nzSpan]="6" nzFor="code">Code</nz-form-label>
           <nz-form-control [nzSpan]="16">
@@ -37,8 +42,16 @@ import { NotificationService } from 'src/app/helper/notification.service';
           <nz-form-label [nzSpan]="6" nzFor="name" nzRequired
             >Name</nz-form-label
           >
-          <nz-form-control [nzSpan]="16" nzErrorTip="Name is required">
+          <nz-form-control [nzSpan]="16" nzHasFeedback [nzErrorTip]="errorTpl">
             <input nz-input formControlName="name" id="name" />
+            <ng-template #errorTpl let-control>
+              <ng-container *ngIf="control.hasError('required')">
+                Name is required
+              </ng-container>
+              <ng-container *ngIf="control.hasError('nameExists')">
+                Name already exists
+              </ng-container>
+            </ng-template>
           </nz-form-control>
         </nz-form-item>
         <nz-form-item>
@@ -77,21 +90,13 @@ import { NotificationService } from 'src/app/helper/notification.service';
     </div>
     <div *nzModalFooter>
       <button
-        *ngIf="mode === 'add'"
-        [disabled]="!form.valid"
+        [disabled]="!form.valid || nameExists"
         nz-button
         nzType="primary"
-        (click)="onSave()"
+        [nzLoading]="loading"
+        (click)="onSubmit()"
       >
-        Add
-      </button>
-      <button
-        *ngIf="mode === 'edit'"
-        nz-button
-        nzType="primary"
-        (click)="onEdit()"
-      >
-        Edit
+        {{ mode === 'add' ? 'Add' : 'Edit' }}
       </button>
       <button nz-button nzType="default" (click)="onCancel()">Cancel</button>
     </div>
@@ -116,18 +121,18 @@ export class TestOperationComponent implements OnInit, OnDestroy {
   @Output() refreshList = new EventEmitter<void>();
   form: FormGroup;
   private subscription: Subscription = new Subscription();
-
+  loading = false;
+  nameExists = false;
   constructor(
     private fb: FormBuilder,
-    private modalInstance: NzModalRef,
+    private modalRef: NzModalRef,
     private service: TestCaseService,
     public uiService: TestCaseUiService,
-    private notificationService: NotificationService,
     @Inject(NZ_MODAL_DATA) public data: any
   ) {
     this.form = this.fb.group({
       code: [{ value: '', disabled: true }],
-      name: ['', Validators.required],
+      name: ['', [Validators.required], [this.nameExistsValidator.bind(this)]],
       description: [''],
       notes: [''],
       mainId: [data.mainId, Validators.required],
@@ -146,45 +151,61 @@ export class TestOperationComponent implements OnInit, OnDestroy {
   }
 
   onCancel(): void {
-    this.modalInstance.close();
+    this.modalRef.close();
+    this.form.reset();
   }
 
-  onSave(): void {
-    if (this.form.valid) {
-      this.service.addTest(this.form.value).subscribe({
-        next: (result) => {
-          this.modalInstance.close(result);
-          this.uiService.dataChanged.emit(result);
-          this.form.reset();
-        },
-        error: (error) => {
-          console.error('Error adding TestCase:', error);
-          this.notificationService.customErrorNotification(
-            'Failed to add Test Case.'
-          );
-        },
-      });
-    } else {
-      this.form.markAllAsTouched();
+  nameExistsValidator(
+    control: AbstractControl
+  ): Observable<ValidationErrors | null> {
+    const name = control.value;
+    const mainId = this.form?.get('mainId')?.value;
+    if (!name || !mainId) {
+      return of(null);
     }
+
+    return this.service.isExists(name, mainId).pipe(
+      map((response) => (response.exists ? { nameExists: true } : null)),
+      catchError(() => of(null))
+    );
   }
 
-  onEdit(): void {
-    if (this.form.valid && this.testCase) {
-      this.service.editTest(this.testCase.id, this.form.value).subscribe({
-        next: (data) => {
-          this.modalInstance.close(data);
-          this.uiService.dataChanged.emit(data);
-        },
-        error: (error) => {
-          console.error('Error updating TestCase:', error);
-          this.notificationService.customErrorNotification(
-            'Failed to update Test Case.'
-          );
-        },
-      });
-    } else {
-      this.form.markAllAsTouched();
+  onSubmit() {
+    if (this.form.valid) {
+      this.loading = true;
+      const formData = this.form.value;
+      if (this.mode === 'add') {
+        this.service.addTest(formData).subscribe({
+          next: () => {
+            this.modalRef.close(true);
+            this.uiService.refresher.emit();
+            this.loading = false;
+            this.form.reset();
+          },
+          error: () => {
+            this.loading = false;
+          },
+        });
+      } else if (this.mode == 'edit' && this.testCase) {
+        const update: TestCase = {
+          ...this.testCase,
+          code: formData.code,
+          name: formData.name,
+          description: formData.description,
+          notes: formData.notes,
+          mainId: formData.mainId,
+        };
+        this.service.editTest(this.testCase.id, update).subscribe({
+          next: () => {
+            this.modalRef.close(true);
+            this.uiService.refresher.emit();
+            this.loading = false;
+          },
+          error: () => {
+            this.loading = false;
+          },
+        });
+      }
     }
   }
 }

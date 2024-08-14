@@ -15,7 +15,6 @@ import { Subject, takeUntil } from 'rxjs';
     <nz-select
       [(ngModel)]="selectedValue"
       (ngModelChange)="onProjectChange($event)"
-      [nzDisabled]="loading"
     >
       <nz-option
         *ngFor="let data of projects"
@@ -38,7 +37,6 @@ export class SelecionComponent implements OnInit, OnDestroy {
   @Output() selectedProjectId = new EventEmitter<number | null>();
   projects: Project[] = [];
   selectedValue: number | null = null;
-  searchTerm: string = '';
   loading: boolean = false;
   private destroy$ = new Subject<void>();
 
@@ -78,7 +76,7 @@ export class SelecionComponent implements OnInit, OnDestroy {
 
   getAllProjects(): void {
     this.loading = true;
-    this.service.getProjects(1, 10).subscribe({
+    this.service.getSelect().subscribe({
       next: (projects: Project[]) => {
         this.projects = projects;
         this.loading = false;

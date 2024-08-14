@@ -75,28 +75,30 @@ export class TreeSelection implements OnChanges, OnDestroy {
   test: TestCase[] = [];
   currentNode: NzTreeNodeOptions | null = null;
   selectedTestCasesList: TestCase[] = [];
-  private subscriptions: Subscription = new Subscription();
+  private subscriptions = new Subscription();
 
   constructor(
-    private service: MainTestService,
-    private testService: TestCaseService,
+    private mainTestService: MainTestService,
+    private testCaseService: TestCaseService,
     private nzContextMenuService: NzContextMenuService,
     public uiService: MainUiService,
-    public uiTest: TestCaseUiService
+    public uiTestService: TestCaseUiService
   ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['projectId']) {
-      if (this.projectId !== null) {
-        this.getMain();
-        this.getTest();
-      }
+    if (changes['projectId'] && this.projectId !== null) {
+      this.loadTreeData();
     }
   }
 
-  getMain() {
+  loadTreeData(): void {
+    this.getMainTests();
+    this.getTestCases();
+  }
+
+  getMainTests(): void {
     if (this.projectId !== null) {
-      const mainSubscription = this.service.getMain().subscribe({
+      const mainSubscription = this.mainTestService.getMain().subscribe({
         next: (data) => {
           this.main = data.filter(
             (mainItem) => mainItem.projectId === this.projectId
@@ -108,8 +110,8 @@ export class TreeSelection implements OnChanges, OnDestroy {
     }
   }
 
-  getTest() {
-    const testSubscription = this.testService.getTree().subscribe({
+  getTestCases(): void {
+    const testSubscription = this.testCaseService.getTree().subscribe({
       next: (data) => {
         this.test = data;
         this.updateNodes();
@@ -118,33 +120,29 @@ export class TreeSelection implements OnChanges, OnDestroy {
     this.subscriptions.add(testSubscription);
   }
 
-  updateNodes() {
-    this.nodes = this.main.map((mainItem) => {
-      return {
-        title: mainItem.name,
-        key: `main-${mainItem.id}`,
-        expanded: true,
-        children: this.test
-          .filter((testItem) => testItem.mainId === mainItem.id)
-          .map((testItem) => {
-            return {
-              title: testItem.name,
-              key: `test-${testItem.id}`,
-              isLeaf: true,
-            };
-          }),
-      };
-    });
+  updateNodes(): void {
+    this.nodes = this.main.map((mainItem) => ({
+      title: mainItem.name,
+      key: `main-${mainItem.id}`,
+      expanded: true,
+      children: this.test
+        .filter((testItem) => testItem.mainId === mainItem.id)
+        .map((testItem) => ({
+          title: testItem.name,
+          key: `test-${testItem.id}`,
+          isLeaf: true,
+        })),
+    }));
   }
 
   nzContextMenu(event: NzFormatEmitEvent, menu: NzDropdownMenuComponent): void {
     this.nzContextMenuService.create(event.event!, menu);
-    this.currentNode = event.node ? event.node.origin : null;
+    this.currentNode = event.node?.origin ?? null;
   }
 
   onCheckBoxChange(event: NzFormatEmitEvent): void {
     const node = event.node as NzTreeNode;
-    const checked = node?.isChecked;
+    const checked = node?.isChecked ?? false;
 
     if (node) {
       const nodeKey = node.origin.key;
@@ -199,12 +197,7 @@ export class TreeSelection implements OnChanges, OnDestroy {
         const testId = parseInt(nodeKey.split('-')[1], 10);
         const testItem = this.test.find((item) => item.id === testId);
         if (testItem) {
-          const mainItem = this.main.find(
-            (main) => main.id === testItem.mainId
-          );
-          if (mainItem) {
-            this.uiTest.showEdit(testItem, mainItem.id, '');
-          }
+          this.uiTestService.showEdit(testItem, testItem.mainId, '');
         }
       }
     }
@@ -214,21 +207,12 @@ export class TreeSelection implements OnChanges, OnDestroy {
     if (this.currentNode) {
       const nodeKey = this.currentNode.key;
       if (nodeKey.startsWith('main-')) {
-        const mainId = parseInt(nodeKey.split('-')[1], 10);
-        const mainItem = this.main.find((item) => item.id === mainId);
-        if (mainItem) {
-          this.uiService.showAdd();
-        }
+        this.uiService.showAdd();
       } else if (nodeKey.startsWith('test-')) {
         const testId = parseInt(nodeKey.split('-')[1], 10);
         const testItem = this.test.find((item) => item.id === testId);
         if (testItem) {
-          const mainItem = this.main.find(
-            (main) => main.id === testItem.mainId
-          );
-          if (mainItem) {
-            this.uiTest.showAdd(mainItem.id);
-          }
+          this.uiTestService.showAdd(testItem.mainId);
         }
       }
     }
@@ -239,16 +223,10 @@ export class TreeSelection implements OnChanges, OnDestroy {
       const nodeKey = this.currentNode.key;
       if (nodeKey.startsWith('main-')) {
         const mainId = parseInt(nodeKey.split('-')[1], 10);
-        const mainItem = this.main.find((item) => item.id === mainId);
-        if (mainItem) {
-          this.uiService.showDelete(mainId, () => this.getMain());
-        }
+        this.uiService.showDelete(mainId, () => this.getMainTests());
       } else if (nodeKey.startsWith('test-')) {
         const testId = parseInt(nodeKey.split('-')[1], 10);
-        const testItem = this.test.find((item) => item.id === testId);
-        if (testItem) {
-          this.uiTest.showDelete(testId, () => this.getTest());
-        }
+        this.uiTestService.showDelete(testId, () => this.getTestCases());
       }
     }
   }

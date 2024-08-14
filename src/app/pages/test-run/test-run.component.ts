@@ -18,7 +18,12 @@ import { TestRunUiService } from './test-run-ui.service';
                   </div>
                   <div class="search">
                     <nz-input-group [nzSuffix]="suffixIconSearch">
-                      <input type="text" nz-input />
+                      <input
+                        type="text"
+                        nz-input
+                        [(ngModel)]="searchTerm"
+                        (ngModelChange)="onSearchTermChange()"
+                      />
                     </nz-input-group>
                     <ng-template #suffixIconSearch>
                       <span nz-icon nzType="search"></span>
@@ -36,11 +41,13 @@ import { TestRunUiService } from './test-run-ui.service';
                   </div>
                 </div>
               </nz-header>
-              <nz-layout>
-                <nz-content>
-                  <app-active-run></app-active-run>
-                </nz-content>
-              </nz-layout>
+
+              <nz-content>
+                <app-active-run
+                  [searchTerm]="searchTerm"
+                  [selectedProjectId]="selectedProjectId"
+                ></app-active-run>
+              </nz-content>
             </nz-tab>
             <nz-tab nzTitle="Close Runs">
               <nz-header>
@@ -52,7 +59,12 @@ import { TestRunUiService } from './test-run-ui.service';
                   </div>
                   <div class="search-close">
                     <nz-input-group [nzSuffix]="suffixIconSearch">
-                      <input type="text" nz-input />
+                      <input
+                        type="text"
+                        nz-input
+                        [(ngModel)]="searchTerm"
+                        (ngModelChange)="onSearchTermChange()"
+                      />
                     </nz-input-group>
                     <ng-template #suffixIconSearch>
                       <span nz-icon nzType="search"></span>
@@ -60,21 +72,24 @@ import { TestRunUiService } from './test-run-ui.service';
                   </div>
                 </div>
               </nz-header>
-              <nz-layout>
-                <nz-content>
-                  <app-close-run></app-close-run>
-                </nz-content>
-              </nz-layout>
+
+              <nz-content>
+                <app-close-run
+                  [searchTerm]="searchTerm"
+                  [selectedProjectId]="selectedProjectId"
+                ></app-close-run>
+              </nz-content>
             </nz-tab>
           </nz-tabset>
         </div>
       </nz-content>
     </div>
-  </nz-layout>`,
+  </nz-layout> `,
   styleUrls: ['../../../assets/scss/test_run.scss'],
 })
 export class TestRunComponent implements OnInit {
   selectedProjectId: number | null = null;
+  searchTerm: string = '';
 
   constructor(public uiService: TestRunUiService) {}
 
@@ -83,4 +98,6 @@ export class TestRunComponent implements OnInit {
   onProjectSelected(projectId: number | null): void {
     this.selectedProjectId = projectId;
   }
+
+  onSearchTermChange(): void {}
 }

@@ -19,8 +19,8 @@ export interface TestCase {
 })
 export class TestCaseService {
   private url: string = 'http://127.0.0.1:8000/api/test';
-  private select_tree: string = 'http://127.0.0.1:8000/api/selectTree';
-
+  private select_tree = 'http://127.0.0.1:8000/api/selectTree';
+  private url_exists = 'http://127.0.0.1:8000/api/test/isExist';
   constructor(private http: HttpClient) {}
 
   getTest(
@@ -52,5 +52,10 @@ export class TestCaseService {
 
   deleteTest(id: number): Observable<string> {
     return this.http.delete(`${this.url}/${id}`, { responseType: 'text' });
+  }
+
+  isExists(name: string, mainId: number): Observable<{ exists: boolean }> {
+    const params = new HttpParams().set('name', name).set('mainId', mainId);
+    return this.http.get<{ exists: boolean }>(this.url_exists, { params });
   }
 }

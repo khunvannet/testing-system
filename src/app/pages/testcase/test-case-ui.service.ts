@@ -10,8 +10,6 @@ import { NotificationService } from 'src/app/helper/notification.service';
   providedIn: 'root',
 })
 export class TestCaseUiService {
-  dataChanged = new EventEmitter<TestCase>();
-  dataUpdated = new Subject<TestCase>();
   searchTerm: any;
 
   constructor(
@@ -19,7 +17,7 @@ export class TestCaseUiService {
     private service: TestCaseService,
     private notificationService: NotificationService
   ) {}
-
+  refresher = new EventEmitter<void>();
   showAdd(mainId: any, componentId: string = ''): void {
     this.modalService.create({
       nzContent: TestOperationComponent,

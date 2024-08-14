@@ -24,9 +24,6 @@ export class HomeUiService {
       nzComponentParams: {
         mode: 'add',
       },
-      nzOnOk: () => {
-        this.refresher.emit();
-      },
     });
   }
 
@@ -41,9 +38,6 @@ export class HomeUiService {
       nzComponentParams: {
         mode: 'edit',
         project: project,
-      },
-      nzOnOk: () => {
-        this.refresher.emit();
       },
     });
   }

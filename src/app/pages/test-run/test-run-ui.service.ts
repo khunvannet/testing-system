@@ -1,19 +1,19 @@
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { RunOperationComponent } from './run-operation.component';
 import { EventEmitter, Injectable } from '@angular/core';
-import { TestRun } from './test-run.service';
-import { Subject } from 'rxjs';
+import { TestRun, TestRunService } from './test-run.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class TestRunUiService {
-  dataChanged = new EventEmitter<TestRun>();
-  dataUpdated = new Subject<TestRun>();
-  constructor(private modalService: NzModalService) {}
-
+  constructor(
+    private modalService: NzModalService,
+    private service: TestRunService
+  ) {}
+  refresher = new EventEmitter<void>();
   showAdd(projectId: number | null): void {
-    const modal = this.modalService.create({
+    this.modalService.create({
       nzContent: RunOperationComponent,
       nzData: { projectId },
       nzFooter: null,
@@ -25,16 +25,10 @@ export class TestRunUiService {
         mode: 'add',
       },
     });
-
-    modal.afterClose.subscribe((result: TestRun | null) => {
-      if (result) {
-        this.dataChanged.emit(result);
-      }
-    });
   }
 
   showEdit(testRun: TestRun, projectId: number, componentId: any = ''): void {
-    const modal = this.modalService.create({
+    this.modalService.create({
       nzContent: RunOperationComponent,
       nzData: { projectId },
       nzFooter: null,
@@ -44,13 +38,30 @@ export class TestRunUiService {
       nzBodyStyle: { padding: '0 ' },
       nzComponentParams: {
         mode: 'edit',
+        testRun,
       },
     });
+  }
+  showDelete(id: number, refreshCallback: () => void): void {
+    this.modalService.confirm({
+      nzTitle: 'Are you sure you want to delete?',
 
-    modal.afterClose.subscribe((result: TestRun | null) => {
-      if (result) {
-        this.dataUpdated.next(result);
-      }
+      nzOkText: 'Yes',
+      nzOkType: 'primary',
+      nzOkDanger: true,
+      nzMaskClosable: false,
+      nzOnOk: () => {
+        this.service.delete(id).subscribe({
+          next: (response: any) => {
+            refreshCallback();
+          },
+          error: (error: any) => {
+            console.error('Error deleting project:', error);
+          },
+        });
+      },
+      nzCancelText: 'No',
+      nzOnCancel: () => console.log('Cancel'),
     });
   }
 }

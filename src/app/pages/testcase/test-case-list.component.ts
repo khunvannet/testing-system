@@ -17,10 +17,7 @@ import { SessionService } from 'src/app/helper/session.service';
   selector: 'app-test-case-list',
   template: `
     <ng-container *ngIf="mainId !== null && tests.length > 0; else noTestCase">
-      <div *ngIf="loading" class="loading-container">
-        <nz-spin nzSize="large"></nz-spin>
-      </div>
-      <div class="table-case" *ngIf="!loading">
+      <div class="table-case" *ngIf="!loading; else loadingTemplate">
         <nz-table
           nzShowSizeChanger
           [nzNoResult]="noResult"
@@ -96,13 +93,19 @@ import { SessionService } from 'src/app/helper/session.service';
     <ng-template #noTestCase>
       <app-no-test-case></app-no-test-case>
     </ng-template>
+    <ng-template #loadingTemplate>
+      <div class="loading-container">
+        <nz-spin></nz-spin>
+      </div>
+    </ng-template>
   `,
   styles: [
     `
       .loading-container {
-        position: relative;
-        top: 40%;
-        bottom: 60%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
       }
 
       .t-head {
@@ -148,7 +151,7 @@ export class TestCaseListComponent implements OnInit, OnDestroy, OnChanges {
   @Input() mainId: number | null = null;
   @Input() searchTerm: string = '';
   private subscriptions = new Subscription();
-
+  private refreshSub$!: Subscription;
   constructor(
     private service: TestCaseService,
     public uiservice: TestCaseUiService,
@@ -158,10 +161,16 @@ export class TestCaseListComponent implements OnInit, OnDestroy, OnChanges {
 
   ngOnInit(): void {
     this.mainId = this.session.getSession('mainId');
-    this.fetchTestsOnDataChange();
+
     if (this.mainId !== null) {
       this.fetchTests();
     }
+    this.refreshSub$ = this.uiservice.refresher.subscribe(() => {
+      if (this.mainId !== null) {
+        this.fetchTests();
+      }
+    });
+    this.subscriptions.add(this.refreshSub$);
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -173,15 +182,6 @@ export class TestCaseListComponent implements OnInit, OnDestroy, OnChanges {
     }
   }
 
-  fetchTestsOnDataChange(): void {
-    const dataChangeSub = this.uiservice.dataChanged.subscribe(() => {
-      if (this.mainId !== null) {
-        this.fetchTests();
-      }
-    });
-    this.subscriptions.add(dataChangeSub);
-  }
-
   fetchTests(): void {
     if (this.mainId !== null) {
       this.loading = true;
@@ -189,7 +189,6 @@ export class TestCaseListComponent implements OnInit, OnDestroy, OnChanges {
         .getTest(this.pageIndex, this.pageSize, this.searchTerm, this.mainId)
         .subscribe({
           next: (response: any) => {
-            this.loading = false;
             if (this.mainId) {
               this.tests = response.results.filter(
                 (item: TestCase) => item.mainId === this.mainId
@@ -198,6 +197,7 @@ export class TestCaseListComponent implements OnInit, OnDestroy, OnChanges {
               this.pageSize = response.param.pageSize;
               this.total = response.param.totalCount;
               this.cdr.markForCheck();
+              this.loading = false;
             }
           },
           error: (err) => {

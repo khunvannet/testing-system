@@ -6,12 +6,18 @@ import {
   OnDestroy,
   Output,
 } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import {
+  AbstractControl,
+  FormBuilder,
+  FormGroup,
+  ValidationErrors,
+  Validators,
+} from '@angular/forms';
 import { NzModalRef } from 'ng-zorro-antd/modal';
 import { MainTest, MainTestService } from './main-test.service';
 import { HomeService, Project } from '../../home/home.service';
 import { ProjectSelectionService } from 'src/app/helper/projectselection.service';
-import { Observable, Subscription } from 'rxjs';
+import { catchError, map, Observable, of, Subscription } from 'rxjs';
 import { MainUiService } from './main-ui.service';
 
 @Component({
@@ -21,13 +27,21 @@ import { MainUiService } from './main-ui.service';
       <span>{{ mode === 'add' ? 'Add ' : 'Edit ' }}</span>
     </div>
     <div class="modal-content" style="margin-top: 20px;">
-      <form nz-form [formGroup]="form">
+      <form nz-form [formGroup]="form" (ngSubmit)="onSubmit()">
         <nz-form-item>
           <nz-form-label [nzSpan]="8" nzFor="name" nzRequired
             >Name</nz-form-label
           >
-          <nz-form-control [nzSpan]="15" nzErrorTip="Name is required">
+          <nz-form-control [nzSpan]="15" nzHasFeedback [nzErrorTip]="errorTpl">
             <input nz-input formControlName="name" type="text" id="name" />
+            <ng-template #errorTpl let-control>
+              <ng-container *ngIf="control.hasError('required')">
+                Name is required
+              </ng-container>
+              <ng-container *ngIf="control.hasError('nameExists')">
+                Name already exists
+              </ng-container>
+            </ng-template>
           </nz-form-control>
         </nz-form-item>
         <nz-form-item>
@@ -48,21 +62,13 @@ import { MainUiService } from './main-ui.service';
     </div>
     <div *nzModalFooter>
       <button
-        *ngIf="mode === 'edit'"
+        [disabled]="!form.valid || nameExists"
         nz-button
         nzType="primary"
-        (click)="onEdit()"
+        [nzLoading]="loading"
+        (click)="onSubmit()"
       >
-        Edit
-      </button>
-      <button
-        *ngIf="mode === 'add'"
-        nz-button
-        [disabled]="!form.valid"
-        nzType="primary"
-        (click)="onAdd()"
-      >
-        Add
+        {{ mode === 'add' ? 'Add' : 'Edit' }}
       </button>
       <button nz-button nzType="default" (click)="onCancel()">Cancel</button>
     </div>
@@ -84,20 +90,22 @@ export class MainTestOperationComponent implements OnInit, OnDestroy {
   @Input() mainTest: MainTest | undefined;
   @Output() refreshList = new EventEmitter<void>();
   form: FormGroup;
+  loading = false;
   projects$: Observable<Project[]>;
   private subscription: Subscription = new Subscription();
+  nameExists = false;
 
   constructor(
     private fb: FormBuilder,
-    private modalInstance: NzModalRef,
+    private modalRef: NzModalRef,
     private homeService: HomeService,
     private projectSelectionService: ProjectSelectionService,
     private service: MainTestService,
     private uiService: MainUiService
   ) {
     this.form = this.fb.group({
-      name: ['', Validators.required],
-      projectId: [null, Validators.required],
+      name: ['', [Validators.required], [this.nameExistsValidator.bind(this)]],
+      projectId: ['', Validators.required],
     });
     this.projects$ = this.homeService.getSelect();
   }
@@ -120,40 +128,58 @@ export class MainTestOperationComponent implements OnInit, OnDestroy {
     this.subscription.unsubscribe();
   }
 
-  onAdd(): void {
-    if (this.form.valid) {
-      this.service.addMain(this.form.value).subscribe({
-        next: (data) => {
-          this.modalInstance.close(data);
-          this.uiService.refresher.emit();
-          this.form.reset();
-        },
-        error: (error) => console.error('Error adding MainTest:', error),
-      });
-    } else {
-      this.form.markAllAsTouched();
-      console.log('Form is invalid');
-    }
-  }
-
-  onEdit(): void {
-    if (this.form.valid && this.mainTest) {
-      const updatedMain: MainTest = { ...this.mainTest, ...this.form.value };
-      this.service.updateMain(this.mainTest.id, updatedMain).subscribe({
-        next: (data) => {
-          this.modalInstance.close(data);
-          this.refreshList.emit();
-          this.uiService.refresher.emit();
-        },
-        error: (error) => console.error('Error updating MainTest:', error),
-      });
-    } else {
-      this.form.markAllAsTouched();
-      console.log('Form is invalid');
-    }
-  }
-
   onCancel(): void {
-    this.modalInstance.close();
+    this.modalRef.close();
+    this.form.reset();
+  }
+
+  nameExistsValidator(
+    control: AbstractControl
+  ): Observable<ValidationErrors | null> {
+    const name = control.value;
+    if (!name) {
+      return of(null);
+    }
+
+    return this.service.isExists(name).pipe(
+      map((response) => (response.exists ? { nameExists: true } : null)),
+      catchError(() => of(null))
+    );
+  }
+
+  onSubmit(): void {
+    if (this.form.valid) {
+      this.loading = true;
+      const formData = this.form.value;
+      if (this.mode === 'add') {
+        this.service.addMain(formData).subscribe({
+          next: () => {
+            this.modalRef.close(true);
+            this.uiService.refresher.emit();
+            this.loading = false;
+            this.form.reset();
+          },
+          error: (error) => {
+            this.loading = false;
+          },
+        });
+      } else if (this.mode === 'edit' && this.mainTest) {
+        const update: MainTest = {
+          ...this.mainTest,
+          name: formData.name,
+          projectId: formData.projectId,
+        };
+        this.service.updateMain(this.mainTest.id, update).subscribe({
+          next: () => {
+            this.modalRef.close(true);
+            this.uiService.refresher.emit();
+            this.loading = false;
+          },
+          error: (err) => {
+            this.loading = false;
+          },
+        });
+      }
+    }
   }
 }
