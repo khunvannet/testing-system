@@ -19,7 +19,7 @@ export class TestRunService {
   private url: string = 'http://127.0.0.1:8000/api/test/run';
   private url_exists = 'http://127.0.0.1:8000/api/test/run/isExist';
   private url_close = 'http://127.0.0.1:8000/api/test/run/close';
-
+  private url_active = 'http://127.0.0.1:8000/api/test/run/active';
   constructor(private http: HttpClient) {}
 
   getTestRun(
@@ -64,5 +64,11 @@ export class TestRunService {
   }
   delete(id: number): Observable<string> {
     return this.http.delete(`${this.url}/${id}`, { responseType: 'text' });
+  }
+  closeRun(id: number): Observable<any> {
+    return this.http.post(`${this.url_close}/${id}`, {});
+  }
+  activeRun(id: number): Observable<any> {
+    return this.http.post(`${this.url_active}/${id}`, {});
   }
 }

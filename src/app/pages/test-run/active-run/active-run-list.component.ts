@@ -65,7 +65,12 @@ import { Subscription } from 'rxjs';
                       ></i>
                       Edit
                     </a>
-                    <a *nzSpaceItem nz-typography style="color: green;">
+                    <a
+                      *nzSpaceItem
+                      nz-typography
+                      style="color: green;"
+                      (click)="showClose(data.id)"
+                    >
                       <span
                         nz-icon
                         nzType="issues-close"
@@ -189,6 +194,9 @@ export class ActiveRunListComponent implements OnInit, OnDestroy {
   deleteRun(id: number): void {
     this.uiService.showDelete(id, () => this.getAllTestRun());
   }
+  showClose(id: number): void {
+    this.uiService.showClose(id, () => this.getAllTestRun());
+  }
 
   onPageIndexChange(pageIndex: number): void {
     this.pageIndex = pageIndex;
@@ -201,6 +209,6 @@ export class ActiveRunListComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.subscriptions.unsubscribe();
+    this.subscriptions?.unsubscribe();
   }
 }

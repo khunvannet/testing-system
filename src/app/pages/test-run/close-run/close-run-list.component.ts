@@ -51,7 +51,12 @@ import { TestRun, TestRunService } from '../test-run.service';
                     <ng-template #spaceSplit>
                       <nz-divider nzType="vertical"></nz-divider>
                     </ng-template>
-                    <a *nzSpaceItem nz-typography style="color: green;">
+                    <a
+                      *nzSpaceItem
+                      nz-typography
+                      style="color: green;"
+                      (click)="showActive(data.id)"
+                    >
                       <span
                         nz-icon
                         nzType="arrow-left"
@@ -59,7 +64,12 @@ import { TestRun, TestRunService } from '../test-run.service';
                       ></span>
                       Run Again
                     </a>
-                    <a *nzSpaceItem nz-typography class="delete-link">
+                    <a
+                      *nzSpaceItem
+                      nz-typography
+                      class="delete-link"
+                      (click)="deleteRun(data.id)"
+                    >
                       <i
                         nz-icon
                         nzType="delete"
@@ -169,7 +179,12 @@ export class CloseRunListComponent implements OnInit, OnDestroy {
         },
       });
   }
-
+  deleteRun(id: number): void {
+    this.uiService.showDelete(id, () => this.getAllTestClose());
+  }
+  showActive(id: number): void {
+    this.uiService.showActive(id, () => this.getAllTestClose());
+  }
   onPageIndexChange(pageIndex: number): void {
     this.pageIndex = pageIndex;
     this.getAllTestClose();

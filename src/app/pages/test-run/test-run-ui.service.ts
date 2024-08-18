@@ -64,4 +64,49 @@ export class TestRunUiService {
       nzOnCancel: () => console.log('Cancel'),
     });
   }
+
+  showClose(id: number, refreshCallback: () => void): void {
+    this.modalService.confirm({
+      nzTitle: 'You want close Test Run',
+
+      nzOkText: 'Yes',
+      nzOkType: 'primary',
+      nzOkDanger: true,
+      nzMaskClosable: false,
+      nzOnOk: () => {
+        this.service.closeRun(id).subscribe({
+          next: (response: any) => {
+            refreshCallback();
+          },
+          error: (error: any) => {
+            console.error('Error deleting project:', error);
+          },
+        });
+      },
+      nzCancelText: 'No',
+      nzOnCancel: () => console.log('Cancel'),
+    });
+  }
+  showActive(id: number, refreshCallback: () => void): void {
+    this.modalService.confirm({
+      nzTitle: 'You want close Test Run',
+
+      nzOkText: 'Yes',
+      nzOkType: 'primary',
+      nzOkDanger: true,
+      nzMaskClosable: false,
+      nzOnOk: () => {
+        this.service.activeRun(id).subscribe({
+          next: (response: any) => {
+            refreshCallback();
+          },
+          error: (error: any) => {
+            console.error('Error deleting project:', error);
+          },
+        });
+      },
+      nzCancelText: 'No',
+      nzOnCancel: () => console.log('Cancel'),
+    });
+  }
 }
