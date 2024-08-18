@@ -24,6 +24,9 @@ export class MainUiService {
       nzWidth: 400,
       nzBodyStyle: { height: '300', padding: '0 ' },
       nzComponentParams: { mode: 'add' },
+      nzOnOk: () => {
+        this.refresher.emit();
+      },
     });
   }
 
@@ -36,6 +39,9 @@ export class MainUiService {
       nzWidth: 400,
       nzBodyStyle: { height: '300', padding: '0 ' },
       nzComponentParams: { mode: 'edit', mainTest },
+      nzOnOk: () => {
+        this.refresher.emit();
+      },
     });
   }
 

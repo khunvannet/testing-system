@@ -113,7 +113,6 @@ export class OperationComponent implements OnInit {
 
   onCancel(): void {
     this.modalRef.close();
-    this.form.reset();
   }
 
   nameExistsValidator(
@@ -134,14 +133,11 @@ export class OperationComponent implements OnInit {
     if (this.form.valid) {
       this.loading = true;
       const formData = this.form.value;
-
       if (this.mode === 'add') {
         this.service.addProject(formData).subscribe({
           next: () => {
-            this.modalRef.close(true);
-            this.uiService.refresher.emit();
             this.loading = false;
-            this.form.reset();
+            this.modalRef.triggerOk();
           },
           error: () => {
             this.loading = false;
@@ -155,9 +151,8 @@ export class OperationComponent implements OnInit {
         };
         this.service.updateProject(this.project.id, updatedProject).subscribe({
           next: () => {
-            this.modalRef.close(true);
-            this.uiService.refresher.emit();
             this.loading = false;
+            this.modalRef.triggerOk();
           },
           error: () => {
             this.loading = false;

@@ -145,7 +145,6 @@ export class MainTestListComponent implements OnInit, OnChanges, OnDestroy {
   constructor(
     private service: MainTestService,
     public uiservice: MainUiService,
-    private cdr: ChangeDetectorRef,
     private sessionService: SessionService
   ) {}
 
@@ -156,7 +155,6 @@ export class MainTestListComponent implements OnInit, OnChanges, OnDestroy {
         this.getAllMain();
       }
     });
-    this.subscriptions.add(this.refreshSub$);
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -165,29 +163,25 @@ export class MainTestListComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
   getAllMain(): void {
-    this.subscriptions.add(
-      this.service.getMain().subscribe({
-        next: (data: MainTest[]) => {
-          if (this.projectId) {
-            this.main = data.filter(
-              (item) => item.projectId === this.projectId
-            );
-          } else {
-            this.main = data;
-          }
-          if (this.activeItemId === null && this.main.length > 0) {
-            this.clickItem(this.main[0].id);
-          }
-        },
-        error: (err: any) => {
-          if (err.status === 404) {
-            this.main = [];
-          } else {
-            console.error('Error fetching MainTest data:', err);
-          }
-        },
-      })
-    );
+    this.service.getMain().subscribe({
+      next: (data: MainTest[]) => {
+        if (this.projectId) {
+          this.main = data.filter((item) => item.projectId === this.projectId);
+        } else {
+          this.main = data;
+        }
+        if (this.activeItemId === null && this.main.length > 0) {
+          this.clickItem(this.main[0].id);
+        }
+      },
+      error: (err: any) => {
+        if (err.status === 404) {
+          this.main = [];
+        } else {
+          console.error('Error fetching MainTest data:', err);
+        }
+      },
+    });
   }
 
   deleteItem(id: number): void {
@@ -203,6 +197,6 @@ export class MainTestListComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.subscriptions.unsubscribe();
+    this.subscriptions?.unsubscribe();
   }
 }

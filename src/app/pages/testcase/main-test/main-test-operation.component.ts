@@ -85,7 +85,7 @@ import { MainUiService } from './main-ui.service';
     `,
   ],
 })
-export class MainTestOperationComponent implements OnInit, OnDestroy {
+export class MainTestOperationComponent implements OnInit {
   @Input() mode: 'add' | 'edit' | undefined;
   @Input() mainTest: MainTest | undefined;
   @Output() refreshList = new EventEmitter<void>();
@@ -100,8 +100,7 @@ export class MainTestOperationComponent implements OnInit, OnDestroy {
     private modalRef: NzModalRef,
     private homeService: HomeService,
     private projectSelectionService: ProjectSelectionService,
-    private service: MainTestService,
-    private uiService: MainUiService
+    private service: MainTestService
   ) {
     this.form = this.fb.group({
       name: ['', [Validators.required], [this.nameExistsValidator.bind(this)]],
@@ -124,13 +123,8 @@ export class MainTestOperationComponent implements OnInit, OnDestroy {
     );
   }
 
-  ngOnDestroy(): void {
-    this.subscription.unsubscribe();
-  }
-
   onCancel(): void {
     this.modalRef.close();
-    this.form.reset();
   }
 
   nameExistsValidator(
@@ -154,12 +148,10 @@ export class MainTestOperationComponent implements OnInit, OnDestroy {
       if (this.mode === 'add') {
         this.service.addMain(formData).subscribe({
           next: () => {
-            this.modalRef.close(true);
-            this.uiService.refresher.emit();
+            this.modalRef.triggerOk();
             this.loading = false;
-            this.form.reset();
           },
-          error: (error) => {
+          error: () => {
             this.loading = false;
           },
         });
@@ -171,11 +163,10 @@ export class MainTestOperationComponent implements OnInit, OnDestroy {
         };
         this.service.updateMain(this.mainTest.id, update).subscribe({
           next: () => {
-            this.modalRef.close(true);
-            this.uiService.refresher.emit();
+            this.modalRef.triggerOk();
             this.loading = false;
           },
-          error: (err) => {
+          error: () => {
             this.loading = false;
           },
         });

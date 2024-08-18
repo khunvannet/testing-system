@@ -190,28 +190,23 @@ export class ListComponent implements OnInit, OnDestroy {
     this.refreshSub$ = this.uiService.refresher.subscribe(() => {
       this.getAllProjects();
     });
-    this.subscriptions.add(this.refreshSub$);
   }
 
   getAllProjects(): void {
     this.loading = true;
-    this.subscriptions.add(
-      this.service.getProjects(this.pageIndex, this.pageSize).subscribe({
-        next: (response) => {
-          setTimeout(() => {
-            this.projects = response.results;
-            this.pageIndex = response.param.pageIndex;
-            this.pageSize = response.param.pageSize;
-            this.totalCount = response.param.totalCount;
-            this.loading = false;
-          }, 350);
-        },
-        error: (err: any) => {
-          this.loading = false;
-          console.error('Error fetching projects', err);
-        },
-      })
-    );
+    this.service.getProjects(this.pageIndex, this.pageSize).subscribe({
+      next: (response) => {
+        this.projects = response.results;
+        this.pageIndex = response.param.pageIndex;
+        this.pageSize = response.param.pageSize;
+        this.totalCount = response.param.totalCount;
+        this.loading = false;
+      },
+      error: (err: any) => {
+        this.loading = false;
+        console.error('Error fetching projects', err);
+      },
+    });
   }
 
   deleteProject(id: number): void {
@@ -236,6 +231,6 @@ export class ListComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.subscriptions.unsubscribe();
+    this.subscriptions?.unsubscribe();
   }
 }
