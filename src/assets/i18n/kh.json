@@ -1,0 +1,17 @@
+{
+  "Dashboard": "ផ្តាំងគ្រប់គ្រង",
+  "Description": "បរិយាយ",
+  "Delete":"លុប",
+  "Project Name":"ឈ្មោះគម្រោង",
+  "All Test Cases":"សាកល្បង",
+  "All Test Run":"ដំណើរការ",
+  "All Projects":"គម្រោងទាំងអស់",
+  "Create Project":"បង្កើតគម្រោង",
+  "Add":"បន្ថែម",
+  "Edit":"កែប្រែ",
+  "Cancel":"បោះបង់",
+  "Notes":"ចំណាំ",
+  "Name":"ឈ្មោះ",
+  "Test Cases":"ករណីសាកល្បង",
+  "Test Run":"ករណីដំណើរការ"
+}

@@ -1,9 +1,9 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { TestCaseUiService } from './test-case-ui.service';
-import { HomeService, Project } from '../home/home.service';
 import { ProjectSelectionService } from 'src/app/helper/projectselection.service';
 import { HomeUiService } from '../home/home-ui.service';
 import { Subject, takeUntil } from 'rxjs';
+import { HomeService, Project } from '../home/home.service';
 
 @Component({
   selector: 'app-testcase',
@@ -15,15 +15,13 @@ import { Subject, takeUntil } from 'rxjs';
             <div class="select-project">
               <nz-select
                 [(ngModel)]="selectedValue"
-                (ngModelChange)="onProjectChange($event)"
+
                 [nzDropdownRender]="actionItem"
               >
                 <nz-option
-                  *ngFor="let data of projects"
-                  [nzValue]="data.id"
-                  [nzLabel]="data.name"
+                 
                 >
-                  {{ data.name }}
+                
                 </nz-option>
                 <ng-template #actionItem>
                   <a class="item-action"> <i nz-icon nzType="plus"></i> Add </a>
@@ -32,9 +30,9 @@ import { Subject, takeUntil } from 'rxjs';
             </div>
 
             <app-main-list
-              [projectId]="selectedValue"
-              [activeItemId]="selectedMainId"
-              (mainId)="handleMainId($event)"
+             
+             
+              
             ></app-main-list>
           </nz-sider>
         </nz-layout>
@@ -169,12 +167,7 @@ export class TestcaseComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.getAllProjects();
-    this.projectSelectionService.selectedProject$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((project) => {
-        this.selectedValue = project ? project.id : null;
-      });
+   
   }
 
   ngOnDestroy(): void {
@@ -182,41 +175,15 @@ export class TestcaseComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  onProjectChange(selectedValue: number | null): void {
-    const selectedProjectName = this.getProjectName(selectedValue);
-    this.projectSelectionService.setSelectedProject({
-      id: selectedValue,
-      name: selectedProjectName,
-    });
+  
+  
 
-    this.selectedMainId = null;
-  }
 
-  private getProjectName(projectId: number | null): string {
-    const project = this.projects.find((proj) => proj.id === projectId);
-    return project ? project.name : '';
-  }
 
-  getAllProjects(): void {
-    this.service.getSelect().subscribe({
-      next: (projects: Project[]) => {
-        this.projects = projects;
-      },
-      error: (err) => {
-        console.error('Error fetching projects:', err);
-      },
-    });
-  }
-
-  handleMainId(mainId: number): void {
-    this.selectedMainId = mainId;
-  }
+ 
 
   onSearch(): void {
     // Implement search logic here if needed
   }
 
-  addNewProject(project: Project): void {
-    this.projectSelectionService.addProject(project);
-  }
 }

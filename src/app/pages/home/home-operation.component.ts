@@ -1,44 +1,44 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
 import {
+  AbstractControl,
   FormBuilder,
   FormGroup,
-  Validators,
-  AbstractControl,
   ValidationErrors,
+  Validators
 } from '@angular/forms';
-import { NzModalRef } from 'ng-zorro-antd/modal';
-import { Observable, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { NzModalRef, NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
 import { Project, HomeService } from './home.service';
 import { HomeUiService } from './home-ui.service';
-
+import { NzNotificationService } from 'ng-zorro-antd/notification';
+import { Observable, of, map, catchError } from 'rxjs';
 @Component({
   selector: 'app-operation',
   template: `
     <div *nzModalTitle class="modal-header-ellipsis">
-      <span>{{ mode === 'add' ? 'Add ' : 'Edit ' }}</span>
+      <span *ngIf="mode === 'add'">{{'Add' | translate}} </span>
+      <span *ngIf="mode === 'edit'">{{'Edit' | translate}} {{modal?.name}}</span>
     </div>
     <div class="modal-content">
-      <form nz-form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <form nz-form [formGroup]="frm" (ngSubmit)="onSubmit()">
         <nz-form-item>
           <nz-form-label [nzSpan]="8" nzFor="name" nzRequired>
-            Name
+          {{'Name'| translate}}
           </nz-form-label>
           <nz-form-control [nzSpan]="15" nzHasFeedback [nzErrorTip]="errorTpl">
             <input nz-input formControlName="name" id="name" />
             <ng-template #errorTpl let-control>
               <ng-container *ngIf="control.hasError('required')">
-                Name is required
+                {{'Name is required' | translate}}
               </ng-container>
               <ng-container *ngIf="control.hasError('nameExists')">
-                Name already exists
+                {{'Name already exists' | translate}}
               </ng-container>
             </ng-template>
           </nz-form-control>
         </nz-form-item>
         <nz-form-item>
           <nz-form-label [nzSpan]="8" nzFor="description">
-            Description
+           {{'Description' | translate}}
           </nz-form-label>
           <nz-form-control [nzSpan]="15">
             <textarea
@@ -52,16 +52,25 @@ import { HomeUiService } from './home-ui.service';
       </form>
     </div>
     <div *nzModalFooter>
-      <button
-        [disabled]="!form.valid || nameExists"
+      <button *ngIf="mode === 'add'"
+        [disabled]="!frm.valid || nameExists"
         nz-button
         nzType="primary"
         [nzLoading]="loading"
         (click)="onSubmit()"
       >
-        {{ mode === 'add' ? 'Add' : 'Edit' }}
+      {{'Add' | translate}}
       </button>
-      <button nz-button nzType="default" (click)="onCancel()">Cancel</button>
+      <button *ngIf="mode ==='edit'"
+        [disabled]="!frm.valid || nameExists"
+        nz-button
+        nzType="primary"
+        [nzLoading]="loading"
+        (click)="onSubmit()"
+      >
+        {{'Edit' | translate}}
+      </button>
+      <button nz-button nzType="default" (click)="onCancel()">{{'Cancel' | translate}}</button>
     </div>
   `,
   styles: [
@@ -84,81 +93,86 @@ import { HomeUiService } from './home-ui.service';
 })
 export class OperationComponent implements OnInit {
   @Input() mode: 'add' | 'edit' = 'add';
-  @Input() project: Project | null = null;
   @Output() refreshList = new EventEmitter<Project>();
-  form!: FormGroup;
+  frm!: FormGroup;
   loading = false;
   nameExists = false;
-
   constructor(
     private fb: FormBuilder,
     private modalRef: NzModalRef,
     private service: HomeService,
-    public uiService: HomeUiService
+    public uiService: HomeUiService,
+    private notification:NzNotificationService
+    
   ) {}
-
+  readonly modal = inject(NZ_MODAL_DATA) ;
   ngOnInit(): void {
-    this.form = this.fb.group({
-      name: ['', [Validators.required], [this.nameExistsValidator.bind(this)]],
-      description: [''],
+   this.initControl();
+   if (this.mode === 'edit' && this.modal.id) {
+    this.setFrmValue();
+  }
+  }
+  private initControl(): void {
+    this.frm = this.fb.group({
+      name: [null, [Validators.required], [this.nameExistsValidator.bind(this)] ],
+      description: [null],
     });
-
-    if (this.mode === 'edit' && this.project) {
-      this.form.patchValue({
-        name: this.project.name,
-        description: this.project.description,
-      });
-    }
   }
-
-  onCancel(): void {
-    this.modalRef.close();
+  private setFrmValue():void {
+    this.service.find(this.modal.id).subscribe({
+      next:(results)=>{
+        this.frm.setValue({
+          name: results.name,
+          description: results.description || null,
+        })
+      }
+    })
   }
-
-  nameExistsValidator(
-    control: AbstractControl
-  ): Observable<ValidationErrors | null> {
+  nameExistsValidator(control: AbstractControl): Observable<ValidationErrors | null> {
     const name = control.value;
+    
     if (!name) {
       return of(null);
     }
-
-    return this.service.isExists(name).pipe(
+  
+    const projectId = this.mode === 'edit' ? this.modal.id : null;
+  
+    return this.service.nameIsExist(name, projectId).pipe(
       map((response) => (response.exists ? { nameExists: true } : null)),
       catchError(() => of(null))
     );
   }
-
+  
   onSubmit(): void {
-    if (this.form.valid) {
-      this.loading = true;
-      const formData = this.form.value;
-      if (this.mode === 'add') {
-        this.service.addProject(formData).subscribe({
-          next: () => {
-            this.loading = false;
-            this.modalRef.triggerOk();
-          },
-          error: () => {
-            this.loading = false;
-          },
-        });
-      } else if (this.mode === 'edit' && this.project) {
-        const updatedProject: Project = {
-          ...this.project,
-          name: formData.name,
-          description: formData.description,
-        };
-        this.service.updateProject(this.project.id, updatedProject).subscribe({
-          next: () => {
-            this.loading = false;
-            this.modalRef.triggerOk();
-          },
-          error: () => {
-            this.loading = false;
-          },
-        });
-      }
+   if(this.frm.valid){
+    this.loading=true;
+    const data ={...this.frm.value};
+    if(this.mode === 'add'){
+      this.service.add(data).subscribe({
+        next:()=>{
+          this.loading = false;
+          this.modalRef.triggerOk();
+        },error:(err:any)=>{
+         this.notification.error('Data','Add faild');
+        }
+       })
+    } else if (this.mode === 'edit' && this.modal.id) {
+      this.service.edit(this.modal.id,data).subscribe({
+        next:()=>{
+          this.loading = false;
+          this.modalRef.triggerOk();
+        },error:()=>{
+          this.notification.error('Data','edit faild');
+        }
+      })
     }
+   }
+    
   }
+  onCancel(): void {
+    this.modalRef.close();
+  }
+ 
 }
+
+

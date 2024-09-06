@@ -3,13 +3,13 @@ import { NzModalRef, NzModalService } from 'ng-zorro-antd/modal';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { OperationComponent } from './home-operation.component';
 import { HomeService, Project } from './home.service';
+import { DeleteProjectComponent } from './delete-project.component';
 @Injectable({
   providedIn: 'root',
 })
 export class HomeUiService {
   constructor(
     private modalService: NzModalService,
-    private service: HomeService
   ) {}
   refresher = new EventEmitter<void>();
 
@@ -30,9 +30,10 @@ export class HomeUiService {
     });
   }
 
-  showEdit(project: Project) {
+  showEdit(id:number,name:string) {
     this.modalService.create({
       nzContent: OperationComponent,
+      nzData:{id,name},
       nzFooter: null,
       nzMaskClosable: false,
       nzClosable: false,
@@ -40,34 +41,25 @@ export class HomeUiService {
       nzBodyStyle: { height: '300', padding: '0 ' },
       nzComponentParams: {
         mode: 'edit',
-        project: project,
+       
       },
       nzOnOk: () => {
         this.refresher.emit();
       },
     });
   }
-
-  showDelete(id: number, refreshCallback: () => void): void {
-    this.modalService.confirm({
-      nzTitle: 'Are you sure you want to delete?',
-
-      nzOkText: 'Yes',
-      nzOkType: 'primary',
-      nzOkDanger: true,
+  showDelete(id:number,name:string) {
+    this.modalService.create({
+      nzContent: DeleteProjectComponent,
+      nzData:{id,name},
+      nzFooter: null,
       nzMaskClosable: false,
+      nzClosable: false,
+      nzWidth: 400,
+      nzBodyStyle: { height: '300', padding: '0 ' },
       nzOnOk: () => {
-        this.service.deleteProject(id).subscribe({
-          next: (response: any) => {
-            refreshCallback();
-          },
-          error: (error: any) => {
-            console.error('Error deleting project:', error);
-          },
-        });
+        this.refresher.emit();
       },
-      nzCancelText: 'No',
-      nzOnCancel: () => console.log('Cancel'),
     });
   }
 }

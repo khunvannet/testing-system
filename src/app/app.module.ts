@@ -7,7 +7,7 @@ import { en_US } from 'ng-zorro-antd/i18n';
 import { registerLocaleData } from '@angular/common';
 import en from '@angular/common/locales/en';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NgZorroAntdModule } from './ng-zorro-antd.module';
 import { HomeComponent } from './pages/home/home.component';
@@ -36,11 +36,17 @@ import { CloseRunComponent } from './pages/test-run/close-run/close-run.componen
 import { RunResultsComponent } from './pages/test-run/active-run/result-modal.component';
 import { BreadcrumbComponent } from './pages/shared/breadcrumb.component';
 import { SettingComponent } from './pages/setting/setting.component';
-import { SelecionComponent } from './pages/shared/selection.component';
 import { SelectMainComponent } from './pages/testcase/main-test/selectmain.component';
 import { TreeSelection } from './pages/shared/tree.component';
+import { InputSearchComponent } from './pages/shared/input-search.component';
+import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
+import { TranslateHttpLoader } from '@ngx-translate/http-loader';
+import { DeleteProjectComponent } from './pages/home/delete-project.component';
+import { SelectProComponent } from './pages/shared/select-project.component';
 registerLocaleData(en);
-
+export function HttpLoaderFactory(http: HttpClient) {
+  return new TranslateHttpLoader(http);
+}
 @NgModule({
   declarations: [
     AppComponent,
@@ -49,6 +55,7 @@ registerLocaleData(en);
     ListComponent,
     OperationComponent,
     LayoutComponent,
+    DeleteProjectComponent,
     //test case
     TestcaseComponent,
     TestOperationComponent,
@@ -60,7 +67,11 @@ registerLocaleData(en);
     MainTestListComponent,
     MainTestOperationComponent,
     SelectMainComponent,
-    SelecionComponent,
+    InputSearchComponent,
+    
+
+    //share
+    SelectProComponent,
 
     //test run
     TestRunComponent,
@@ -87,6 +98,13 @@ registerLocaleData(en);
     BrowserAnimationsModule,
     NgZorroAntdModule,
     ReactiveFormsModule,
+    TranslateModule.forRoot({
+      loader: {
+        provide: TranslateLoader,
+        useFactory: HttpLoaderFactory,
+        deps: [HttpClient]
+      }
+    })
   ],
   providers: [{ provide: NZ_I18N, useValue: en_US }],
   bootstrap: [AppComponent],

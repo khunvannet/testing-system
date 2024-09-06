@@ -1,6 +1,12 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { HomeUiService } from './home-ui.service';
 
+export interface Language {
+  name: string;
+  code: string;
+  flag: string;
+}
 @Component({
   selector: 'app-home',
   template: `
@@ -22,7 +28,7 @@ import { HomeUiService } from './home-ui.service';
           <li nz-menu-item nzMatchRouter>
             <a routerLink="/home">
               <i nz-icon nzType="home" nzTheme="outline"></i>
-              <span>All Projects</span>
+              <span>{{'All Projects' | translate}}</span>
             </a>
           </li>
         </ul>
@@ -37,54 +43,23 @@ import { HomeUiService } from './home-ui.service';
               <span>S9 Server</span>
             </div>
             <div class="header" style="margin-left:10px;">
-              <a
-                nz-dropdown
-                nzTrigger="click"
-                [nzDropdownMenu]="menu"
-                nzPlacement="bottomRight"
-              >
-                <img [src]="selectedImageSrc" alt="" />
-              </a>
+              <div nz-dropdown nzTrigger="click" [nzDropdownMenu]="menu">
+                <img
+                  [src]="selectLang.flag"
+                  [alt]="selectLang.name"
+                />
+              </div>
               <nz-dropdown-menu #menu="nzDropdownMenu">
                 <ul nz-menu>
                   <li
+                    *ngFor="let lang of languages"
                     nz-menu-item
-                    (click)="
-                      onLanguageChange('../../../assets/images/kh_FLAG.png')
-                    "
+                    (click)="switchLang(lang)"
+                    [ngClass]="{ active: lang.code === selectLang.code }"
                   >
-                    <img
-                      class="images"
-                      src="../../../assets/images/kh_FLAG.png"
-                      alt=""
-                    />&nbsp;
-                    <span>Khmer</span>
-                  </li>
-                  <li
-                    nz-menu-item
-                    (click)="
-                      onLanguageChange('../../../assets/images/en_FLAG.png')
-                    "
-                  >
-                    <img
-                      class="images"
-                      src="../../../assets/images/en_FLAG.png"
-                      alt=""
-                    />&nbsp;
-                    <span>English</span>
-                  </li>
-                  <li
-                    nz-menu-item
-                    (click)="
-                      onLanguageChange('../../../assets/images/ch_FLAG.png')
-                    "
-                  >
-                    <img
-                      class="images"
-                      src="../../../assets/images/ch_FLAG.png"
-                      alt=""
-                    />&nbsp;
-                    <span>Chinese</span>
+                    <img class="flag" [src]="lang.flag" [alt]="lang.name" />
+                    {{ lang.name }}
+                    <span *ngIf="lang.code === selectLang.code">✔️</span>
                   </li>
                 </ul>
               </nz-dropdown-menu>
@@ -147,15 +122,34 @@ import { HomeUiService } from './home-ui.service';
     `,
   ],
 })
-export class HomeComponent {
+export class HomeComponent implements OnInit {
   isCollapsed = false;
-  selectedValue: string | null = null;
-  selectedImageSrc: string = '../../../assets/images/kh_FLAG.png';
   isFullScreen = false;
-  constructor(public uiservice: HomeUiService) {}
+  selectLang!: Language;
+  defualtLang: string = 'en';
 
-  onLanguageChange(imageSrc: string): void {
-    this.selectedImageSrc = imageSrc;
+  languages: Language[] = [
+    {
+      name: 'English',
+      code: 'en',
+      flag: '../../../assets/images/English-logo.svg',
+    },
+    {
+      name: 'Khmer',
+      code: 'kh',
+      flag: '../../../assets/images/Khmer-logo.svg',
+    },
+  ];
+  constructor(
+    public uiservice: HomeUiService,
+    private translateService: TranslateService
+  ) {}
+  ngOnInit(): void {
+    const storeLang = localStorage.getItem('selectLang') || this.defualtLang;
+    this.selectLang =
+      this.languages.find((lang) => lang.code === storeLang) ||
+      this.getDefaultLang();
+    this.translateService.use(this.selectLang.code);
   }
 
   toggleFullScreen(): void {
@@ -183,5 +177,13 @@ export class HomeComponent {
           );
         });
     }
+  }
+  private getDefaultLang(): Language {
+    return this.languages.find((lang) => lang.code === this.defualtLang)!;
+  }
+  switchLang(lang: Language): void {
+    this.selectLang = lang;
+    this.translateService.use(lang.code);
+    localStorage.setItem('selectLang', lang.code);
   }
 }

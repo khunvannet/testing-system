@@ -12,9 +12,7 @@ import { TestRunUiService } from './test-run-ui.service';
               <nz-header>
                 <div class="header">
                   <div class="select-project">
-                    <app-selection
-                      (selectedProjectId)="onProjectSelected($event)"
-                    ></app-selection>
+                   
                   </div>
                   <div class="search">
                     <nz-input-group [nzSuffix]="suffixIconSearch">
@@ -53,9 +51,7 @@ import { TestRunUiService } from './test-run-ui.service';
               <nz-header>
                 <div class="header-close">
                   <div class="select-close">
-                    <app-selection
-                      (selectedProjectId)="onProjectSelected($event)"
-                    ></app-selection>
+                  
                   </div>
                   <div class="search-close">
                     <nz-input-group [nzSuffix]="suffixIconSearch">

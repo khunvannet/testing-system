@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, OnInit } from '@angular/core';
-import { HomeService, Project } from '../../home/home.service';
-import { ProjectSelectionService } from 'src/app/helper/projectselection.service';
+
+import { Project, ProjectSelectionService } from 'src/app/helper/projectselection.service';
+import { HomeService } from '../../home/home.service';
 
 @Component({
   selector: 'app-main-test',
@@ -8,12 +9,10 @@ import { ProjectSelectionService } from 'src/app/helper/projectselection.service
     <div class="select-project">
       <nz-select
         [(ngModel)]="selectedValue"
-        (ngModelChange)="onProjectChange($event)"
+       
       >
         <nz-option
-          *ngFor="let data of projects"
-          [nzValue]="data.id"
-          [nzLabel]="data.name"
+       
         ></nz-option>
       </nz-select>
     </div>
@@ -55,7 +54,7 @@ export class MainTestComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.getAllProjects();
+    
     const storedProject = this.projectSelectionService.getSelectedProject();
     if (storedProject) {
       this.selectedValue = storedProject.id;
@@ -66,30 +65,8 @@ export class MainTestComponent implements OnInit {
     });
   }
 
-  onProjectChange(selectedValue: number | null): void {
-    this.projectSelectionService.setSelectedProject({
-      id: selectedValue,
-      name: this.getProjectName(selectedValue),
-    });
-  }
-
-  private getProjectName(projectId: number | null): string {
-    const selectedProject = this.projects.find(
-      (project) => project.id === projectId
-    );
-    return selectedProject ? selectedProject.name : '';
-  }
-
-  getAllProjects() {
-    this.service.getSelect().subscribe({
-      next: (projects: Project[]) => {
-        this.projects = projects;
-      },
-      error: (err: any) => {
-        console.error('Error fetching projects:', err);
-      },
-    });
-  }
+  
+ 
   handleMainId(id: number): void {
     this.selectedMainId = id;
     console.log('Selected Main ID:', this.selectedMainId);

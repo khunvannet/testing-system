@@ -62,9 +62,7 @@ import { catchError, map, Observable, of } from 'rxjs';
             >Project</nz-form-label
           >
           <nz-form-control [nzSpan]="16">
-            <app-selection
-              (selectedProjectId)="onProjectChange($event)"
-            ></app-selection>
+            
           </nz-form-control>
         </nz-form-item>
         <nz-form-item>

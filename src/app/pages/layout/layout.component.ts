@@ -1,9 +1,13 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
-import { HomeService, Project } from '../home/home.service';
-import { ProjectSelectionService } from 'src/app/helper/projectselection.service';
-import { Subscription } from 'rxjs';
-
+import { HomeUiService } from '../home/home-ui.service';
+import { TranslateService } from '@ngx-translate/core';
+import { Project } from '../home/home.service';
+export interface Language {
+  name: string;
+  code: string;
+  flag: string;
+}
 @Component({
   selector: 'app-layout',
   template: `
@@ -17,23 +21,9 @@ import { Subscription } from 'rxjs';
         [nzTrigger]="null"
       >
         <div class="select-project">
-          <nz-select
-            nzShowSearch
-            [(ngModel)]="selectedValue"
-            (ngModelChange)="onProjectChange($event)"
-          >
-            <nz-option
-              nzLabel="All Projects"
-              nzValue="All Projects"
-            ></nz-option>
-            <nz-option
-              *ngFor="let data of projects"
-              [nzLabel]="data.name"
-              [nzValue]="data.id"
-            ></nz-option>
-          </nz-select>
+          <app-select-pro>
+          </app-select-pro>
         </div>
-
         <ul
           nz-menu
           nzMode="inline"
@@ -47,19 +37,19 @@ import { Subscription } from 'rxjs';
           >
             <a routerLink="/test/dashboard">
               <i nz-icon nzType="dashboard" nzTheme="outline"></i>
-              <span>Dashboard</span>
+              <span>{{'Dashboard' | translate}}</span>
             </a>
           </li>
           <li nz-menu-item routerLinkActive="active">
             <a routerLink="/test/test_cases">
               <i nz-icon nzType="folder" nzTheme="outline"></i>
-              <span>Test Cases</span>
+              <span>{{'Test Cases' | translate}}</span>
             </a>
           </li>
           <li nz-menu-item routerLinkActive="active">
             <a routerLink="/test/test_run">
               <i nz-icon nzType="code" nzTheme="outline"></i>
-              <span>Test Run</span>
+              <span>{{'Test Run' | translate}}</span>
             </a>
           </li>
         </ul>
@@ -74,55 +64,24 @@ import { Subscription } from 'rxjs';
               <span>S9 Server</span>
             </div>
             <div class="header" style="margin-left: 10px;">
-              <a
-                nz-dropdown
-                nzTrigger="click"
-                [nzDropdownMenu]="menu"
-                nzPlacement="bottomRight"
-              >
-                <img [src]="selectedImageSrc" alt="" />
-              </a>
-
+            <div nz-dropdown nzTrigger="click" [nzDropdownMenu]="menu">
+                <img
+                
+                  [src]="selectLang.flag"
+                  [alt]="selectLang.name"
+                />
+              </div>
               <nz-dropdown-menu #menu="nzDropdownMenu">
                 <ul nz-menu>
                   <li
+                    *ngFor="let lang of languages"
                     nz-menu-item
-                    (click)="
-                      onLanguageChange('../../../assets/images/kh_FLAG.png')
-                    "
+                    (click)="switchLang(lang)"
+                    [ngClass]="{ active: lang.code === selectLang.code }"
                   >
-                    <img
-                      class="images"
-                      src="../../../assets/images/kh_FLAG.png"
-                      alt=""
-                    />&nbsp;
-                    <span>Khmer</span>
-                  </li>
-                  <li
-                    nz-menu-item
-                    (click)="
-                      onLanguageChange('../../../assets/images/en_FLAG.png')
-                    "
-                  >
-                    <img
-                      class="images"
-                      src="../../../assets/images/en_FLAG.png"
-                      alt=""
-                    />&nbsp;
-                    <span>English</span>
-                  </li>
-                  <li
-                    nz-menu-item
-                    (click)="
-                      onLanguageChange('../../../assets/images/ch_FLAG.png')
-                    "
-                  >
-                    <img
-                      class="images"
-                      src="../../../assets/images/ch_FLAG.png"
-                      alt=""
-                    />&nbsp;
-                    <span>Chinese</span>
+                    <img class="flag" [src]="lang.flag" [alt]="lang.name" />
+                    {{ lang.name }}
+                    <span *ngIf="lang.code === selectLang.code">✔️</span>
                   </li>
                 </ul>
               </nz-dropdown-menu>
@@ -166,60 +125,35 @@ import { Subscription } from 'rxjs';
   `,
   styleUrls: ['../../../assets/scss/layout.component.scss'],
 })
-export class LayoutComponent implements OnInit, OnDestroy {
+export class LayoutComponent implements OnInit {
   isCollapsed = false;
-  selectedValue: string | number | null = null;
-  selectedImageSrc: string = '../../../assets/images/kh_FLAG.png';
+  selectLang!: Language;
+  defualtLang: string = 'en';
+
+  languages: Language[] = [
+    {
+      name: 'English',
+      code: 'en',
+      flag: '../../../assets/images/English-logo.svg',
+    },
+    {
+      name: 'Khmer',
+      code: 'kh',
+      flag: '../../../assets/images/Khmer-logo.svg',
+    },
+  ];
   isFullScreen = false;
-  projects: Project[] = [];
   isLoading = false;
-  private subscriptions = new Subscription();
-
   constructor(
-    private router: Router,
-    private service: HomeService,
-    private projectSelectionService: ProjectSelectionService,
-    private cdr: ChangeDetectorRef
+    public uiservice: HomeUiService,
+    private translateService: TranslateService
   ) {}
-
   ngOnInit(): void {
-    this.getAllProjects();
-    const storedProject = this.projectSelectionService.getSelectedProject();
-    if (storedProject) {
-      this.selectedValue = storedProject.id;
-    }
-    this.subscriptions.add(
-      this.projectSelectionService.selectedProject$.subscribe((project) => {
-        this.selectedValue = project ? project.id : null;
-      })
-    );
-  }
-
-  ngOnDestroy(): void {
-    this.subscriptions.unsubscribe();
-  }
-
-  onProjectChange(selectedValue: string | number | null): void {
-    const id = typeof selectedValue === 'number' ? selectedValue : null;
-    const name =
-      typeof selectedValue === 'string'
-        ? selectedValue
-        : this.getProjectName(selectedValue as number);
-
-    this.projectSelectionService.setSelectedProject({ id, name });
-
-    if (selectedValue === 'All Projects' || selectedValue === null) {
-      this.router.navigate(['home']);
-    }
-  }
-
-  private getProjectName(projectId: number | null): string {
-    const project = this.projects.find((proj) => proj.id === projectId);
-    return project ? project.name : '';
-  }
-
-  onLanguageChange(imageSrc: string): void {
-    this.selectedImageSrc = imageSrc;
+    const storeLang = localStorage.getItem('selectLang') || this.defualtLang;
+    this.selectLang =
+      this.languages.find((lang) => lang.code === storeLang) ||
+      this.getDefaultLang();
+    this.translateService.use(this.selectLang.code);
   }
 
   toggleFullScreen(): void {
@@ -227,27 +161,33 @@ export class LayoutComponent implements OnInit, OnDestroy {
     if (!document.fullscreenElement) {
       elem
         .requestFullscreen()
-        .then(() => (this.isFullScreen = true))
-        .catch((err) => console.log(`Error: ${err.message}`));
+        .then(() => {
+          this.isFullScreen = true;
+        })
+        .catch((err) => {
+          console.log(
+            `Error attempting to enable full-screen mode: ${err.message} (${err.name})`
+          );
+        });
     } else {
       document
         .exitFullscreen()
-        .then(() => (this.isFullScreen = false))
-        .catch((err) => console.log(`Error: ${err.message}`));
+        .then(() => {
+          this.isFullScreen = false;
+        })
+        .catch((err) => {
+          console.log(
+            `Error attempting to disable full-screen mode: ${err.message} (${err.name})`
+          );
+        });
     }
   }
-
-  getAllProjects(): void {
-    this.isLoading = true;
-    this.service.getSelect().subscribe({
-      next: (projects: Project[]) => {
-        this.projects = projects;
-        this.isLoading = false;
-      },
-      error: (err) => {
-        console.error('Error fetching projects:', err);
-        this.isLoading = false;
-      },
-    });
+  private getDefaultLang(): Language {
+    return this.languages.find((lang) => lang.code === this.defualtLang)!;
+  }
+  switchLang(lang: Language): void {
+    this.selectLang = lang;
+    this.translateService.use(lang.code);
+    localStorage.setItem('selectLang', lang.code);
   }
 }

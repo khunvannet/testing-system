@@ -15,10 +15,10 @@ import {
 } from '@angular/forms';
 import { NzModalRef } from 'ng-zorro-antd/modal';
 import { MainTest, MainTestService } from './main-test.service';
-import { HomeService, Project } from '../../home/home.service';
 import { ProjectSelectionService } from 'src/app/helper/projectselection.service';
 import { catchError, map, Observable, of, Subscription } from 'rxjs';
 import { MainUiService } from './main-ui.service';
+import { HomeService } from '../../home/home.service';
 
 @Component({
   selector: 'app-main-test-operation',
@@ -51,9 +51,7 @@ import { MainUiService } from './main-ui.service';
           <nz-form-control [nzSpan]="15">
             <nz-select formControlName="projectId" [nzDisabled]="true">
               <nz-option
-                *ngFor="let data of projects$ | async"
-                [nzValue]="data.id"
-                [nzLabel]="data.name"
+              
               ></nz-option>
             </nz-select>
           </nz-form-control>
@@ -91,7 +89,6 @@ export class MainTestOperationComponent implements OnInit {
   @Output() refreshList = new EventEmitter<void>();
   form: FormGroup;
   loading = false;
-  projects$: Observable<Project[]>;
   private subscription: Subscription = new Subscription();
   nameExists = false;
 
@@ -106,7 +103,7 @@ export class MainTestOperationComponent implements OnInit {
       name: ['', [Validators.required], [this.nameExistsValidator.bind(this)]],
       projectId: ['', Validators.required],
     });
-    this.projects$ = this.homeService.getSelect();
+    
   }
 
   ngOnInit(): void {

@@ -1,188 +1,133 @@
-import { Component, OnInit, TemplateRef, OnDestroy } from '@angular/core';
-import { HomeService, Project } from './home.service';
+import { Component, OnInit, OnDestroy, Output, EventEmitter } from '@angular/core';
 import { HomeUiService } from './home-ui.service';
-import { ProjectSelectionService } from 'src/app/helper/projectselection.service';
+import { NzNotificationService } from 'ng-zorro-antd/notification';
 import { Subscription } from 'rxjs';
+import { HomeService, Project } from './home.service';
 
 @Component({
   selector: 'app-list',
   template: `
-    <ng-container *ngIf="!loading; else loadingTemplate">
-      <ng-container *ngIf="projects.length > 0; else noProjects">
-        <nz-header>
-          <div class="header">
-            <div class="btn-run">
-              <button
-                class="create-project"
-                nz-button
-                nzType="primary"
-                (click)="uiService.showAdd()"
-              >
-                Create Project
-              </button>
-            </div>
-          </div>
-        </nz-header>
-        <nz-table
-          nzShowSizeChanger
-          [nzNoResult]="noResult"
-          [nzData]="projects"
-          [nzPageSize]="pageSize"
-          [nzPageIndex]="pageIndex"
-          [nzTotal]="totalCount"
-          nzSize="small"
-          (nzPageIndexChange)="onPageIndexChange($event)"
-          (nzPageSizeChange)="onPageSizeChange($event)"
-          nzTableLayout="fixed"
-          [nzFrontPagination]="false"
-        >
-          <thead>
-            <tr>
-              <th class="t-head" nzWidth="5%">#</th>
-              <th class="t-head" nzWidth="25%">Project Name</th>
-              <th class="t-head" nzWidth="25%">Description</th>
-              <th class="t-head" nzWidth="10%">All Test Cases</th>
-              <th class="t-head" nzWidth="10%">All Test Run</th>
-              <th class="t-head" nzWidth="25%"></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let project of projects; let i = index">
-              <td nzEllipsis>{{ (pageIndex - 1) * pageSize + i + 1 }}</td>
-              <td nzEllipsis>
-                <a
-                  [routerLink]="['/test/dashboard']"
-                  (click)="selectProject(project.id, project.name)"
-                >
-                  {{ project.name }}
-                </a>
-              </td>
-              <td nzEllipsis>{{ project.description }}</td>
-              <td nzEllipsis>0</td>
-              <td nzEllipsis>0</td>
-              <td style="display: flex; justify-content: end;">
-                <nz-space [nzSplit]="spaceSplit">
-                  <ng-template #spaceSplit>
-                    <nz-divider nzType="vertical"></nz-divider>
-                  </ng-template>
-                  <a
-                    *nzSpaceItem
-                    nz-typography
-                    (click)="uiService.showEdit(project)"
-                  >
-                    <i
-                      nz-icon
-                      nzType="edit"
-                      nzTheme="outline"
-                      style="padding-right: 5px"
-                    ></i>
-                    Edit
-                  </a>
-                  <a
-                    *nzSpaceItem
-                    nz-typography
-                    style="color: #F31313"
-                    (click)="deleteProject(project.id)"
-                  >
-                    <i
-                      nz-icon
-                      nzType="delete"
-                      nzTheme="outline"
-                      style="padding-right: 5px"
-                    ></i>
-                    Delete
-                  </a>
-                </nz-space>
-              </td>
-            </tr>
-          </tbody>
-        </nz-table>
-      </ng-container>
-      <ng-template #noProjects>
-        <div class="container">
-          <h5 style="font-size: 36px; margin-bottom: 6px;">
-            <span nz-icon nzType="info-circle" nzTheme="outline"></span>
-          </h5>
-          <span class="title-menu">No Projects</span>
-          <p id="text">
-            No project data available. Create a project to get started.
-          </p>
-          <button nz-button nzType="dashed" (click)="uiService.showAdd()">
-            Create Project
-          </button>
-        </div>
-      </ng-template>
-    </ng-container>
-    <ng-template #loadingTemplate>
-      <div class="loading-container">
-        <nz-spin></nz-spin>
+    <nz-header> 
+      <div class="header">
+        <app-input-search
+          [(searchQuery)]="param.searchQuery"
+          (search)="onSearch($event)"
+        ></app-input-search>
+        <div style="padding: 1.5px;">
+          <button nz-button nzType="primary" (click)="uiService.showAdd()">{{'Create Project' | translate}}</button>
+        </div> 
       </div>
-    </ng-template>
+    </nz-header>
+    <nz-table
+      nzShowSizeChanger
+      nzShowPagination
+      nzSize="small"
+      [nzData]="projects"
+      [nzTotal]="totalCount"
+      [nzPageIndex]="param.pageIndex"
+      [nzPageSize]="param.pageSize"
+      [nzFrontPagination]="false"
+      [nzLoading]="loading"
+      [nzNoResult]="noResult"
+      nzTableLayout="fixed"
+      (nzPageIndexChange)="onPageIndexChange($event)"
+      (nzPageSizeChange)="onPageSizeChange($event)"
+    >
+      <ng-template #noResult>
+        <app-no-result-found></app-no-result-found>
+      </ng-template>
+      <thead>
+        <tr>
+          <th nzWidth="5%">#</th>
+          <th nzWidth="25%">{{'Project Name' | translate}}</th>
+          <th nzWidth="25%">{{ 'Description' | translate }}</th>
+          <th nzWidth="10%">{{'All Test Cases' | translate}}</th>
+          <th nzWidth="10%">{{'All Test Run' | translate}}</th>
+          <th nzWidth="25%"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let data of projects; let i = index">
+          <td>{{ (param.pageIndex - 1) * param.pageSize + i + 1 }}</td>
+          <td><a [routerLink]="['/test/dashboard']" (click)="clickSelect(data.id!)">{{ data.name }}</a></td>
+          <td>{{ data.description }}</td>
+          <td>0</td>
+          <td>0</td>
+          <td style="display: flex; justify-content: end;">
+            <nz-space [nzSplit]="spaceSplit">
+              <ng-template #spaceSplit>
+                <nz-divider nzType="vertical"></nz-divider>
+              </ng-template>
+              <a *nzSpaceItem nz-typography (click)="uiService.showEdit(data.id || 0, data.name!)">
+                <i nz-icon nzType="edit" nzTheme="outline"></i>
+                {{'Edit' | translate}}
+              </a>
+              <a *nzSpaceItem nz-typography style="color: #F31313" (click)="uiService.showDelete(data.id || 0, data.name!)">
+                <i nz-icon nzType="delete" nzTheme="outline"></i>
+                {{'Delete' | translate}}
+              </a>
+            </nz-space>
+          </td>
+        </tr>
+      </tbody>
+    </nz-table>
   `,
-  styles: [
-    `
-      nz-table {
-        max-height: 495px;
-        overflow-y: auto;
-      }
-      .t-head {
-        position: sticky;
-        top: 0;
-        background-color: #fff;
-        z-index: 1;
-      }
-      #text {
-        color: #7d8597;
-      }
-      .title-menu {
-        margin-left: 10px;
-        font-size: 14px;
-        font-weight: bold;
-      }
-      .container {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        margin-top: 15%;
-      }
-      .header {
-        display: flex;
-        justify-content: flex-end;
-      }
-      .btn-run {
-        margin-right: -40px;
-      }
-      nz-header {
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        background: #f8f9fa;
-      }
-      nz-table {
-        margin-top: 10px;
-      }
-      .loading-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-      }
-    `,
-  ],
+  styles: [`
+    nz-table {
+      max-height: 495px;
+      overflow-y: auto;
+    }
+    .t-head {
+      position: sticky;
+      top: 0;
+      background-color: #fff;
+      z-index: 1;
+    }
+    #text {
+      color: #7d8597;
+    }
+    .title-menu {
+      margin-left: 10px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      margin-top: 15%;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+    }
+    nz-header {
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      background: #f8f9fa;
+    }
+    nz-table {
+      margin-top: 10px;
+    }
+  `],
 })
 export class ListComponent implements OnInit, OnDestroy {
+  @Output() pId = new EventEmitter<number | null>(); // Define the EventEmitter
+
   projects: Project[] = [];
-  noResult: string | TemplateRef<any> = 'No Projects Found';
-  loading = true;
-  pageIndex = 1;
-  pageSize = 10;
+  loading = false;
   totalCount = 0;
-  private subscriptions = new Subscription();
+  param = {
+    pageIndex: 1,
+    pageSize: 10,
+    searchQuery: ''
+  };
   private refreshSub$!: Subscription;
 
   constructor(
     private service: HomeService,
     public uiService: HomeUiService,
-    private projectSelectionService: ProjectSelectionService
+    private notification: NzNotificationService
   ) {}
 
   ngOnInit(): void {
@@ -194,43 +139,43 @@ export class ListComponent implements OnInit, OnDestroy {
 
   getAllProjects(): void {
     this.loading = true;
-    this.service.getProjects(this.pageIndex, this.pageSize).subscribe({
-      next: (response) => {
-        this.projects = response.results;
-        this.pageIndex = response.param.pageIndex;
-        this.pageSize = response.param.pageSize;
-        this.totalCount = response.param.totalCount;
-        this.loading = false;
+    this.service.getAll(this.param).subscribe({
+      next: (response: any) => {
+        setTimeout(() => {
+          this.projects = response.results;
+          this.totalCount = response.totalCount;
+          this.loading = false;
+        }, 500);
       },
-      error: (err: any) => {
+      error: (error: any) => {
+        console.error("Error Fetching data", error);
+        this.notification.error('Project', 'Failed to get data');
         this.loading = false;
-        console.error('Error fetching projects', err);
-      },
+      }
     });
   }
 
-  deleteProject(id: number): void {
-    this.uiService.showDelete(id, () => this.getAllProjects());
-  }
-
   onPageIndexChange(pageIndex: number): void {
-    this.pageIndex = pageIndex;
+    this.param.pageIndex = pageIndex;
     this.getAllProjects();
   }
 
   onPageSizeChange(pageSize: number): void {
-    this.pageSize = pageSize;
+    this.param.pageSize = pageSize;
     this.getAllProjects();
   }
 
-  selectProject(projectId: number, projectName: string): void {
-    this.projectSelectionService.setSelectedProject({
-      id: projectId,
-      name: projectName,
-    });
+  onSearch(query: string): void {
+    this.param.pageIndex = 1;
+    this.param.searchQuery = query;
+    this.getAllProjects();
+  }
+
+  clickSelect(id: number): void {
+    this.pId.emit(id); // Emit the selected project ID
   }
 
   ngOnDestroy(): void {
-    this.subscriptions?.unsubscribe();
+    this.refreshSub$?.unsubscribe();
   }
 }
