@@ -8,7 +8,6 @@ import {
 } from '@angular/forms';
 import { NzModalRef, NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
 import { Project, HomeService } from './home.service';
-import { HomeUiService } from './home-ui.service';
 import { NzNotificationService } from 'ng-zorro-antd/notification';
 import { Observable, of, map, catchError } from 'rxjs';
 @Component({
@@ -28,10 +27,10 @@ import { Observable, of, map, catchError } from 'rxjs';
             <input nz-input formControlName="name" id="name" />
             <ng-template #errorTpl let-control>
               <ng-container *ngIf="control.hasError('required')">
-                {{'Name is required' | translate}}
+              {{'Input is required!' | translate}}
               </ng-container>
               <ng-container *ngIf="control.hasError('nameExists')">
-                {{'Name already exists' | translate}}
+              {{'Name already exists!' | translate}}
               </ng-container>
             </ng-template>
           </nz-form-control>
@@ -101,7 +100,6 @@ export class OperationComponent implements OnInit {
     private fb: FormBuilder,
     private modalRef: NzModalRef,
     private service: HomeService,
-    public uiService: HomeUiService,
     private notification:NzNotificationService
     
   ) {}

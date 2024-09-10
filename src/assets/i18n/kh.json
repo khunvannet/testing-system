@@ -6,12 +6,24 @@
   "All Test Cases":"សាកល្បង",
   "All Test Run":"ដំណើរការ",
   "All Projects":"គម្រោងទាំងអស់",
-  "Create Project":"បង្កើតគម្រោង",
+  "Create Project":"បង្កើត",
   "Add":"បន្ថែម",
   "Edit":"កែប្រែ",
   "Cancel":"បោះបង់",
   "Notes":"ចំណាំ",
   "Name":"ឈ្មោះ",
   "Test Cases":"ករណីសាកល្បង",
-  "Test Run":"ករណីដំណើរការ"
+  "Test Run":"ករណីដំណើរការ",
+  "Code":"កូដ",
+  "Create Test Case":"បង្កើត",
+  "Name already exists!":"ឈ្មោះមានរួចហើយ!",
+  "Input is required!":"ទាមទារការបញ្ចូល!",
+  "Project":"គម្រោង",
+  "Main Test":"មេ",
+  "Active Runs":"បើកដំណើរការ",
+  "Close Runs":"បិទដំណើរការ",
+  "Close":"បិទ",
+  "Create Test Run":"បង្កើត",
+  "No of test":"ចំនួនសាកល្បង"
+  
 }

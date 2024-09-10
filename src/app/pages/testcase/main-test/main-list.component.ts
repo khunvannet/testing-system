@@ -1,101 +1,86 @@
 import {
   Component,
-  Input,
-  OnInit,
-  OnChanges,
-  SimpleChanges,
-  Output,
   EventEmitter,
-  ChangeDetectorRef,
+  Input,
   OnDestroy,
+  OnInit,
+  Output,
+  SimpleChanges,
 } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { MainTest, MainTestService } from './main-test.service';
 import { MainUiService } from './main-ui.service';
-import { SessionService } from 'src/app/helper/session.service';
-import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-main-list',
   template: `
-    <ng-container>
-      <ng-container *ngIf="main.length > 0; else noMain">
-        <ul nz-menu nzMode="inline">
-          <li
-            *ngFor="let data of main"
-            [class.active]="data.id === activeItemId"
-            class="block-ordering"
+    <ng-container *ngIf="main.length > 0; else noMain">
+      <ul nz-menu nzMode="inline">
+        <li
+          *ngFor="let data of main; let i = index"
+          [ngClass]="{ active: activeIndex === i }"
+          class="block-ordering"
+        >
+          <span class="move">
+            <i nz-icon nzType="holder" nzTheme="outline"></i>
+          </span>
+          <a
+            (click)="clickItem(data.id!, i)"
+            nz-menu-item
+            style="margin-left: 10px;"
+            >{{ data.name }}</a
           >
-            <span class="move">
-              <i nz-icon nzType="holder" nzTheme="outline"></i>
-            </span>
-            <a
-              nz-menu-item
-              (click)="clickItem(data.id)"
-              style="margin-left: 10px;"
-              >{{ data.name }}</a
-            >
-            <a
-              [nzDropdownMenu]="menu"
-              class="action-button menu-dropdown"
-              nz-dropdown
-              nzTrigger="click"
-              nzPlacement="bottomRight"
-            >
-              <i
-                nz-icon
-                nzType="ellipsis"
-                nzTheme="outline"
-                style="font-size: 16px"
-              ></i>
-            </a>
-            <nz-dropdown-menu #menu="nzDropdownMenu">
-              <ul nz-menu nzSelectable>
-                <li
-                  class="menu-item"
-                  nz-menu-item
-                  style="color: blue"
-                  (click)="uiservice.showEdit(data)"
-                >
-                  <i nz-icon nzType="edit"></i>&nbsp;
-                  <span class="action-text">Edit</span>
-                </li>
-                <li
-                  class="menu-item"
-                  nz-menu-item
-                  style="color: red"
-                  (click)="deleteItem(data.id)"
-                >
-                  <i nz-icon nzType="delete"></i>&nbsp;
-                  <span class="action-text">Delete</span>
-                </li>
-              </ul>
-            </nz-dropdown-menu>
-          </li>
-        </ul>
-        <div class="btn-add">
-          <button
-            nz-button
-            nzType="dashed"
-            nzBlock
-            (click)="uiservice.showAdd()"
+          <a
+            [nzDropdownMenu]="menu"
+            class="action-button menu-dropdown"
+            nz-dropdown
+            nzTrigger="click"
+            nzPlacement="bottomRight"
           >
-            Add
-          </button>
-        </div>
-      </ng-container>
-      <ng-template #noMain>
-        <div class="btn-add">
-          <button
-            nz-button
-            nzType="dashed"
-            nzBlock
-            (click)="uiservice.showAdd()"
-          >
-            Add
-          </button>
-        </div>
-      </ng-template>
+            <i
+              nz-icon
+              nzType="ellipsis"
+              nzTheme="outline"
+              style="font-size: 16px"
+            ></i>
+          </a>
+          <nz-dropdown-menu #menu="nzDropdownMenu">
+            <ul nz-menu nzSelectable>
+              <li
+                class="menu-item"
+                nz-menu-item
+                style="color: blue"
+                (click)="uiservice.showEdit(data.id || 0, data.name!)"
+              >
+                <i nz-icon nzType="edit"></i>&nbsp;
+                <span class="action-text">{{ 'Edit' | translate }}</span>
+              </li>
+              <li
+                class="menu-item"
+                nz-menu-item
+                style="color: red"
+                (click)="uiservice.showDalete(data.id || 0, data.name!)"
+              >
+                <i nz-icon nzType="delete"></i>&nbsp;
+                <span class="action-text">{{ 'Delete' | translate }}</span>
+              </li>
+            </ul>
+          </nz-dropdown-menu>
+        </li>
+      </ul>
+      <div class="btn-add">
+        <button nz-button nzType="dashed" nzBlock (click)="uiservice.showAdd()">
+          Add
+        </button>
+      </div>
     </ng-container>
+    <ng-template #noMain>
+      <div class="btn-add">
+        <button nz-button nzType="dashed" nzBlock (click)="uiservice.showAdd()">
+          Add
+        </button>
+      </div>
+    </ng-template>
   `,
   styles: [
     `
@@ -135,21 +120,27 @@ import { Subscription } from 'rxjs';
     `,
   ],
 })
-export class MainTestListComponent implements OnInit, OnChanges, OnDestroy {
+export class MainTestListComponent implements OnInit, OnDestroy {
   @Input() projectId: number | null = null;
-  @Input() activeItemId: number | null = null;
-  @Output() mainId = new EventEmitter<number>();
+  @Output() mainId = new EventEmitter<number | null>();
   main: MainTest[] = [];
-  private subscriptions = new Subscription();
+  totalCount = 0;
+  param = {
+    pageIndex: 1,
+    pageSize: 999999,
+    searchQuery: '',
+  };
+  activeIndex: number | null = null;
   private refreshSub$!: Subscription;
+
   constructor(
     private service: MainTestService,
-    public uiservice: MainUiService,
-    private sessionService: SessionService
+    public uiservice: MainUiService
   ) {}
 
   ngOnInit(): void {
     this.getAllMain();
+
     this.refreshSub$ = this.uiservice.refresher.subscribe(() => {
       if (this.projectId !== null) {
         this.getAllMain();
@@ -162,41 +153,40 @@ export class MainTestListComponent implements OnInit, OnChanges, OnDestroy {
       this.getAllMain();
     }
   }
+
   getAllMain(): void {
-    this.service.getMain().subscribe({
-      next: (data: MainTest[]) => {
+    this.service.getAll(this.param).subscribe({
+      next: (response: any) => {
         if (this.projectId) {
-          this.main = data.filter((item) => item.projectId === this.projectId);
+          this.main = response.results.filter(
+            (item: { projectId: number | null }) =>
+              item.projectId === this.projectId
+          );
         } else {
-          this.main = data;
+          this.main = response.results;
         }
-        if (this.activeItemId === null && this.main.length > 0) {
-          this.clickItem(this.main[0].id);
+        this.totalCount = response.totalCount;
+
+        if (this.main.length > 0) {
+          this.activeIndex = 0;
+          this.clickItem(this.main[0].id!, 0);
+        } else {
+          this.activeIndex = null;
+          this.mainId.emit(null);
         }
       },
-      error: (err: any) => {
-        if (err.status === 404) {
-          this.main = [];
-        } else {
-          console.error('Error fetching MainTest data:', err);
-        }
+      error: (error: any) => {
+        console.error('Error Fetching Data', error);
       },
     });
   }
 
-  deleteItem(id: number): void {
-    this.uiservice.showDelete(id, () => {
-      this.getAllMain();
-    });
-  }
-
-  clickItem(id: number): void {
-    this.activeItemId = id;
+  clickItem(id: number, index: number): void {
+    this.activeIndex = index;
     this.mainId.emit(id);
-    this.sessionService.setSession('activeItemId', id);
   }
 
   ngOnDestroy(): void {
-    this.subscriptions?.unsubscribe();
+    this.refreshSub$?.unsubscribe();
   }
 }

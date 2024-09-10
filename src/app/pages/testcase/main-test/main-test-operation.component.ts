@@ -3,8 +3,8 @@ import {
   EventEmitter,
   Input,
   OnInit,
-  OnDestroy,
   Output,
+  inject,
 } from '@angular/core';
 import {
   AbstractControl,
@@ -13,62 +13,76 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
-import { NzModalRef } from 'ng-zorro-antd/modal';
-import { MainTest, MainTestService } from './main-test.service';
-import { ProjectSelectionService } from 'src/app/helper/projectselection.service';
-import { catchError, map, Observable, of, Subscription } from 'rxjs';
-import { MainUiService } from './main-ui.service';
-import { HomeService } from '../../home/home.service';
+import { NzModalRef, NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
+import { NzNotificationService } from 'ng-zorro-antd/notification';
+import { catchError, map, Observable, of } from 'rxjs';
+import { ProjectService } from 'src/app/helper/project-select.service';
+import { MainTestService } from './main-test.service';
 
 @Component({
   selector: 'app-main-test-operation',
   template: `
     <div *nzModalTitle class="modal-header-ellipsis">
-      <span>{{ mode === 'add' ? 'Add ' : 'Edit ' }}</span>
+      <span *ngIf="mode === 'add'">{{ 'Add' | translate }} </span>
+      <span *ngIf="mode === 'edit'"
+        >{{ 'Edit' | translate }} {{ modal?.name }}</span
+      >
     </div>
     <div class="modal-content" style="margin-top: 20px;">
-      <form nz-form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <form nz-form [formGroup]="frm" (ngSubmit)="onSubmit()">
         <nz-form-item>
-          <nz-form-label [nzSpan]="8" nzFor="name" nzRequired
-            >Name</nz-form-label
-          >
+          <nz-form-label [nzSpan]="8" nzFor="name" nzRequired>{{
+            'Name' | translate
+          }}</nz-form-label>
           <nz-form-control [nzSpan]="15" nzHasFeedback [nzErrorTip]="errorTpl">
             <input nz-input formControlName="name" type="text" id="name" />
             <ng-template #errorTpl let-control>
               <ng-container *ngIf="control.hasError('required')">
-                Name is required
+                {{ 'Input is required!' | translate }}
               </ng-container>
               <ng-container *ngIf="control.hasError('nameExists')">
-                Name already exists
+                {{ 'Name already exists!' | translate }}
               </ng-container>
             </ng-template>
           </nz-form-control>
         </nz-form-item>
         <nz-form-item>
-          <nz-form-label [nzSpan]="8" nzFor="project" nzRequired
-            >Project</nz-form-label
-          >
+          <nz-form-label [nzSpan]="8" nzFor="project" nzRequired>{{
+            'Project' | translate
+          }}</nz-form-label>
           <nz-form-control [nzSpan]="15">
-            <nz-select formControlName="projectId" [nzDisabled]="true">
-              <nz-option
-              
-              ></nz-option>
-            </nz-select>
+            <app-select-formain
+              formControlName="projectId"
+              [isDisabled]="true"
+            ></app-select-formain>
           </nz-form-control>
         </nz-form-item>
       </form>
     </div>
     <div *nzModalFooter>
       <button
-        [disabled]="!form.valid || nameExists"
+        *ngIf="mode === 'add'"
+        [disabled]="!frm.valid || nameExists"
         nz-button
         nzType="primary"
         [nzLoading]="loading"
         (click)="onSubmit()"
       >
-        {{ mode === 'add' ? 'Add' : 'Edit' }}
+        {{ 'Add' | translate }}
       </button>
-      <button nz-button nzType="default" (click)="onCancel()">Cancel</button>
+      <button
+        *ngIf="mode === 'edit'"
+        [disabled]="!frm.valid || nameExists"
+        nz-button
+        nzType="primary"
+        [nzLoading]="loading"
+        (click)="onSubmit()"
+      >
+        {{ 'Edit' | translate }}
+      </button>
+      <button nz-button nzType="default" (click)="onCancel()">
+        {{ 'Cancel' | translate }}
+      </button>
     </div>
   `,
   styles: [
@@ -85,89 +99,96 @@ import { HomeService } from '../../home/home.service';
 })
 export class MainTestOperationComponent implements OnInit {
   @Input() mode: 'add' | 'edit' | undefined;
-  @Input() mainTest: MainTest | undefined;
   @Output() refreshList = new EventEmitter<void>();
-  form: FormGroup;
+  frm!: FormGroup;
   loading = false;
-  private subscription: Subscription = new Subscription();
+
   nameExists = false;
+  selectedValue!: number;
 
   constructor(
     private fb: FormBuilder,
     private modalRef: NzModalRef,
-    private homeService: HomeService,
-    private projectSelectionService: ProjectSelectionService,
-    private service: MainTestService
-  ) {
-    this.form = this.fb.group({
-      name: ['', [Validators.required], [this.nameExistsValidator.bind(this)]],
-      projectId: ['', Validators.required],
-    });
-    
-  }
-
+    private service: MainTestService,
+    private notification: NzNotificationService,
+    private projectService: ProjectService
+  ) {}
+  readonly modal = inject(NZ_MODAL_DATA);
   ngOnInit(): void {
-    if (this.mode === 'edit' && this.mainTest) {
-      this.form.patchValue({
-        name: this.mainTest.name,
-        projectId: this.mainTest.projectId,
-      });
+    const storedId = localStorage.getItem('selectedProjectId');
+    if (storedId) {
+      this.selectedValue = +storedId;
     }
-    this.subscription.add(
-      this.projectSelectionService.selectedProject$.subscribe((project) => {
-        this.form.controls['projectId'].setValue(project ? project.id : null);
-      })
-    );
+    this.projectService.currentProjectId$.subscribe((id) => {
+      if (id) {
+        this.selectedValue = id;
+      }
+    });
+    this.initControl();
+    if (this.mode === 'edit' && this.modal.id) {
+      this.setFrmValue();
+    }
   }
-
-  onCancel(): void {
-    this.modalRef.close();
+  private initControl(): void {
+    this.frm = this.fb.group({
+      name: ['', [Validators.required], [this.nameExistsValidator.bind(this)]],
+      projectId: [this.selectedValue, Validators.required],
+    });
   }
-
+  private setFrmValue(): void {
+    this.service.find(this.modal.id).subscribe({
+      next: (results) => {
+        this.frm.setValue({
+          name: results.name,
+          projectId: results.projectId || null,
+        });
+      },
+    });
+  }
   nameExistsValidator(
     control: AbstractControl
   ): Observable<ValidationErrors | null> {
     const name = control.value;
+
     if (!name) {
       return of(null);
     }
 
-    return this.service.isExists(name).pipe(
+    const id = this.mode === 'edit' ? this.modal.id : null;
+    const pId = this.selectedValue;
+    return this.service.mainIsExist(name, id, pId).pipe(
       map((response) => (response.exists ? { nameExists: true } : null)),
       catchError(() => of(null))
     );
   }
-
   onSubmit(): void {
-    if (this.form.valid) {
+    if (this.frm.valid) {
       this.loading = true;
-      const formData = this.form.value;
+      const data = { ...this.frm.value };
       if (this.mode === 'add') {
-        this.service.addMain(formData).subscribe({
+        this.service.add(data).subscribe({
           next: () => {
+            this.loading = false;
             this.modalRef.triggerOk();
-            this.loading = false;
           },
-          error: () => {
-            this.loading = false;
+          error: (err: any) => {
+            this.notification.error('Data', 'Add faild');
           },
         });
-      } else if (this.mode === 'edit' && this.mainTest) {
-        const update: MainTest = {
-          ...this.mainTest,
-          name: formData.name,
-          projectId: formData.projectId,
-        };
-        this.service.updateMain(this.mainTest.id, update).subscribe({
+      } else if (this.mode === 'edit' && this.modal.id) {
+        this.service.edit(this.modal.id, data).subscribe({
           next: () => {
-            this.modalRef.triggerOk();
             this.loading = false;
+            this.modalRef.triggerOk();
           },
           error: () => {
-            this.loading = false;
+            this.notification.error('Data', 'edit faild');
           },
         });
       }
     }
+  }
+  onCancel(): void {
+    this.modalRef.close();
   }
 }

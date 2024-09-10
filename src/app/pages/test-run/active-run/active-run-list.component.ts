@@ -12,100 +12,109 @@ import { Subscription } from 'rxjs';
 @Component({
   selector: 'app-active-run',
   template: `
-    <ng-container *ngIf="!loading; else loadingTemplate">
-      <ng-container *ngIf="testRun.length > 0; else noTestRun">
-        <div class="table-case">
-          <nz-table
-            [nzNoResult]="noResult"
-            [nzData]="testRun"
-            nzSize="small"
-            (nzPageIndexChange)="onPageIndexChange($event)"
-            (nzPageSizeChange)="onPageSizeChange($event)"
-            nzTableLayout="fixed"
-            [nzPageSize]="pageSize"
-            [nzPageIndex]="pageIndex"
-            [nzTotal]="totalCount"
-            nzShowSizeChanger
-            [nzFrontPagination]="false"
+    <nz-header>
+      <nz-header>
+        <div class="header-container">
+          <div class="left-elements">
+            <app-select-formain></app-select-formain>
+            <app-input-search></app-input-search>
+          </div>
+          <button
+            class="create-project"
+            nz-button
+            nzType="primary"
+            (click)="uiService.showAdd(selectedProjectId)"
           >
-            <thead>
-              <tr>
-                <th nzWidth="5%">#</th>
-                <th nzWidth="10%">Code</th>
-                <th nzWidth="25%">Name</th>
-                <th nzWidth="10%">No of test</th>
-                <th nzWidth="30%">Description</th>
-                <th nzWidth="20%"></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let data of testRun; let i = index">
-                <td nzEllipsis>{{ (pageIndex - 1) * pageSize + i + 1 }}</td>
-                <td nzEllipsis>
-                  <a routerLink="/test/test_run/run">{{ data.code }} </a>
-                </td>
-                <td nzEllipsis>{{ data.name }}</td>
-                <td nzEllipsis>{{ data.testCases?.length || 0 }}</td>
-                <td nzEllipsis>{{ data.description }}</td>
-                <td class="action-buttons">
-                  <nz-space [nzSplit]="spaceSplit">
-                    <ng-template #spaceSplit>
-                      <nz-divider nzType="vertical"></nz-divider>
-                    </ng-template>
-                    <a
-                      *nzSpaceItem
-                      nz-typography
-                      (click)="uiService.showEdit(data, data.projectId)"
-                    >
-                      <i
-                        nz-icon
-                        nzType="edit"
-                        nzTheme="outline"
-                        class="icon-padding"
-                      ></i>
-                      Edit
-                    </a>
-                    <a
-                      *nzSpaceItem
-                      nz-typography
-                      style="color: green;"
-                      (click)="showClose(data.id)"
-                    >
-                      <span
-                        nz-icon
-                        nzType="issues-close"
-                        nzTheme="outline"
-                      ></span>
-                      Close
-                    </a>
-                    <a
-                      *nzSpaceItem
-                      nz-typography
-                      class="delete-link"
-                      (click)="deleteRun(data.id)"
-                    >
-                      <i
-                        nz-icon
-                        nzType="delete"
-                        nzTheme="outline"
-                        class="icon-padding"
-                      ></i>
-                      Delete
-                    </a>
-                  </nz-space>
-                </td>
-              </tr>
-            </tbody>
-          </nz-table>
+            {{ 'Create Test Run' | translate }}
+          </button>
         </div>
-      </ng-container>
-    </ng-container>
-    <ng-template #noTestRun>
-      <h1>Add New TestRun</h1>
-    </ng-template>
-    <ng-template #loadingTemplate>
-      <nz-spin class="loading-spinner"></nz-spin>
-    </ng-template>
+      </nz-header>
+    </nz-header>
+
+    <div class="table-case">
+      <nz-table
+        [nzNoResult]="noResult"
+        [nzData]="testRun"
+        nzSize="small"
+        (nzPageIndexChange)="onPageIndexChange($event)"
+        (nzPageSizeChange)="onPageSizeChange($event)"
+        nzTableLayout="fixed"
+        [nzPageSize]="pageSize"
+        [nzPageIndex]="pageIndex"
+        [nzTotal]="totalCount"
+        nzShowSizeChanger
+        [nzFrontPagination]="false"
+        [nzNoResult]="noResult"
+      >
+        <ng-template #noResult>
+          <app-no-result-found></app-no-result-found>
+        </ng-template>
+        <thead>
+          <tr>
+            <th nzWidth="5%">#</th>
+            <th nzWidth="10%">{{ 'Code' | translate }}</th>
+            <th nzWidth="25%">{{ 'Name' | translate }}</th>
+            <th nzWidth="10%">{{ 'No of test' | translate }}</th>
+            <th nzWidth="30%">{{ 'Description' | translate }}</th>
+            <th nzWidth="20%"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let data of testRun; let i = index">
+            <td nzEllipsis>{{ (pageIndex - 1) * pageSize + i + 1 }}</td>
+            <td nzEllipsis>
+              <a routerLink="/test/test_run/run">{{ data.code }} </a>
+            </td>
+            <td nzEllipsis>{{ data.name }}</td>
+            <td nzEllipsis>{{ data.testCases.length || 0 }}</td>
+            <td nzEllipsis>{{ data.description }}</td>
+            <td class="action-buttons">
+              <nz-space [nzSplit]="spaceSplit">
+                <ng-template #spaceSplit>
+                  <nz-divider nzType="vertical"></nz-divider>
+                </ng-template>
+                <a
+                  *nzSpaceItem
+                  nz-typography
+                  (click)="uiService.showEdit(data, data.projectId)"
+                >
+                  <i
+                    nz-icon
+                    nzType="edit"
+                    nzTheme="outline"
+                    class="icon-padding"
+                  ></i>
+                  {{ 'Edit' | translate }}
+                </a>
+                <a
+                  *nzSpaceItem
+                  nz-typography
+                  style="color: green;"
+                  (click)="showClose(data.id)"
+                >
+                  <span nz-icon nzType="issues-close" nzTheme="outline"></span>
+                  {{ 'Close' | translate }}
+                </a>
+                <a
+                  *nzSpaceItem
+                  nz-typography
+                  class="delete-link"
+                  (click)="deleteRun(data.id)"
+                >
+                  <i
+                    nz-icon
+                    nzType="delete"
+                    nzTheme="outline"
+                    class="icon-padding"
+                  ></i>
+                  {{ 'Delete' | translate }}
+                </a>
+              </nz-space>
+            </td>
+          </tr>
+        </tbody>
+      </nz-table>
+    </div>
   `,
   styles: [
     `
@@ -122,11 +131,25 @@ import { Subscription } from 'rxjs';
       .delete-link {
         color: #f31313;
       }
-      .loading-spinner {
+      nz-header {
+        background: #f8f9fa;
+        padding: 0;
+        padding-left: 5px;
+      }
+      .header-container {
         display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100px;
+        align-items: center; /* Vertically center items */
+        justify-content: space-between; /* Ensure button is on the far right */
+      }
+
+      .left-elements {
+        display: flex;
+        gap: 10px; /* Add 10px space between the select and input */
+      }
+
+      .create-project {
+        margin-left: auto;
+        margin-right: 10px;
       }
     `,
   ],

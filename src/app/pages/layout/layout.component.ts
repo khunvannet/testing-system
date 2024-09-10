@@ -1,8 +1,6 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, Input, OnInit} from '@angular/core';
 import { HomeUiService } from '../home/home-ui.service';
 import { TranslateService } from '@ngx-translate/core';
-import { Project } from '../home/home.service';
 export interface Language {
   name: string;
   code: string;
@@ -21,8 +19,7 @@ export interface Language {
         [nzTrigger]="null"
       >
         <div class="select-project">
-          <app-select-pro>
-          </app-select-pro>
+          <app-select-pro ></app-select-pro>
         </div>
         <ul
           nz-menu

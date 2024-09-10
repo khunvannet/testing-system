@@ -21,7 +21,6 @@ import { TestOperationComponent } from './pages/testcase/test-operation.componen
 import { NoTestCaseComponent } from './pages/shared/no-test-case.component';
 import { TestCaseListComponent } from './pages/testcase/test-case-list.component';
 import { DetailModalComponent } from './pages/testcase/detail-modal.component';
-import { MainTestComponent } from './pages/testcase/main-test/main-test.component';
 
 import { MainTestOperationComponent } from './pages/testcase/main-test/main-test-operation.component';
 import { MainTestListComponent } from './pages/testcase/main-test/main-list.component';
@@ -36,13 +35,16 @@ import { CloseRunComponent } from './pages/test-run/close-run/close-run.componen
 import { RunResultsComponent } from './pages/test-run/active-run/result-modal.component';
 import { BreadcrumbComponent } from './pages/shared/breadcrumb.component';
 import { SettingComponent } from './pages/setting/setting.component';
-import { SelectMainComponent } from './pages/testcase/main-test/selectmain.component';
 import { TreeSelection } from './pages/shared/tree.component';
 import { InputSearchComponent } from './pages/shared/input-search.component';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { DeleteProjectComponent } from './pages/home/delete-project.component';
 import { SelectProComponent } from './pages/shared/select-project.component';
+import { SelectForMainComponent } from './pages/home/select-formain.component';
+import { DeleteMainComponent } from './pages/testcase/main-test/delete-main.component';
+import { SelectMainComponent } from './pages/testcase/main-test/selectmain.component';
+import { DeleteTestComponent } from './pages/testcase/delete-testcase.component';
 registerLocaleData(en);
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http);
@@ -63,13 +65,13 @@ export function HttpLoaderFactory(http: HttpClient) {
     NoTestCaseComponent,
     TestCaseListComponent,
     DetailModalComponent,
-    MainTestComponent,
     MainTestListComponent,
     MainTestOperationComponent,
     SelectMainComponent,
     InputSearchComponent,
-    
-
+    SelectForMainComponent,
+    DeleteMainComponent,
+    DeleteTestComponent,
     //share
     SelectProComponent,
 
@@ -102,9 +104,9 @@ export function HttpLoaderFactory(http: HttpClient) {
       loader: {
         provide: TranslateLoader,
         useFactory: HttpLoaderFactory,
-        deps: [HttpClient]
-      }
-    })
+        deps: [HttpClient],
+      },
+    }),
   ],
   providers: [{ provide: NZ_I18N, useValue: en_US }],
   bootstrap: [AppComponent],

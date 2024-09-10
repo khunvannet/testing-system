@@ -6,8 +6,7 @@ export interface QueryParam {
   pageSize: number;
   searchQuery: string;
 }
-export class BaseApiService <T>{
-
+export class BaseApiService<T> {
   constructor(protected http: HttpClient, private endpoint: string) {}
 
   protected apiUrl = environment.apiUrl;
@@ -36,24 +35,50 @@ export class BaseApiService <T>{
     return this.http.put<T>(`${this.getEndpoint()}/${id}`, item);
   }
 
-  delete(id: number, note?: string): Observable<T> {
-    return this.http.patch<T>(`${this.getEndpoint()}/${id}`, {
-      body: { note },
-    });
+  delete(id: number, data: any): Observable<T> {
+    return this.http.patch<T>(`${this.getEndpoint()}/${id}`, data);
   }
   nameIsExist(name: string, id?: number): Observable<{ exists: boolean }> {
-    // Prepare query parameters
     const params: any = { name };
-    
-    // If id is provided (for edit), include it in the params
     if (id) {
       params.id = id;
     }
-  
-    // Send the request with the query parameters
     return this.http.get<{ exists: boolean }>(`${this.getEndpoint()}/isExist`, {
-      params
+      params,
     });
   }
-  
+  mainIsExist(
+    name?: string,
+    id?: number,
+    projectId?: number
+  ): Observable<{ exists: boolean }> {
+    const params: any = { name, projectId };
+    if (id) {
+      params.id = id;
+    }
+    if (projectId) {
+      params.projectId = projectId;
+    }
+
+    return this.http.get<{ exists: boolean }>(`${this.getEndpoint()}/isExist`, {
+      params,
+    });
+  }
+  isExist(
+    name?: string,
+    id?: number,
+    mainId?: number
+  ): Observable<{ exists: boolean }> {
+    const params: any = { name, mainId };
+    if (id) {
+      params.id = id;
+    }
+    if (mainId) {
+      params.mainId = mainId;
+    }
+
+    return this.http.get<{ exists: boolean }>(`${this.getEndpoint()}/isExist`, {
+      params,
+    });
+  }
 }

@@ -2,11 +2,11 @@ import { Component, EventEmitter, inject, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NzModalRef, NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
 import { NzNotificationService } from 'ng-zorro-antd/notification';
-import { HomeUiService } from './home-ui.service';
-import { HomeService, Project } from './home.service';
+import { MainTest, MainTestService } from './main-test.service';
+import { MainUiService } from './main-ui.service';
 
 @Component({
-  selector: 'app-delete-pro',
+  selector: 'app-delete-main',
   template: `
      <div *nzModalTitle class="modal-header-ellipsis">
       <span>{{'Delete' | translate}} {{modal?.name}} </span>
@@ -66,14 +66,14 @@ import { HomeService, Project } from './home.service';
     `,
   ],
 })
-export class DeleteProjectComponent implements OnInit {
-  @Output() refreshList = new EventEmitter<Project>();
+export class DeleteMainComponent implements OnInit {
+  @Output() refreshList = new EventEmitter<MainTest>();
   frm!: FormGroup;
   loading = false;
  constructor(private fb: FormBuilder,
   private modalRef: NzModalRef,
-  private service: HomeService,
-  public uiService: HomeUiService,
+  private service: MainTestService,
+  public uiService: MainUiService,
   private notification:NzNotificationService){}
   readonly modal = inject(NZ_MODAL_DATA) ;
  ngOnInit(): void {

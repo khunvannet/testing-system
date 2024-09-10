@@ -97,42 +97,15 @@ export class TreeSelection implements OnChanges, OnDestroy {
   }
 
   getMainTests(): void {
-    if (this.projectId !== null) {
-      const mainSubscription = this.mainTestService.getMain().subscribe({
-        next: (data) => {
-          this.main = data.filter(
-            (mainItem) => mainItem.projectId === this.projectId
-          );
-          this.updateNodes();
-        },
-      });
-      this.subscriptions.add(mainSubscription);
-    }
+   
   }
 
   getTestCases(): void {
-    const testSubscription = this.testCaseService.getTree().subscribe({
-      next: (data) => {
-        this.test = data;
-        this.updateNodes();
-      },
-    });
-    this.subscriptions.add(testSubscription);
+   
   }
 
   updateNodes(): void {
-    this.nodes = this.main.map((mainItem) => ({
-      title: mainItem.name,
-      key: `main-${mainItem.id}`,
-      expanded: true,
-      children: this.test
-        .filter((testItem) => testItem.mainId === mainItem.id)
-        .map((testItem) => ({
-          title: testItem.name,
-          key: `test-${testItem.id}`,
-          isLeaf: true,
-        })),
-    }));
+    
   }
 
   nzContextMenu(event: NzFormatEmitEvent, menu: NzDropdownMenuComponent): void {
@@ -190,15 +163,11 @@ export class TreeSelection implements OnChanges, OnDestroy {
       if (nodeKey.startsWith('main-')) {
         const mainId = parseInt(nodeKey.split('-')[1], 10);
         const mainItem = this.main.find((item) => item.id === mainId);
-        if (mainItem) {
-          this.uiService.showEdit(mainItem);
-        }
+       
       } else if (nodeKey.startsWith('test-')) {
         const testId = parseInt(nodeKey.split('-')[1], 10);
         const testItem = this.test.find((item) => item.id === testId);
-        if (testItem) {
-          this.uiTestService.showEdit(testItem, testItem.mainId, '');
-        }
+       
       }
     }
   }
@@ -211,9 +180,7 @@ export class TreeSelection implements OnChanges, OnDestroy {
       } else if (nodeKey.startsWith('test-')) {
         const testId = parseInt(nodeKey.split('-')[1], 10);
         const testItem = this.test.find((item) => item.id === testId);
-        if (testItem) {
-          this.uiTestService.showAdd(testItem.mainId);
-        }
+       
       }
     }
   }
@@ -223,10 +190,10 @@ export class TreeSelection implements OnChanges, OnDestroy {
       const nodeKey = this.currentNode.key;
       if (nodeKey.startsWith('main-')) {
         const mainId = parseInt(nodeKey.split('-')[1], 10);
-        this.uiService.showDelete(mainId, () => this.getMainTests());
+       
       } else if (nodeKey.startsWith('test-')) {
         const testId = parseInt(nodeKey.split('-')[1], 10);
-        this.uiTestService.showDelete(testId, () => this.getTestCases());
+        
       }
     }
   }

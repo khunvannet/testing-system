@@ -3,6 +3,7 @@ import { HomeUiService } from './home-ui.service';
 import { NzNotificationService } from 'ng-zorro-antd/notification';
 import { Subscription } from 'rxjs';
 import { HomeService, Project } from './home.service';
+import { ProjectService } from 'src/app/helper/project-select.service';
 
 @Component({
   selector: 'app-list',
@@ -112,8 +113,7 @@ import { HomeService, Project } from './home.service';
   `],
 })
 export class ListComponent implements OnInit, OnDestroy {
-  @Output() pId = new EventEmitter<number | null>(); // Define the EventEmitter
-
+  @Output() pId = new EventEmitter<any | null>(); 
   projects: Project[] = [];
   loading = false;
   totalCount = 0;
@@ -127,7 +127,8 @@ export class ListComponent implements OnInit, OnDestroy {
   constructor(
     private service: HomeService,
     public uiService: HomeUiService,
-    private notification: NzNotificationService
+    private notification: NzNotificationService,
+    private projectService:ProjectService
   ) {}
 
   ngOnInit(): void {
@@ -172,7 +173,7 @@ export class ListComponent implements OnInit, OnDestroy {
   }
 
   clickSelect(id: number): void {
-    this.pId.emit(id); // Emit the selected project ID
+    this.projectService.changeProjectId(id);
   }
 
   ngOnDestroy(): void {

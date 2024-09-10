@@ -1,13 +1,18 @@
-import { Component, forwardRef, OnInit } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  forwardRef,
+  Input,
+  OnInit,
+  Output,
+} from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { HomeService, Project } from '../home/home.service';
-import { NzNotificationService } from 'ng-zorro-antd/notification';
 import { QueryParam } from 'src/app/helper/base-api.service';
+import { HomeService, Project } from '../home/home.service';
 import { ProjectService } from 'src/app/helper/project-select.service';
-import { Router } from '@angular/router';
 
 @Component({
-  selector: 'app-select-pro',
+  selector: 'app-select-formain',
   template: `
     <nz-select
       nzShowSearch
@@ -15,11 +20,8 @@ import { Router } from '@angular/router';
       (ngModelChange)="onChange($event)"
       (blur)="onTouched()"
       [nzLoading]="loading"
+      [disabled]="isDisabled"
     >
-      <nz-option
-        nzLabel="{{ this.allPro | translate }}"
-        nzValue="All Projects"
-      ></nz-option>
       <nz-option
         *ngFor="let data of projects"
         [nzValue]="data.id"
@@ -31,20 +33,19 @@ import { Router } from '@angular/router';
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => SelectProComponent),
+      useExisting: forwardRef(() => SelectForMainComponent),
       multi: true,
     },
   ],
   styles: [
     `
       nz-select {
-        width: 240px;
+        width: 235px;
       }
     `,
   ],
 })
-export class SelectProComponent implements OnInit, ControlValueAccessor {
-  allPro = 'All Projects';
+export class SelectForMainComponent implements OnInit, ControlValueAccessor {
   projects: Project[] = [];
   selectedValue: any = null;
   loading: boolean = false;
@@ -54,11 +55,13 @@ export class SelectProComponent implements OnInit, ControlValueAccessor {
     searchQuery: '',
   };
 
+  @Input() isDisabled: boolean = false;
+
+  @Output() pId: EventEmitter<number> = new EventEmitter<number>();
+
   constructor(
     private service: HomeService,
-    private notification: NzNotificationService,
-    private projectService: ProjectService,
-    private router: Router
+    private projectService: ProjectService
   ) {}
 
   ngOnInit(): void {
@@ -84,21 +87,17 @@ export class SelectProComponent implements OnInit, ControlValueAccessor {
       },
       error: (error) => {
         console.error(error);
-        this.notification.error('Error', 'Failed to load projects.');
         this.loading = false;
       },
     });
   }
 
   onChange = (value: any) => {
+    if (this.isDisabled) return; // Prevent changes if disabled
     this.selectedValue = value;
     localStorage.setItem('selectedProjectId', value);
     this.onChangeCallback(value);
-    this.projectService.changeProjectId(value);
-
-    if (value === 'All Projects') {
-      this.router.navigate(['home']); // Navigate to home page
-    }
+    this.pId.emit(value);
   };
 
   onTouched = () => {};
@@ -108,6 +107,7 @@ export class SelectProComponent implements OnInit, ControlValueAccessor {
   registerOnChange(fn: any): void {
     this.onChangeCallback = fn;
   }
+
   registerOnTouched(fn: any): void {
     this.onTouchedCallback = fn;
   }
