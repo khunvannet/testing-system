@@ -1,6 +1,7 @@
-import { Component, Input, OnInit} from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { HomeUiService } from '../home/home-ui.service';
 import { TranslateService } from '@ngx-translate/core';
+import { en_US, km_KH, NzI18nService } from 'ng-zorro-antd/i18n';
 export interface Language {
   name: string;
   code: string;
@@ -19,7 +20,7 @@ export interface Language {
         [nzTrigger]="null"
       >
         <div class="select-project">
-          <app-select-pro ></app-select-pro>
+          <app-select-project [showAllOption]="true"></app-select-project>
         </div>
         <ul
           nz-menu
@@ -34,19 +35,19 @@ export interface Language {
           >
             <a routerLink="/test/dashboard">
               <i nz-icon nzType="dashboard" nzTheme="outline"></i>
-              <span>{{'Dashboard' | translate}}</span>
+              <span>{{ 'Dashboard' | translate }}</span>
             </a>
           </li>
           <li nz-menu-item routerLinkActive="active">
             <a routerLink="/test/test_cases">
               <i nz-icon nzType="folder" nzTheme="outline"></i>
-              <span>{{'Test Cases' | translate}}</span>
+              <span>{{ 'Test Cases' | translate }}</span>
             </a>
           </li>
           <li nz-menu-item routerLinkActive="active">
             <a routerLink="/test/test_run">
               <i nz-icon nzType="code" nzTheme="outline"></i>
-              <span>{{'Test Run' | translate}}</span>
+              <span>{{ 'Test Run' | translate }}</span>
             </a>
           </li>
         </ul>
@@ -61,12 +62,8 @@ export interface Language {
               <span>S9 Server</span>
             </div>
             <div class="header" style="margin-left: 10px;">
-            <div nz-dropdown nzTrigger="click" [nzDropdownMenu]="menu">
-                <img
-                
-                  [src]="selectLang.flag"
-                  [alt]="selectLang.name"
-                />
+              <div nz-dropdown nzTrigger="click" [nzDropdownMenu]="menu">
+                <img [src]="selectLang.flag" [alt]="selectLang.name" />
               </div>
               <nz-dropdown-menu #menu="nzDropdownMenu">
                 <ul nz-menu>
@@ -135,7 +132,7 @@ export class LayoutComponent implements OnInit {
     },
     {
       name: 'Khmer',
-      code: 'kh',
+      code: 'km',
       flag: '../../../assets/images/Khmer-logo.svg',
     },
   ];
@@ -143,14 +140,16 @@ export class LayoutComponent implements OnInit {
   isLoading = false;
   constructor(
     public uiservice: HomeUiService,
-    private translateService: TranslateService
+    private translateService: TranslateService,
+    private i18n: NzI18nService
   ) {}
   ngOnInit(): void {
-    const storeLang = localStorage.getItem('selectLang') || this.defualtLang;
+    const storeLang = localStorage.getItem('selectedLang') || this.defualtLang;
     this.selectLang =
       this.languages.find((lang) => lang.code === storeLang) ||
       this.getDefaultLang();
     this.translateService.use(this.selectLang.code);
+    this.i18n.setLocale(this.selectLang.code === 'km' ? km_KH : en_US);
   }
 
   toggleFullScreen(): void {
@@ -185,6 +184,7 @@ export class LayoutComponent implements OnInit {
   switchLang(lang: Language): void {
     this.selectLang = lang;
     this.translateService.use(lang.code);
-    localStorage.setItem('selectLang', lang.code);
+    this.i18n.setLocale(lang.code === 'km' ? km_KH : en_US);
+    localStorage.setItem('selectedLang', lang.code);
   }
 }

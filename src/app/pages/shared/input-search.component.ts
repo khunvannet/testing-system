@@ -1,44 +1,40 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+  ViewEncapsulation,
+} from '@angular/core';
 
 @Component({
-  selector: 'app-input-search',
+  selector: 'app-filter-input',
   template: `
     <nz-input-group [nzSuffix]="suffixIconSearch">
-        <input
+      <input
         type="text"
         nz-input
-        [(ngModel)]="searchQuery"
-        (ngModelChange)="onSearchQueryChange($event)"
-        (keydown)="handleKeyDown($event)"
-        />
+        [(ngModel)]="value"
+        (keyup.enter)="filterTestChanged()"
+      />
     </nz-input-group>
     <ng-template #suffixIconSearch>
-        <span nz-icon nzType="search"></span>
+      <span nz-icon nzType="search"></span>
     </ng-template>
-   
   `,
   styles: [
     `
-        nz-input-group {
+      nz-input-group {
         width: 250px;
       }
     `,
   ],
+  encapsulation: ViewEncapsulation.Emulated,
 })
-export class InputSearchComponent{
- @Input() searchQuery: string = '';
- @Output() searchQueryChange: EventEmitter<string> =
- new EventEmitter<string>();
-@ Output() search: EventEmitter<string> = new EventEmitter<string>();
-  constructor() {}
-  handleKeyDown(event: KeyboardEvent): void {
-    if (event.key === 'Enter') {
-      this.search.emit(this.searchQuery);
-    }
-  }
-  onSearchQueryChange(value: string): void {
-    this.searchQuery = value;
-    this.searchQueryChange.emit(this.searchQuery);
+export class InputSearchComponent {
+  @Input() value: string = '';
+  @Output() filterChanged: EventEmitter<string> = new EventEmitter<string>();
+
+  filterTestChanged(): void {
+    this.filterChanged.emit(this.value.trim());
   }
 }

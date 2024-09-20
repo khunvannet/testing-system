@@ -16,8 +16,8 @@ import { Subscription } from 'rxjs';
       <nz-header>
         <div class="header-container">
           <div class="left-elements">
-            <app-select-formain></app-select-formain>
-            <app-input-search></app-input-search>
+            <app-select-project></app-select-project>
+            <app-filter-input></app-filter-input>
           </div>
           <button
             class="create-project"

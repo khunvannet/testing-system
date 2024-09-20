@@ -1,22 +1,18 @@
 import { Injectable, EventEmitter } from '@angular/core';
-import { MainTest, MainTestService } from './main-test.service';
 import { MainTestOperationComponent } from './main-test-operation.component';
 import { NzModalService } from 'ng-zorro-antd/modal';
-import { NotificationService } from 'src/app/helper/notification.service';
-import { Subject } from 'rxjs';
 import { DeleteMainComponent } from './delete-main.component';
 
 @Injectable({
   providedIn: 'root',
 })
 export class MainUiService {
-  constructor(
-    private modalService: NzModalService,
-  ) {}
+  constructor(private modalService: NzModalService) {}
   refresher = new EventEmitter<void>();
-  showAdd(): void {
+  showAdd(projectId: number): void {
     this.modalService.create({
       nzContent: MainTestOperationComponent,
+      nzData: { projectId },
       nzMaskClosable: false,
       nzFooter: null,
       nzClosable: false,
@@ -29,10 +25,10 @@ export class MainUiService {
     });
   }
 
-  showEdit(id:number,name:string): void {
+  showEdit(id: number, name: string, projectId: number): void {
     this.modalService.create({
       nzContent: MainTestOperationComponent,
-      nzData:{id,name},
+      nzData: { id, name, projectId },
       nzMaskClosable: false,
       nzFooter: null,
       nzClosable: false,
@@ -44,10 +40,10 @@ export class MainUiService {
       },
     });
   }
-  showDalete(id:number,name:string): void {
+  showDalete(id: number, name: string): void {
     this.modalService.create({
       nzContent: DeleteMainComponent,
-      nzData:{id,name},
+      nzData: { id, name },
       nzMaskClosable: false,
       nzFooter: null,
       nzClosable: false,

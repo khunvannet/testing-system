@@ -5,17 +5,18 @@ import { BaseApiService } from 'src/app/helper/base-api.service';
 export interface MainTest {
   id?: number;
   name?: string;
+  ordering?: number;
   projectId?: number;
-  notes?:string;
-  active?:boolean;
-
+  projectName?: string;
+  note?: string;
+  active?: boolean;
 }
 
 @Injectable({
   providedIn: 'root',
 })
-export class MainTestService extends BaseApiService<MainTest>{
+export class MainTestService extends BaseApiService<MainTest> {
   constructor(protected override http: HttpClient) {
-    super(http,'main');
+    super(http, 'mains');
   }
 }

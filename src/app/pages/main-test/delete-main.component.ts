@@ -1,11 +1,13 @@
 import { Component, EventEmitter, inject, OnInit, Output } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup } from '@angular/forms';
 import { NzModalRef, NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
 import { NzNotificationService } from 'ng-zorro-antd/notification';
 import { CustomValidators } from 'src/app/helper/customValidators';
-import { TestCase, TestCaseService } from './test-case.service';
+import { MainTest, MainTestService } from './main-test.service';
+import { MainUiService } from './main-ui.service';
+
 @Component({
-  selector: 'app-delete-pro',
+  selector: 'app-delete-main',
   template: `
     <div *nzModalTitle class="modal-header-ellipsis">
       <span>{{ 'Delete' | translate }} {{ modal?.name }} </span>
@@ -13,7 +15,7 @@ import { TestCase, TestCaseService } from './test-case.service';
     <div class="modal-content">
       <form nz-form [formGroup]="frm" (ngSubmit)="onSubmit()">
         <nz-form-item>
-          <nz-form-label [nzSpan]="8" nzFor="name">
+          <nz-form-label [nzSpan]="8" nzFor="name" nzRequired>
             {{ 'Name' | translate }}
           </nz-form-label>
           <nz-form-control [nzSpan]="15" nzHasFeedback>
@@ -38,6 +40,7 @@ import { TestCase, TestCaseService } from './test-case.service';
     <div *nzModalFooter>
       <button
         nz-button
+        [disabled]="!frm.valid"
         nzType="primary"
         [nzLoading]="loading"
         (click)="onSubmit()"
@@ -67,14 +70,15 @@ import { TestCase, TestCaseService } from './test-case.service';
     `,
   ],
 })
-export class DeleteTestComponent implements OnInit {
-  @Output() refreshList = new EventEmitter<TestCase>();
+export class DeleteMainComponent implements OnInit {
+  @Output() refreshList = new EventEmitter<MainTest>();
   frm!: FormGroup;
   loading = false;
   constructor(
     private fb: FormBuilder,
     private modalRef: NzModalRef,
-    private service: TestCaseService,
+    private service: MainTestService,
+    public uiService: MainUiService,
     private notification: NzNotificationService
   ) {}
   readonly modal = inject(NZ_MODAL_DATA);
@@ -88,15 +92,15 @@ export class DeleteTestComponent implements OnInit {
     const { required } = CustomValidators;
     this.frm = this.fb.group({
       name: [{ value: null, disabled: true }, [required]],
-      notes: [null],
+      note: [null],
     });
   }
   private setFrmValue(): void {
-    this.service.find(this.modal?.id).subscribe({
+    this.service.find(this.modal.id).subscribe({
       next: (results) => {
         this.frm.setValue({
           name: results.name,
-          notes: results.notes || null,
+          note: results.note,
         });
       },
     });
@@ -112,18 +116,19 @@ export class DeleteTestComponent implements OnInit {
         next: () => {
           this.loading = false;
           this.modalRef.triggerOk();
-          this.notification.success('Success', 'Test deleted successfully');
+          this.notification.success('Success', 'Project deleted successfully');
         },
         error: () => {
           this.notification.error(
             'Error',
-            'Error occurred while deleting the test'
+            'Error occurred while deleting the project'
           );
           this.loading = false;
         },
       });
     }
   }
+
   onCancel(): void {
     this.modalRef.close();
   }

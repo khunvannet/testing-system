@@ -1,35 +1,36 @@
 import { Component, EventEmitter, inject, OnInit, Output } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup } from '@angular/forms';
 import { NzModalRef, NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
 import { NzNotificationService } from 'ng-zorro-antd/notification';
+import { CustomValidators } from 'src/app/helper/customValidators';
 import { HomeUiService } from './home-ui.service';
 import { HomeService, Project } from './home.service';
 
 @Component({
   selector: 'app-delete-pro',
   template: `
-     <div *nzModalTitle class="modal-header-ellipsis">
-      <span>{{'Delete' | translate}} {{modal?.name}} </span>
+    <div *nzModalTitle class="modal-header-ellipsis">
+      <span>{{ 'Delete' | translate }} {{ modal?.name }} </span>
     </div>
     <div class="modal-content">
       <form nz-form [formGroup]="frm" (ngSubmit)="onSubmit()">
         <nz-form-item>
-          <nz-form-label [nzSpan]="8" nzFor="name" >
-           {{'Name'| translate}}
+          <nz-form-label [nzSpan]="8" nzFor="name" nzRequired>
+            {{ 'Name' | translate }}
           </nz-form-label>
-          <nz-form-control [nzSpan]="15" nzHasFeedback >
+          <nz-form-control [nzSpan]="15" nzHasFeedback>
             <input nz-input formControlName="name" id="name" />
           </nz-form-control>
         </nz-form-item>
         <nz-form-item>
           <nz-form-label [nzSpan]="8" nzFor="notes">
-            {{'Notes' | translate}}
+            {{ 'Notes' | translate }}
           </nz-form-label>
           <nz-form-control [nzSpan]="15">
             <textarea
               rows="3"
               nz-input
-              formControlName="notes"
+              formControlName="note"
               id="notes"
             ></textarea>
           </nz-form-control>
@@ -39,18 +40,21 @@ import { HomeService, Project } from './home.service';
     <div *nzModalFooter>
       <button
         nz-button
+        [disabled]="!frm.valid"
         nzType="primary"
         [nzLoading]="loading"
         (click)="onSubmit()"
       >
-      {{'Delete' | translate}}
+        {{ 'Delete' | translate }}
       </button>
-      <button nz-button nzType="default" (click)="onCancel()">{{'Cancel' | translate}}</button>
+      <button nz-button nzType="default" (click)="onCancel()">
+        {{ 'Cancel' | translate }}
+      </button>
     </div>
   `,
   styles: [
     `
-       ::ng-deep .ant-modal-header {
+      ::ng-deep .ant-modal-header {
         padding: 8px 10px;
       }
       .modal-content {
@@ -70,52 +74,62 @@ export class DeleteProjectComponent implements OnInit {
   @Output() refreshList = new EventEmitter<Project>();
   frm!: FormGroup;
   loading = false;
- constructor(private fb: FormBuilder,
-  private modalRef: NzModalRef,
-  private service: HomeService,
-  public uiService: HomeUiService,
-  private notification:NzNotificationService){}
-  readonly modal = inject(NZ_MODAL_DATA) ;
- ngOnInit(): void {
-  this.initControl();
-  if (this.modal.id) {
-    this.setFrmValue();
-  }
- }
- private initControl(): void {
-  this.frm = this.fb.group({
-    name: [{ value: null, disabled: true }, [Validators.required] ],
-    notes: [''],
-  });
-}
- private setFrmValue():void {
-  this.service.find(this.modal.id).subscribe({
-    next:(results)=>{
-      this.frm.setValue({
-        name: results.name,
-        notes: results.notes || null,
-      })
+  constructor(
+    private fb: FormBuilder,
+    private modalRef: NzModalRef,
+    private service: HomeService,
+    public uiService: HomeUiService,
+    private notification: NzNotificationService
+  ) {}
+  readonly modal = inject(NZ_MODAL_DATA);
+  ngOnInit(): void {
+    this.initControl();
+    if (this.modal.id) {
+      this.setFrmValue();
     }
-  })
-}
-onSubmit() {
-  if (this.frm.valid) {
-    this.loading = true;
-    const data = { ...this.frm.value }; 
-    this.service.delete(this.modal.id, data).subscribe({
-      next: () => {
-        this.loading = false;
-        this.modalRef.triggerOk();
-      },
-      error: () => {
-        this.notification.error('Error', 'Delete');
-        this.loading = false;
-      }
+  }
+  private initControl(): void {
+    const { required } = CustomValidators;
+    this.frm = this.fb.group({
+      name: [{ value: null, disabled: true }, [required]],
+      note: [''],
     });
   }
-}
+  private setFrmValue(): void {
+    this.service.find(this.modal.id).subscribe({
+      next: (results) => {
+        this.frm.setValue({
+          name: results.name,
+          note: results.note,
+        });
+      },
+    });
+  }
+  onSubmit() {
+    if (this.frm.valid) {
+      this.loading = true;
+      const data = {
+        id: this.modal.id,
+        note: this.frm.value.note,
+      };
+      this.service.delete(this.modal.id, data).subscribe({
+        next: () => {
+          this.loading = false;
+          this.modalRef.triggerOk();
+          this.notification.success('Success', 'Project deleted successfully');
+        },
+        error: () => {
+          this.notification.error(
+            'Error',
+            'Error occurred while deleting the project'
+          );
+          this.loading = false;
+        },
+      });
+    }
+  }
 
- onCancel(): void {
-  this.modalRef.close();
-}
+  onCancel(): void {
+    this.modalRef.close();
+  }
 }

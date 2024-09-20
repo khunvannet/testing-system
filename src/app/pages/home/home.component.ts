@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
+import { en_US, km_KH, NzI18nService } from 'ng-zorro-antd/i18n';
 import { HomeUiService } from './home-ui.service';
 
 export interface Language {
@@ -28,7 +29,7 @@ export interface Language {
           <li nz-menu-item nzMatchRouter>
             <a routerLink="/home">
               <i nz-icon nzType="home" nzTheme="outline"></i>
-              <span>{{'All Projects' | translate}}</span>
+              <span>{{ 'All Projects' | translate }}</span>
             </a>
           </li>
         </ul>
@@ -44,10 +45,7 @@ export interface Language {
             </div>
             <div class="header" style="margin-left:10px;">
               <div nz-dropdown nzTrigger="click" [nzDropdownMenu]="menu">
-                <img
-                  [src]="selectLang.flag"
-                  [alt]="selectLang.name"
-                />
+                <img [src]="selectLang.flag" [alt]="selectLang.name" />
               </div>
               <nz-dropdown-menu #menu="nzDropdownMenu">
                 <ul nz-menu>
@@ -136,20 +134,22 @@ export class HomeComponent implements OnInit {
     },
     {
       name: 'Khmer',
-      code: 'kh',
+      code: 'km',
       flag: '../../../assets/images/Khmer-logo.svg',
     },
   ];
   constructor(
     public uiservice: HomeUiService,
-    private translateService: TranslateService
+    private translateService: TranslateService,
+    private i18n: NzI18nService
   ) {}
   ngOnInit(): void {
-    const storeLang = localStorage.getItem('selectLang') || this.defualtLang;
+    const storeLang = localStorage.getItem('selectedLang') || this.defualtLang;
     this.selectLang =
       this.languages.find((lang) => lang.code === storeLang) ||
       this.getDefaultLang();
     this.translateService.use(this.selectLang.code);
+    this.i18n.setLocale(this.selectLang.code === 'km' ? km_KH : en_US);
   }
 
   toggleFullScreen(): void {
@@ -184,6 +184,7 @@ export class HomeComponent implements OnInit {
   switchLang(lang: Language): void {
     this.selectLang = lang;
     this.translateService.use(lang.code);
-    localStorage.setItem('selectLang', lang.code);
+    this.i18n.setLocale(lang.code === 'km' ? km_KH : en_US);
+    localStorage.setItem('selectedLang', lang.code);
   }
 }

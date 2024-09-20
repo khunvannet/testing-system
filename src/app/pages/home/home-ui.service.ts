@@ -1,16 +1,12 @@
 import { EventEmitter, Injectable } from '@angular/core';
-import { NzModalRef, NzModalService } from 'ng-zorro-antd/modal';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { NzModalService } from 'ng-zorro-antd/modal';
 import { OperationComponent } from './home-operation.component';
-import { HomeService, Project } from './home.service';
 import { DeleteProjectComponent } from './delete-project.component';
 @Injectable({
   providedIn: 'root',
 })
 export class HomeUiService {
-  constructor(
-    private modalService: NzModalService,
-  ) {}
+  constructor(private modalService: NzModalService) {}
   refresher = new EventEmitter<void>();
 
   showAdd() {
@@ -30,10 +26,10 @@ export class HomeUiService {
     });
   }
 
-  showEdit(id:number,name:string) {
+  showEdit(id: number, name: string) {
     this.modalService.create({
       nzContent: OperationComponent,
-      nzData:{id,name},
+      nzData: { id, name },
       nzFooter: null,
       nzMaskClosable: false,
       nzClosable: false,
@@ -41,17 +37,16 @@ export class HomeUiService {
       nzBodyStyle: { height: '300', padding: '0 ' },
       nzComponentParams: {
         mode: 'edit',
-       
       },
       nzOnOk: () => {
         this.refresher.emit();
       },
     });
   }
-  showDelete(id:number,name:string) {
+  showDelete(id: number, name: string) {
     this.modalService.create({
       nzContent: DeleteProjectComponent,
-      nzData:{id,name},
+      nzData: { id, name },
       nzFooter: null,
       nzMaskClosable: false,
       nzClosable: false,

@@ -16,13 +16,12 @@
   "Test Run":"Test Run",
   "Code":"Code",
   "Create Test Case":"Create Test Case",
-  "Name already exists!":"Name already exists!",
-  "Input is required!":"Input is required!",
   "Project":"Project",
   "Main Test":"Main Test",
   "Active Runs":"Active Runs",
   "Close Runs":"Close Runs",
   "Close":"Close",
   "Create Test Run":"Create Test Run",
-  "No of test":"No of test"
+  "No of test":"No of test",
+  "Save":"Save"
 }

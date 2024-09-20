@@ -2,9 +2,9 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 export interface QueryParam {
-  pageIndex: number;
-  pageSize: number;
-  searchQuery: string;
+  pageIndex?: number;
+  pageSize?: number;
+  filters?: any;
 }
 export class BaseApiService<T> {
   constructor(protected http: HttpClient, private endpoint: string) {}
@@ -14,11 +14,11 @@ export class BaseApiService<T> {
     return `${this.apiUrl}/${this.endpoint}`;
   }
 
-  getAll(params: QueryParam): Observable<any> {
+  search(params: QueryParam): Observable<any> {
     const httpParams = new HttpParams()
-      .set('pageIndex', params.pageIndex.toString())
-      .set('pageSize', params.pageSize.toString())
-      .set('searchQuery', params.searchQuery);
+      .set('pageIndex', params.pageIndex!.toString())
+      .set('pageSize', params.pageSize!.toString())
+      .set('filters', `${params.filters === undefined ? '' : params.filters}`);
 
     return this.http.get<any>(this.getEndpoint(), { params: httpParams });
   }
@@ -36,49 +36,32 @@ export class BaseApiService<T> {
   }
 
   delete(id: number, data: any): Observable<T> {
-    return this.http.patch<T>(`${this.getEndpoint()}/${id}`, data);
+    return this.http.post<T>(`${this.getEndpoint()}/${id}`, data);
   }
-  nameIsExist(name: string, id?: number): Observable<{ exists: boolean }> {
-    const params: any = { name };
-    if (id) {
-      params.id = id;
-    }
-    return this.http.get<{ exists: boolean }>(`${this.getEndpoint()}/isExist`, {
-      params,
-    });
-  }
-  mainIsExist(
-    name?: string,
-    id?: number,
-    projectId?: number
-  ): Observable<{ exists: boolean }> {
-    const params: any = { name, projectId };
-    if (id) {
-      params.id = id;
-    }
-    if (projectId) {
-      params.projectId = projectId;
-    }
 
-    return this.http.get<{ exists: boolean }>(`${this.getEndpoint()}/isExist`, {
-      params,
+  exist(
+    name: string = '',
+    id: number = 0,
+    params: { key: string; val: any }[] = []
+  ): Observable<{ exists: boolean }> {
+    if (!params) {
+      params = [];
+    }
+    let httpParams = new HttpParams();
+    params.forEach((pair) => {
+      httpParams = httpParams.append(pair.key, pair.val);
+    });
+    if (name) {
+      httpParams = httpParams.append('name', name);
+    }
+    httpParams = httpParams.append('id', id.toString());
+
+    return this.http.get<{ exists: boolean }>(`${this.getEndpoint()}/exists`, {
+      params: httpParams,
     });
   }
-  isExist(
-    name?: string,
-    id?: number,
-    mainId?: number
-  ): Observable<{ exists: boolean }> {
-    const params: any = { name, mainId };
-    if (id) {
-      params.id = id;
-    }
-    if (mainId) {
-      params.mainId = mainId;
-    }
 
-    return this.http.get<{ exists: boolean }>(`${this.getEndpoint()}/isExist`, {
-      params,
-    });
+  updateOrdering(result: any = []): Observable<T> {
+    return this.http.post<T>(`${this.getEndpoint()}/update-ordering`, result);
   }
 }

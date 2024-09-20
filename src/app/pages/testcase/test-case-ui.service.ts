@@ -2,9 +2,6 @@ import { EventEmitter, Injectable } from '@angular/core';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { TestOperationComponent } from './test-operation.component';
 import { DetailModalComponent } from './detail-modal.component';
-import { TestCase, TestCaseService } from './test-case.service';
-import { Subject } from 'rxjs';
-import { NotificationService } from 'src/app/helper/notification.service';
 import { DeleteTestComponent } from './delete-testcase.component';
 
 @Injectable({

@@ -2,12 +2,12 @@ import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 import { HomeComponent } from './pages/home/home.component';
 import { LayoutComponent } from './pages/layout/layout.component';
-import { TestcaseComponent } from './pages/testcase/testcase.component';
 import { TestRunComponent } from './pages/test-run/test-run.component';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { ActiveRunComponent } from './pages/test-run/active-run/active-run.component';
 import { CloseRunComponent } from './pages/test-run/close-run/close-run.component';
 import { SettingComponent } from './pages/setting/setting.component';
+import { MainTestListComponent } from './pages/main-test/main-list.component';
 
 const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'home' },
@@ -19,7 +19,7 @@ const routes: Routes = [
       { path: 'dashboard', component: DashboardComponent },
       {
         path: 'test_cases',
-        component: TestcaseComponent,
+        component: MainTestListComponent,
         data: {
           nzComponentParams: {
             mode: 'testcase',

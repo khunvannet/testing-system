@@ -3,21 +3,14 @@ import {
   EventEmitter,
   inject,
   Input,
-  OnDestroy,
   OnInit,
   Output,
 } from '@angular/core';
-import {
-  AbstractControl,
-  FormBuilder,
-  FormGroup,
-  ValidationErrors,
-  Validators,
-} from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NzModalRef, NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
 import { TestCaseService } from './test-case.service';
 import { NzNotificationService } from 'ng-zorro-antd/notification';
-import { Observable, of, map, catchError } from 'rxjs';
+import { CustomValidators } from 'src/app/helper/customValidators';
 
 @Component({
   selector: 'app-test-operation',
@@ -29,34 +22,26 @@ import { Observable, of, map, catchError } from 'rxjs';
       >
     </div>
     <div class="modal-content">
-      <form nz-form [formGroup]="frm" (ngSubmit)="onSubmit()">
+      <form
+        nz-form
+        [formGroup]="frm"
+        (ngSubmit)="onSubmit()"
+        [nzAutoTips]="autoTips"
+      >
         <nz-form-item>
-          <nz-form-label [nzSpan]="6" nzFor="code">{{
+          <nz-form-label [nzSpan]="6" nzFor="code" nzRequired>{{
             'Code' | translate
           }}</nz-form-label>
-          <nz-form-control [nzSpan]="16">
-            <input
-              nz-input
-              formControlName="code"
-              id="code"
-              placeholder="New Code"
-            />
+          <nz-form-control [nzSpan]="16" nzHasFeedback>
+            <input nz-input formControlName="code" />
           </nz-form-control>
         </nz-form-item>
         <nz-form-item>
           <nz-form-label [nzSpan]="6" nzFor="name" nzRequired>{{
             'Name' | translate
           }}</nz-form-label>
-          <nz-form-control [nzSpan]="16" nzHasFeedback [nzErrorTip]="errorTpl">
+          <nz-form-control [nzSpan]="16" nzHasFeedback>
             <input nz-input formControlName="name" id="name" />
-            <ng-template #errorTpl let-control>
-              <ng-container *ngIf="control.hasError('required')">
-                {{ 'Input is required!' | translate }}
-              </ng-container>
-              <ng-container *ngIf="control.hasError('nameExists')">
-                {{ 'Name already exists!' | translate }}
-              </ng-container>
-            </ng-template>
           </nz-form-control>
         </nz-form-item>
         <nz-form-item>
@@ -64,7 +49,10 @@ import { Observable, of, map, catchError } from 'rxjs';
             'Main Test' | translate
           }}</nz-form-label>
           <nz-form-control [nzSpan]="16">
-            <select-main formControlName="mainId"></select-main>
+            <select-main
+              formControlName="mainId"
+              [isDisabled]="true"
+            ></select-main>
           </nz-form-control>
         </nz-form-item>
         <nz-form-item>
@@ -85,7 +73,7 @@ import { Observable, of, map, catchError } from 'rxjs';
     <div *nzModalFooter>
       <button
         *ngIf="mode === 'add'"
-        [disabled]="!frm.valid || nameExists"
+        [disabled]="!frm.valid"
         nz-button
         nzType="primary"
         [nzLoading]="loading"
@@ -95,7 +83,7 @@ import { Observable, of, map, catchError } from 'rxjs';
       </button>
       <button
         *ngIf="mode === 'edit'"
-        [disabled]="!frm.valid || nameExists"
+        [disabled]="!frm.valid"
         nz-button
         nzType="primary"
         [nzLoading]="loading"
@@ -127,7 +115,7 @@ export class TestOperationComponent implements OnInit {
   @Output() refreshList = new EventEmitter<void>();
   frm!: FormGroup;
   loading = false;
-  nameExists = false;
+  autoTips = CustomValidators.autoTips;
   constructor(
     private fb: FormBuilder,
     private modalRef: NzModalRef,
@@ -142,11 +130,21 @@ export class TestOperationComponent implements OnInit {
     }
   }
   private initControl(): void {
+    const { required, nameExistValidator, codeExistValidator } =
+      CustomValidators;
     this.frm = this.fb.group({
-      code: [{ value: '', disabled: true }],
-      name: ['', [Validators.required], [this.nameExistsValidator.bind(this)]],
-      description: [''],
-      mainId: [this.modal.mainId, Validators.required],
+      code: [
+        null,
+        [required],
+        [codeExistValidator(this.service, this.modal?.id, this.modal?.mainId)],
+      ],
+      name: [
+        null,
+        [required],
+        [nameExistValidator(this.service, this.modal?.id, this.modal?.mainId)],
+      ],
+      description: [null],
+      mainId: [{ value: this.modal?.mainId, disabled: true }, [required]],
     });
   }
   private setFrmValue(): void {
@@ -155,54 +153,47 @@ export class TestOperationComponent implements OnInit {
         this.frm.setValue({
           code: results.code,
           name: results.name,
-          description: results.description || null,
+          description: results.description,
           mainId: results.mainId,
         });
       },
     });
   }
-  nameExistsValidator(
-    control: AbstractControl
-  ): Observable<ValidationErrors | null> {
-    const name = control.value;
-    if (!name) {
-      return of(null);
-    }
-
-    const id = this.mode === 'edit' ? this.modal?.id : null;
-    const mainId = this.modal?.mainId;
-    return this.service.isExist(name, id, mainId).pipe(
-      map((response) => (response.exists ? { nameExists: true } : null)),
-      catchError(() => of(null))
-    );
-  }
 
   onSubmit() {
-    this.loading = true;
-    const data = { ...this.frm.value };
-    if (this.mode === 'add') {
-      this.service.add(data).subscribe({
-        next: () => {
-          this.loading = false;
-          this.modalRef.triggerOk();
-        },
-        error: (err: any) => {
-          this.notification.error('Data', 'Add faild');
-        },
-      });
-    } else if (this.mode === 'edit' && this.modal?.id) {
-      this.service.edit(this.modal.id, data).subscribe({
-        next: () => {
-          this.loading = false;
-          this.modalRef.triggerOk();
-        },
-        error: () => {
-          this.notification.error('Data', 'edit faild');
-        },
-      });
+    if (this.frm.valid) {
+      this.loading = true;
+      const data = { ...this.frm.getRawValue() };
+      if (this.mode === 'add') {
+        this.service.add(data).subscribe({
+          next: () => {
+            this.loading = false;
+            this.modalRef.triggerOk();
+            this.notification.success('Data', 'Add successful');
+          },
+          error: (err: any) => {
+            this.loading = false;
+            console.error('Add failed', err);
+            this.notification.error('Data', 'Add faild');
+          },
+        });
+      } else if (this.mode === 'edit' && this.modal?.id) {
+        const editData = { ...data, id: this.modal.id };
+        this.service.edit(this.modal?.id, editData).subscribe({
+          next: () => {
+            this.loading = false;
+            this.modalRef.triggerOk();
+            this.notification.success('Data', 'Edit successful');
+          },
+          error: (err) => {
+            this.loading = false;
+            console.error('Edit failed', err);
+            this.notification.error('Data', 'edit faild');
+          },
+        });
+      }
     }
   }
-
   onCancel(): void {
     this.modalRef.close();
   }

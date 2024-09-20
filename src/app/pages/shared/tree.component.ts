@@ -14,16 +14,13 @@ import {
   NzTreeNodeOptions,
   NzTreeNode,
 } from 'ng-zorro-antd/tree';
-import {
-  MainTest,
-  MainTestService,
-} from '../testcase/main-test/main-test.service';
+import { MainTest, MainTestService } from '../main-test/main-test.service';
 import { TestCase, TestCaseService } from '../testcase/test-case.service';
 import {
   NzContextMenuService,
   NzDropdownMenuComponent,
 } from 'ng-zorro-antd/dropdown';
-import { MainUiService } from '../testcase/main-test/main-ui.service';
+import { MainUiService } from '../main-test/main-ui.service';
 import { TestCaseUiService } from '../testcase/test-case-ui.service';
 import { Subscription } from 'rxjs';
 import { FormArray } from '@angular/forms';
@@ -51,7 +48,7 @@ import { FormArray } from '@angular/forms';
     </ng-container>
 
     <ng-template #treeadd>
-      <a (click)="uiService.showAdd()">Add New</a>
+      <a>Add New</a>
     </ng-template>
   `,
   styles: [
@@ -96,17 +93,11 @@ export class TreeSelection implements OnChanges, OnDestroy {
     this.getTestCases();
   }
 
-  getMainTests(): void {
-   
-  }
+  getMainTests(): void {}
 
-  getTestCases(): void {
-   
-  }
+  getTestCases(): void {}
 
-  updateNodes(): void {
-    
-  }
+  updateNodes(): void {}
 
   nzContextMenu(event: NzFormatEmitEvent, menu: NzDropdownMenuComponent): void {
     this.nzContextMenuService.create(event.event!, menu);
@@ -163,11 +154,9 @@ export class TreeSelection implements OnChanges, OnDestroy {
       if (nodeKey.startsWith('main-')) {
         const mainId = parseInt(nodeKey.split('-')[1], 10);
         const mainItem = this.main.find((item) => item.id === mainId);
-       
       } else if (nodeKey.startsWith('test-')) {
         const testId = parseInt(nodeKey.split('-')[1], 10);
         const testItem = this.test.find((item) => item.id === testId);
-       
       }
     }
   }
@@ -176,11 +165,9 @@ export class TreeSelection implements OnChanges, OnDestroy {
     if (this.currentNode) {
       const nodeKey = this.currentNode.key;
       if (nodeKey.startsWith('main-')) {
-        this.uiService.showAdd();
       } else if (nodeKey.startsWith('test-')) {
         const testId = parseInt(nodeKey.split('-')[1], 10);
         const testItem = this.test.find((item) => item.id === testId);
-       
       }
     }
   }
@@ -190,10 +177,8 @@ export class TreeSelection implements OnChanges, OnDestroy {
       const nodeKey = this.currentNode.key;
       if (nodeKey.startsWith('main-')) {
         const mainId = parseInt(nodeKey.split('-')[1], 10);
-       
       } else if (nodeKey.startsWith('test-')) {
         const testId = parseInt(nodeKey.split('-')[1], 10);
-        
       }
     }
   }

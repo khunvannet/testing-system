@@ -1,3 +1,4 @@
+
 .scrollbar::-webkit-scrollbar {
   width: 5px;
 }
@@ -212,4 +213,11 @@ input[type="number"]::-webkit-outer-spin-button {
 ::ng-deep [nz-height="100%"] .ant-tabs-content {
   height: 100%;
   margin-top: -16px;
+}
+.filter-box {
+  width: 220px;
+  margin-right: 4px;
+}
+.standard-height {
+  height: calc(100vh - 290px) !important;
 }
