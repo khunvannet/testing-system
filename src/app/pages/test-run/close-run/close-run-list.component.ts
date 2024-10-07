@@ -1,13 +1,11 @@
-import {
-  Component,
-  Input,
-  OnDestroy,
-  OnInit,
-  TemplateRef,
-} from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { NzModalService } from 'ng-zorro-antd/modal';
 import { Subscription } from 'rxjs';
+import { BaseListComponent } from 'src/app/utils/components/base-list.component';
 import { TestRunUiService } from '../test-run-ui.service';
+import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { TestRun, TestRunService } from '../test-run.service';
+import { NzNotificationService } from 'ng-zorro-antd/notification';
 
 @Component({
   selector: 'app-close-run',
@@ -16,50 +14,78 @@ import { TestRun, TestRunService } from '../test-run.service';
       <nz-header>
         <div class="header-container">
           <div class="left-elements">
-            <app-select-project></app-select-project>
-            <app-filter-input></app-filter-input>
+            <app-filter-input
+              (filterChanged)="
+                searchText = $event; param.pageIndex = 1; search()
+              "
+            ></app-filter-input>
+            <app-select-project
+              (valueChanged)="onProjectChange($event)"
+            ></app-select-project>
+            <button
+              *ngIf="draged"
+              nz-button
+              nzType="primary"
+              style="margin-left:10px;"
+              (click)="saveOrdering()"
+            >
+              {{ 'Save' | translate }}
+            </button>
           </div>
         </div>
       </nz-header>
     </nz-header>
+
     <div class="table-case">
       <nz-table
-        [nzNoResult]="noResult"
-        [nzData]="testRun"
-        nzSize="small"
-        (nzPageIndexChange)="onPageIndexChange($event)"
-        (nzPageSizeChange)="onPageSizeChange($event)"
+        [nzData]="lists"
         nzTableLayout="fixed"
-        [nzPageSize]="pageSize"
-        [nzPageIndex]="pageIndex"
-        [nzTotal]="totalCount"
         nzShowSizeChanger
+        nzShowPagination
         [nzFrontPagination]="false"
+        [nzPageIndex]="param.pageIndex!"
+        [nzPageSize]="param.pageSize!"
+        nzSize="small"
+        [nzTotal]="totalList"
+        [nzLoading]="loading"
         [nzNoResult]="noResult"
+        (nzQueryParams)="onQueryParamsChange($event)"
       >
         <ng-template #noResult>
           <app-no-result-found></app-no-result-found>
         </ng-template>
         <thead>
           <tr>
+            <th nzWidth="5%"></th>
             <th nzWidth="5%">#</th>
             <th nzWidth="10%">{{ 'Code' | translate }}</th>
             <th nzWidth="25%">{{ 'Name' | translate }}</th>
             <th nzWidth="10%">{{ 'No of test' | translate }}</th>
-            <th nzWidth="30%">{{ 'Description' | translate }}</th>
+            <th nzWidth="25%">{{ 'Description' | translate }}</th>
             <th nzWidth="20%"></th>
           </tr>
         </thead>
-        <tbody>
-          <tr *ngFor="let data of testRun; let i = index">
-            <td nzEllipsis>{{ (pageIndex - 1) * pageSize + i + 1 }}</td>
-            <td nzEllipsis>
-              {{ data.code }}
+        <tbody
+          cdkDropList
+          (cdkDropListDropped)="drop($event)"
+          [cdkDropListData]="lists"
+        >
+          <tr *ngFor="let data of lists; let i = index" cdkDrag>
+            <td style="width: 35px; cursor: move;" cdkDragHandle>
+              <span nz-icon nzType="holder" nzTheme="outline"></span>
             </td>
-            <td nzEllipsis>{{ data.name }}</td>
-            <td nzEllipsis>{{ data.testCases?.length || 0 }}</td>
-            <td nzEllipsis>{{ data.description }}</td>
-            <td class="action-buttons">
+            <td nzEllipsis>
+              {{
+                ((param.pageIndex || 1) - 1) * (param.pageSize || 10) + i + 1
+              }}
+            </td>
+            <td nzEllipsis style="flex: 0.8;">
+              <a routerLink="/test/test_run/run">{{ data.code }} </a>
+            </td>
+            <td nzEllipsis style="flex: 2;">{{ data.name }}</td>
+            <td nzEllipsis style="flex: 1;">{{ data.testName?.length }}</td>
+            <td nzEllipsis style="flex: 1.5;">{{ data.description }}</td>
+            <td class="action-buttons" style="flex: 2;">
               <nz-space [nzSplit]="spaceSplit">
                 <ng-template #spaceSplit>
                   <nz-divider nzType="vertical"></nz-divider>
@@ -68,7 +94,7 @@ import { TestRun, TestRunService } from '../test-run.service';
                   *nzSpaceItem
                   nz-typography
                   style="color: green;"
-                  (click)="showActive(data.id)"
+                  (click)="this.uiService.showRunAgain(data.id!)"
                 >
                   <span nz-icon nzType="arrow-left" nzTheme="outline"></span>
                   Run Again
@@ -76,8 +102,8 @@ import { TestRun, TestRunService } from '../test-run.service';
                 <a
                   *nzSpaceItem
                   nz-typography
-                  class="delete-link"
-                  (click)="deleteRun(data.id)"
+                  class="delete-link "
+                  (click)="this.uiService.showDelete(data.id!)"
                 >
                   <i
                     nz-icon
@@ -96,18 +122,18 @@ import { TestRun, TestRunService } from '../test-run.service';
   `,
   styles: [
     `
-      ::ng-deep .ant-dropdown-menu {
-        width: 150px;
-      }
       .action-buttons {
         display: flex;
-        justify-content: end;
+        justify-content: flex-end;
       }
       .table-case {
         margin-top: 10px;
       }
+      ::ng-deep .ant-table-wrapper {
+        background-color: #fff;
+      }
       .delete-link {
-        color: red;
+        color: #f31313;
       }
       nz-header {
         background: #f8f9fa;
@@ -116,97 +142,99 @@ import { TestRun, TestRunService } from '../test-run.service';
       }
       .header-container {
         display: flex;
-        align-items: center; /* Vertically center items */
-        justify-content: space-between; /* Ensure button is on the far right */
+        align-items: center;
+        justify-content: space-between;
       }
 
       .left-elements {
         display: flex;
-        gap: 10px; /* Add 10px space between the select and input */
+        gap: 10px;
+        align-items: center;
+      }
+      ::ng-deep .cdk-drag-preview {
+        display: flex;
+        background: rgba(0, 0, 0, 0.1);
+        gap: 1em;
+
+        align-items: center;
+        padding: 0 4px;
+      }
+
+      ::ng-deep .cdk-drag-placeholder {
+        opacity: 0;
       }
     `,
   ],
 })
-export class CloseRunListComponent implements OnInit, OnDestroy {
-  @Input() selectedProjectId: number | null = null;
-  noResult: string | TemplateRef<any> | undefined;
-  private subscriptions = new Subscription();
-  testRun: TestRun[] = [];
-  pageIndex = 1;
-  pageSize = 10;
-  totalCount = 0;
-  loading = false;
-  @Input() searchTerm: string = '';
+export class CloseRunListComponent
+  extends BaseListComponent<TestRun>
+  implements OnInit, OnDestroy
+{
+  projectId = 0;
+  draged: boolean = false;
   private refreshSub$!: Subscription;
 
   constructor(
+    service: TestRunService,
     public uiService: TestRunUiService,
-    private service: TestRunService
-  ) {}
-
-  ngOnInit(): void {
-    this.getAllTestClose();
-    this.refreshSub$ = this.uiService.refresher.subscribe(() => {
-      this.getAllTestClose();
-    });
-    this.subscriptions.add(this.refreshSub$);
+    private notification: NzNotificationService
+  ) {
+    super(service);
   }
 
-  ngOnChanges(): void {
-    this.getAllTestClose();
+  override ngOnInit(): void {
+    const storedProjectId = localStorage.getItem('selectedProjectId');
+    if (storedProjectId) {
+      this.projectId = +storedProjectId;
+      this.search();
+    }
+    this.refreshSub$ = this.uiService.refresher.subscribe(() => this.search());
   }
-
-  getAllTestClose(): void {
+  override search(): void {
+    if (this.loading) return;
     this.loading = true;
-    this.service
-      .getCloseRun(
-        this.pageIndex,
-        this.pageSize,
-        this.searchTerm,
-        this.selectedProjectId
-      )
-      .subscribe({
-        next: (data: {
-          results: any[];
-          param: { pageIndex: number; pageSize: number; totalCount: number };
-        }) => {
-          if (data && data.results) {
-            if (this.selectedProjectId) {
-              this.testRun = data.results.filter(
-                (item: TestRun) => item.projectId === this.selectedProjectId
-              );
-            } else {
-              this.testRun = data.results;
-            }
-            this.pageIndex = data.param.pageIndex;
-            this.pageSize = data.param.pageSize;
-            this.totalCount = data.param?.totalCount || 0;
-            this.loading = false;
-          }
-        },
-        error: (err: any) => {
-          console.error('Failed to fetch test runs', err);
+    setTimeout(() => {
+      const filters = [
+        { field: 'search', operator: 'contains', value: this.searchText },
+        { field: 'projectId', operator: 'eq', value: this.projectId },
+        { field: 'Active', operator: 'eq', value: false },
+      ];
+      this.param.filters = JSON.stringify(filters);
+      this.service.search(this.param).subscribe({
+        next: (response: any) => {
+          this.lists = response.results;
+          this.totalList = response.param.rowCount;
           this.loading = false;
         },
+        error: () => (this.loading = false),
       });
+    }, 150);
   }
-  deleteRun(id: number): void {
-    this.uiService.showDelete(id, () => this.getAllTestClose());
+  onProjectChange(projectId: number): void {
+    this.projectId = projectId;
+    localStorage.setItem('selectedProjectId', projectId.toString());
+    this.search();
   }
-  showActive(id: number): void {
-    this.uiService.showActive(id, () => this.getAllTestClose());
-  }
-  onPageIndexChange(pageIndex: number): void {
-    this.pageIndex = pageIndex;
-    this.getAllTestClose();
-  }
+  saveOrdering() {
+    this.loading = true;
+    let newLists: TestRun[] = [];
 
-  onPageSizeChange(pageSize: number): void {
-    this.pageSize = pageSize;
-    this.getAllTestClose();
+    this.lists.forEach((item, i) => {
+      item.ordering = i + 1;
+      newLists.push(item);
+    });
+    this.service.updateOrdering(newLists).subscribe(() => {
+      this.loading = false;
+      this.draged = false;
+      this.notification.success('update-ordering', 'Successfully Saved');
+    });
+  }
+  drop(event: CdkDragDrop<TestRun[], any, any>): void {
+    moveItemInArray(this.lists, event.previousIndex, event.currentIndex);
+    if (event.previousIndex !== event.currentIndex) this.draged = true;
   }
 
   ngOnDestroy(): void {
-    this.subscriptions.unsubscribe();
+    this.refreshSub$?.unsubscribe();
   }
 }

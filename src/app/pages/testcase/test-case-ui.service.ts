@@ -28,10 +28,10 @@ export class TestCaseUiService {
     });
   }
 
-  showEdit(id: number, name: string, mainId: number): void {
+  showEdit(id: number, mainId: number): void {
     this.modalService.create({
       nzContent: TestOperationComponent,
-      nzData: { id, name, mainId },
+      nzData: { id, mainId },
       nzMaskClosable: false,
       nzFooter: null,
       nzClosable: true,
@@ -46,10 +46,10 @@ export class TestCaseUiService {
     });
   }
 
-  showDelete(id: number, name: string) {
+  showDelete(id: number) {
     this.modalService.create({
       nzContent: DeleteTestComponent,
-      nzData: { id, name },
+      nzData: { id },
       nzFooter: null,
       nzMaskClosable: false,
       nzClosable: false,

@@ -2,15 +2,12 @@
 .content {
   margin: 11px;
   display: flex;
-  min-height: 92vh;
+  min-height: 87vh;
   background: #fff;
-  width: 98%;
-  
+  min-width: 1000px;
+
 }
-
-
 .tab-run {
-  width: 100%;
+  min-width: 100%;
   padding: 0px 20px;
 }
-

@@ -10,9 +10,23 @@ import { MainUiService } from './main-ui.service';
   selector: 'app-delete-main',
   template: `
     <div *nzModalTitle class="modal-header-ellipsis">
-      <span>{{ 'Delete' | translate }} {{ modal?.name }} </span>
+      <span>{{ 'Delete' | translate }} {{ model.name }} </span>
     </div>
     <div class="modal-content">
+      <nz-spin
+        *ngIf="loading"
+        style="position: absolute; top: 50%; left: 50%"
+      ></nz-spin>
+      <div
+        *ngIf="msg && !loading"
+        nz-row
+        nzJustify="center"
+        style="margin:2px 0 ; margin-bottom: 35px;"
+      >
+        <span nz-typography nzType="danger" style="position: absolute">{{
+          msg | translate
+        }}</span>
+      </div>
       <form nz-form [formGroup]="frm" (ngSubmit)="onSubmit()">
         <nz-form-item>
           <nz-form-label [nzSpan]="8" nzFor="name" nzRequired>
@@ -39,11 +53,13 @@ import { MainUiService } from './main-ui.service';
     </div>
     <div *nzModalFooter>
       <button
+        *ngIf="!isInused"
         nz-button
-        [disabled]="!frm.valid"
         nzType="primary"
+        [disabled]="!frm.valid"
         [nzLoading]="loading"
         (click)="onSubmit()"
+        style="background-color: red; color: white"
       >
         {{ 'Delete' | translate }}
       </button>
@@ -63,9 +79,7 @@ import { MainUiService } from './main-ui.service';
       .modal-header-ellipsis {
         display: block;
         text-align: center;
-      }
-      .error-message {
-        color: red;
+        font-size: 14px;
       }
     `,
   ],
@@ -74,6 +88,9 @@ export class DeleteMainComponent implements OnInit {
   @Output() refreshList = new EventEmitter<MainTest>();
   frm!: FormGroup;
   loading = false;
+  model: MainTest = {};
+  isInused = false;
+  msg = '';
   constructor(
     private fb: FormBuilder,
     private modalRef: NzModalRef,
@@ -86,7 +103,19 @@ export class DeleteMainComponent implements OnInit {
     this.initControl();
     if (this.modal.id) {
       this.setFrmValue();
+      this.checkMainInUse();
     }
+  }
+  private checkMainInUse(): void {
+    this.service.inused(this.modal.id).subscribe({
+      next: (response) => {
+        this.isInused = !response.can;
+        this.msg = response.message;
+      },
+      error: () => {
+        this.notification.error('Error', 'Error checking if main is in use');
+      },
+    });
   }
   private initControl(): void {
     const { required } = CustomValidators;
@@ -98,6 +127,7 @@ export class DeleteMainComponent implements OnInit {
   private setFrmValue(): void {
     this.service.find(this.modal.id).subscribe({
       next: (results) => {
+        this.model = results;
         this.frm.setValue({
           name: results.name,
           note: results.note,
@@ -116,7 +146,6 @@ export class DeleteMainComponent implements OnInit {
         next: () => {
           this.loading = false;
           this.modalRef.triggerOk();
-          this.notification.success('Success', 'Project deleted successfully');
         },
         error: () => {
           this.notification.error(

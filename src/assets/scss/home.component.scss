@@ -5,16 +5,6 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-.header-app {
-  display: flex;
-  margin-right: 20px;
-  justify-content: flex-end;
-}
-.header img,
-.flag {
-  width: 20px;
-  height: 20px;
-}
 .app-layout {
   height: 100vh;
 }
@@ -46,13 +36,13 @@
   line-height: 64px;
   background: #fff;
   transition: all 0.3s;
-}
 
-.sidebar-logo img {
-  display: inline-block;
-  height: 32px;
-  width: 32px;
-  vertical-align: middle;
+  img {
+    display: inline-block;
+    height: 32px;
+    width: 32px;
+    vertical-align: middle;
+  }
 }
 
 nz-header {
@@ -71,6 +61,7 @@ nz-content {
   background: #fff;
   height: 100%;
   border-radius: 4px;
+  min-width: 1000px;
 }
 
 .title-menu {
@@ -81,4 +72,63 @@ nz-content {
   margin-top: 15px;
   background: #ebeaea;
   border-radius: 5px;
+}
+
+// New styles for the header
+.header-app {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 16px;
+}
+
+.server-info {
+  background-color: #f0f0f0;
+  font-size: 17px;
+  border-radius: 5px;
+  padding: 5px 15px;
+  height: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10px;
+}
+
+.language-selector {
+  margin-right: 10px;
+
+  img, .flag {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.header-icon {
+  margin-right: 10px;
+  color: #1890ff;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+}
+
+.user-avatar {
+  font-size: 18px;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  background: #1890ff;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10px;
+}
+
+.username {
+  color: #1890ff;
+  font-size: 20px;
 }

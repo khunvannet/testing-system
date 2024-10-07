@@ -8,75 +8,81 @@ import {
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { QueryParam } from 'src/app/helper/base-api.service';
+import { BaseListComponent } from 'src/app/utils/components/base-list.component';
 import { MainTest, MainTestService } from './main-test.service';
 
 @Component({
-  selector: 'select-main',
+  selector: 'app-main-multiple-select',
   template: `
     <nz-select
-      nzShowSearch
-      [nzServerSearch]="true"
+      [nzMaxTagCount]="3"
+      [nzMaxTagPlaceholder]="tagPlaceHolder"
+      nzMode="multiple"
+      nzPlaceHolder="Please select"
       [(ngModel)]="selectedValue"
       (ngModelChange)="onModalChange()"
-      (nzOnSearch)="onSearch($event)"
-      [nzDisabled]="isDisabled"
+      style="width: 100%"
     >
       <nz-option
-        *ngIf="showAllOption"
-        [nzValue]="0"
+        [nzValue]="'all'"
         [nzLabel]="'All Mains' | translate"
       ></nz-option>
       <nz-option
-        *ngFor="let data of main"
+        *ngFor="let item of lists"
         nzCustomContent
-        [nzValue]="data.id"
-        [nzLabel]="data.name!"
+        [nzValue]="item.id"
+        [nzLabel]="item.name ?? ''"
       >
-        <span>{{ data.name }}</span>
+        {{ item.name }}
       </nz-option>
     </nz-select>
+    <ng-template #tagPlaceHolder let-selectedList>
+      and {{ selectedList.length }} more selected
+    </ng-template>
   `,
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => SelectMainComponent),
+      useExisting: forwardRef(() => MainMultipleSelectComponent),
       multi: true,
     },
   ],
 })
-export class SelectMainComponent implements OnInit, ControlValueAccessor {
-  @Input() showAllOption: boolean = false;
+export class MainMultipleSelectComponent
+  extends BaseListComponent<MainTest>
+  implements OnInit, ControlValueAccessor
+{
+  @Input() projectId = 0;
   @Output() valueChanged = new EventEmitter<any>();
-  selectedValue: number = 0;
-  main: MainTest[] = [];
-  loading: boolean = false;
-  searchText = '';
-  param: QueryParam = {
+  selectedValue: any[] = [];
+  override param: QueryParam = {
     pageIndex: 1,
     pageSize: 999999,
     filters: '',
   };
-  @Input() isDisabled: boolean = false;
   onChange(_value: any) {}
   onTouched() {}
 
-  constructor(private service: MainTestService) {}
-  ngOnInit(): void {
-    if (this.showAllOption) this.selectedValue = 0;
+  constructor(service: MainTestService) {
+    super(service);
   }
 
-  search() {
+  override ngOnInit() {
+    this.search();
+  }
+
+  override search() {
     this.loading = true;
     this.param.filters = JSON.stringify([
-      { field: 'name', operator: 'contains', value: this.searchText },
+      { field: 'projectId', operator: 'eq', value: this.projectId },
     ]);
     if (this.searchText && this.param.pageIndex === 1) {
-      this.main = [];
+      this.lists = [];
     }
     this.service.search(this.param).subscribe({
       next: (response: any) => {
         this.loading = false;
-        this.main = response.results;
+        this.lists = response.results;
       },
       error: () => {
         this.loading = false;
@@ -84,16 +90,17 @@ export class SelectMainComponent implements OnInit, ControlValueAccessor {
     });
   }
 
-  onSearch(value: string): void {
-    this.searchText = value;
-    this.param.pageIndex = 1;
-    this.search();
+  onModalChange() {
+    // Check if 'All Mains' is selected
+    if (this.selectedValue.includes('all')) {
+      // Select all the options except 'All Mains'
+      this.selectedValue = this.lists.map((item) => item.id);
+    }
+    // Call registered change handler and emit valueChanged event
+    this.onChange(this.selectedValue);
+    this.valueChanged.emit(this.selectedValue);
   }
 
-  onModalChange() {
-    this.valueChanged.emit(this.selectedValue);
-    this.onChange(this.selectedValue);
-  }
   writeValue(value: any): void {
     this.selectedValue = value;
     this.search();

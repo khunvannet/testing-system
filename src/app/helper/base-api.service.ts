@@ -38,7 +38,19 @@ export class BaseApiService<T> {
   delete(id: number, data: any): Observable<T> {
     return this.http.post<T>(`${this.getEndpoint()}/${id}`, data);
   }
+  deleteTo(id: number, data: any): Observable<T> {
+    return this.http.post<T>(`${this.getEndpoint()}/${id}`, data);
+  }
+  public inused(id: number): Observable<any> {
+    return this.http.get<any>(`${this.getEndpoint()}/${id}/can-remove`);
+  }
 
+  close(id: number, data: any): Observable<T> {
+    return this.http.post<T>(`${this.getEndpoint()}/${id}/close`, data);
+  }
+  runAgain(id: number, data: any): Observable<T> {
+    return this.http.post<T>(`${this.getEndpoint()}/${id}/run-again`, data);
+  }
   exist(
     name: string = '',
     id: number = 0,

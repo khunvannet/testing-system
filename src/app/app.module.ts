@@ -34,7 +34,6 @@ import { CloseRunComponent } from './pages/test-run/close-run/close-run.componen
 import { RunResultsComponent } from './pages/test-run/active-run/result-modal.component';
 import { BreadcrumbComponent } from './pages/shared/breadcrumb.component';
 import { SettingComponent } from './pages/setting/setting.component';
-import { TreeSelection } from './pages/shared/tree.component';
 import { InputSearchComponent } from './pages/shared/input-search.component';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
@@ -44,6 +43,12 @@ import { SelectMainComponent } from './pages/main-test/selectmain.component';
 import { DeleteTestComponent } from './pages/testcase/delete-testcase.component';
 import { SelectProjectComponent } from './pages/home/select-project.component';
 import { DragDropModule } from '@angular/cdk/drag-drop';
+import { MainMultipleSelectComponent } from './pages/main-test/main-multiple-select.component';
+import { TestMultipleSelectComponent } from './pages/testcase/test-multiple-select.component';
+import { CloseActiveComponent } from './pages/test-run/active-run/close-active.component';
+import { RunAgainComponent } from './pages/test-run/close-run/run-again.component';
+import { DeleteRunComponent } from './pages/test-run/active-run/delete-run.component';
+
 registerLocaleData(en);
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http);
@@ -76,6 +81,9 @@ export function i18nFactory(): NzI18nInterface {
     SelectProjectComponent,
     DeleteMainComponent,
     DeleteTestComponent,
+    MainMultipleSelectComponent,
+    TestMultipleSelectComponent,
+
     //share
 
     //test run
@@ -85,7 +93,9 @@ export function i18nFactory(): NzI18nInterface {
     RunOperationComponent,
     ActiveRunComponent,
     CloseRunComponent,
-    TreeSelection,
+    CloseActiveComponent,
+    RunAgainComponent,
+    DeleteRunComponent,
 
     RunResultsComponent,
     BreadcrumbComponent,

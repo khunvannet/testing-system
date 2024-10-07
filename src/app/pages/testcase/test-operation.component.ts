@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NzModalRef, NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
-import { TestCaseService } from './test-case.service';
+import { TestCase, TestCaseService } from './test-case.service';
 import { NzNotificationService } from 'ng-zorro-antd/notification';
 import { CustomValidators } from 'src/app/helper/customValidators';
 
@@ -18,7 +18,7 @@ import { CustomValidators } from 'src/app/helper/customValidators';
     <div *nzModalTitle class="modal-header-ellipsis">
       <span *ngIf="mode === 'add'">{{ 'Add' | translate }} </span>
       <span *ngIf="mode === 'edit'"
-        >{{ 'Edit' | translate }} {{ modal?.name }}</span
+        >{{ 'Edit' | translate }} {{ model.name }}</span
       >
     </div>
     <div class="modal-content">
@@ -103,6 +103,7 @@ import { CustomValidators } from 'src/app/helper/customValidators';
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        font-size: 14px;
       }
       .modal-content {
         padding-top: 20px;
@@ -116,11 +117,11 @@ export class TestOperationComponent implements OnInit {
   frm!: FormGroup;
   loading = false;
   autoTips = CustomValidators.autoTips;
+  model: TestCase = {};
   constructor(
     private fb: FormBuilder,
     private modalRef: NzModalRef,
-    private service: TestCaseService,
-    private notification: NzNotificationService
+    private service: TestCaseService
   ) {}
   readonly modal = inject(NZ_MODAL_DATA);
   ngOnInit(): void {
@@ -150,6 +151,7 @@ export class TestOperationComponent implements OnInit {
   private setFrmValue(): void {
     this.service.find(this.modal.id).subscribe({
       next: (results) => {
+        this.model = results;
         this.frm.setValue({
           code: results.code,
           name: results.name,
@@ -163,35 +165,30 @@ export class TestOperationComponent implements OnInit {
   onSubmit() {
     if (this.frm.valid) {
       this.loading = true;
-      const data = { ...this.frm.getRawValue() };
-      if (this.mode === 'add') {
-        this.service.add(data).subscribe({
-          next: () => {
-            this.loading = false;
-            this.modalRef.triggerOk();
-            this.notification.success('Data', 'Add successful');
-          },
-          error: (err: any) => {
-            this.loading = false;
-            console.error('Add failed', err);
-            this.notification.error('Data', 'Add faild');
-          },
-        });
-      } else if (this.mode === 'edit' && this.modal?.id) {
-        const editData = { ...data, id: this.modal.id };
-        this.service.edit(this.modal?.id, editData).subscribe({
-          next: () => {
-            this.loading = false;
-            this.modalRef.triggerOk();
-            this.notification.success('Data', 'Edit successful');
-          },
-          error: (err) => {
-            this.loading = false;
-            console.error('Edit failed', err);
-            this.notification.error('Data', 'edit faild');
-          },
-        });
-      }
+      const data = this.frm.getRawValue();
+      const operation =
+        this.mode === 'add'
+          ? this.service.add(data)
+          : this.service.edit(this.modal?.id, { ...data, id: this.modal?.id });
+
+      operation.subscribe({
+        next: () => {
+          this.loading = false;
+          this.modalRef.triggerOk();
+          // this.notification.success(
+          //   'Data',
+          //   `${this.mode === 'add' ? 'Add' : 'Edit'} successful`
+          // );
+        },
+        error: (err: any) => {
+          this.loading = false;
+          console.error(`${this.mode === 'add' ? 'Add' : 'Edit'} failed`, err);
+          // this.notification.error(
+          //   'Data',
+          //   `${this.mode === 'add' ? 'Add' : 'Edit'} failed`
+          // );
+        },
+      });
     }
   }
   onCancel(): void {

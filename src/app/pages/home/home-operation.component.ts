@@ -17,7 +17,7 @@ import { CustomValidators } from 'src/app/helper/customValidators';
     <div *nzModalTitle class="modal-header-ellipsis">
       <span *ngIf="mode === 'add'">{{ 'Add' | translate }} </span>
       <span *ngIf="mode === 'edit'"
-        >{{ 'Edit' | translate }} {{ modal?.name }}</span
+        >{{ 'Edit' | translate }} {{ model.name }}</span
       >
     </div>
     <div class="modal-content">
@@ -87,6 +87,7 @@ import { CustomValidators } from 'src/app/helper/customValidators';
       .modal-header-ellipsis {
         display: block;
         text-align: center;
+        font-size: 14px;
       }
       .error-message {
         color: red;
@@ -99,6 +100,7 @@ export class OperationComponent implements OnInit {
   @Output() refreshList = new EventEmitter<Project>();
   frm!: FormGroup;
   loading = false;
+  model: Project = {};
   autoTips = CustomValidators.autoTips;
   constructor(
     private fb: FormBuilder,
@@ -127,9 +129,10 @@ export class OperationComponent implements OnInit {
   private setFrmValue(): void {
     this.service.find(this.modal.id).subscribe({
       next: (results) => {
+        this.model = results;
         this.frm.setValue({
           name: results.name,
-          description: results.description || null,
+          description: results.description,
         });
       },
     });
@@ -137,34 +140,23 @@ export class OperationComponent implements OnInit {
   onSubmit(): void {
     if (this.frm.valid) {
       this.loading = true;
-      const data = { ...this.frm.getRawValue() };
+      const data = this.frm.getRawValue();
+      const operation =
+        this.mode === 'add'
+          ? this.service.add(data)
+          : this.service.edit(this.modal.id, { ...data, id: this.modal.id });
 
-      if (this.mode === 'add') {
-        this.service.add(data).subscribe({
-          next: () => {
-            this.loading = false;
-            this.modalRef.triggerOk();
-          },
-          error: (err: any) => {
-            this.loading = false;
-            console.error('Add failed', err);
-            this.notification.error('Data', 'Add failed');
-          },
-        });
-      } else if (this.mode === 'edit' && this.modal.id) {
-        const editData = { ...data, id: this.modal.id };
-        this.service.edit(this.modal.id, editData).subscribe({
-          next: () => {
-            this.loading = false;
-            this.modalRef.triggerOk();
-          },
-          error: (err) => {
-            this.loading = false;
-            console.error('Edit failed', err);
-            this.notification.error('Data', 'Edit failed');
-          },
-        });
-      }
+      operation.subscribe({
+        next: () => {
+          this.loading = false;
+          this.modalRef.triggerOk();
+        },
+        error: (err) => {
+          this.loading = false;
+          console.error(`${this.mode} failed`, err);
+          this.notification.error('Data', `${this.mode} failed`);
+        },
+      });
     }
   }
 

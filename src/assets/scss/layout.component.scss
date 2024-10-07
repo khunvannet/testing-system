@@ -1,23 +1,3 @@
-.menu-layout .active {
-  background-color: #e6f7ff;
-  font-weight: bold;
-}
-.setting-sider {
-  position: absolute;
-  bottom: 0;
-  margin-bottom: 50px;
-}
-.header-app {
-  display: flex;
-  margin-right: 20px;
-  justify-content: flex-end;
-}
-.header img,
-.flag {
-  width: 20px;
-  height: 20px;
-}
-
 :host {
   display: flex;
   text-rendering: optimizeLegibility;
@@ -25,26 +5,51 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+.app-layout {
+  min-height: 90vh;
+}
+
+.menu-sidebar {
+  position: relative;
+  z-index: 10;
+  min-height: 90vh;
+  background: #fff;
+}
+
+.menu-layout {
+  .active {
+    background-color: #e6f7ff;
+    font-weight: bold;
+  }
+
+  li {
+    margin-top: 10px;
+    border-radius: 5px;
+    width: 240px;
+    margin-left: 10px;
+  }
+}
+
+.menu-centered li {
+  margin-top: 15px;
+  background: #ebeaea;
+  border-radius: 5px;
+}
+
 .title-menu {
   font-size: x-large;
   font-weight: bold;
 }
-.menu-sidebar {
-  position: relative;
-  z-index: 10;
-  min-height: 100vh;
-  background: #fff;
+
+.select-project {
+  margin-left: 10px;
+  margin-top: 20px;
 }
 
-.header-trigger {
-  height: 64px;
-  padding: 20px 24px;
-  font-size: 20px;
-  cursor: pointer;
-  transition: all 0.3s, padding 0s;
-}
-.trigger:hover {
-  color: #1890ff;
+.setting-sider {
+  position: absolute;
+  bottom: 0;
+  margin-bottom: 50px;
 }
 
 nz-header {
@@ -54,123 +59,64 @@ nz-header {
   background: #fff;
 }
 
+.header-app {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 20px;
+
+  .server-indicator {
+    display: flex;
+    align-items: center;
+    background-color: #f0f0f0;
+    font-size: 17px;
+    border-radius: 5px;
+    padding: 5px 15px;
+    height: 25px;
+    margin-right: 10px;
+  }
+
+  .language-selector {
+    margin-right: 10px;
+
+    img, .flag {
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  .header-icon {
+    margin-right: 10px;
+    color: #1890ff;
+    font-size: 20px;
+    cursor: pointer;
+  }
+
+  .user-avatar {
+    margin-right: 10px;
+
+    span {
+      font-size: 18px;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      background: #1890ff;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
+  .username {
+    color: #1890ff;
+    font-size: 20px;
+  }
+}
+
 .inner-content {
   padding: 24px;
   background: #fff;
   height: 100%;
   border-radius: 4px;
-}
-.title-menu {
-  font-size: x-large;
-  font-weight: bold;
-}
-.menu-centered li {
-  margin-top: 15px;
-  background: #ebeaea;
-  border-radius: 5px;
-}
-
-.menu-layout li {
-  margin-top: 10px;
-  border-radius: 5px;
-  width: 240px;
-  margin-left: 10px;
-}
-.select-project {
-
-  margin-left: 10px;
-  margin-top: 20px;
-}
-.app-layout {
-  height: 100vh;
-}
-
-@media (max-width: 575px) {
-  ::ng-deep
-    .ant-select-show-search.ant-select:not(.ant-select-customize-input)
-    .ant-select-selector {
-    width: 70px;
-  }
-  nz-sider {
-    .select-project {
-      nz-select {
-        width: 70px;
-      }
-
-      margin-top: 20px;
-    }
-  }
-  .menu-layout li {
-    margin-top: 10px;
-    border-radius: 5px;
-    width: 90px;
-    margin-left: -10px;
-  }
-  .header-app {
-    display: flex;
-
-    justify-content: flex-end;
-    width: 930px;
-  }
-  .header img,
-  .images {
-    width: 20px;
-    height: 20px;
-  }
-  nz-content {
-    width: 950px;
-  }
-}
-@media (min-width: 576px) and (max-width: 767px) {
-  ::ng-deep
-    .ant-select-show-search.ant-select:not(.ant-select-customize-input)
-    .ant-select-selector {
-    width: 70px;
-  }
-  nz-sider {
-    .select-project {
-      nz-select {
-        width: 70px;
-      }
-
-      margin-top: 20px;
-    }
-  }
-  .menu-layout li {
-    margin-top: 10px;
-    border-radius: 5px;
-    width: 90px;
-    margin-left: -10px;
-  }
-  nz-content {
-    width: 810px;
-  }
-  .header-app {
-    display: flex;
-    margin-right: -20px;
-    justify-content: flex-end;
-    width: 800px;
-  }
-  .header img,
-  .images {
-    width: 20px;
-    height: 20px;
-  }
-}
-@media (min-width: 768px) and (max-width: 991px) {
-  nz-content {
-    width: 800px;
-  }
-
-  .header-app {
-    display: flex;
-    margin-right: -20px;
-    justify-content: flex-end;
-    width: 800px;
-  }
-  .header img,
-  .images {
-    width: 20px;
-    height: 20px;
-  }
 }

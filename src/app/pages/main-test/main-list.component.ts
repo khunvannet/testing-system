@@ -1,13 +1,14 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { Subscription, timer } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { QueryParam } from 'src/app/helper/base-api.service';
-import { MainTest, MainTestService } from './main-test.service';
-import { MainUiService } from './main-ui.service';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { NzNotificationService } from 'ng-zorro-antd/notification';
+import { BaseListComponent } from 'src/app/utils/components/base-list.component';
+import { MainTest, MainTestService } from './main-test.service';
+import { MainUiService } from './main-ui.service';
 
 @Component({
-  selector: 'app-main-list',
+  selector: 'app-lists-list',
   template: `
     <nz-layout>
       <nz-content>
@@ -25,7 +26,7 @@ import { NzNotificationService } from 'ng-zorro-antd/notification';
               (cdkDropListDropped)="drop($event)"
             >
               <ul
-                *ngFor="let data of main; let i = index"
+                *ngFor="let data of lists; let i = index"
                 cdkDrag
                 class="block-ordering"
               >
@@ -60,32 +61,40 @@ import { NzNotificationService } from 'ng-zorro-antd/notification';
                   ></i>
                 </a>
                 <nz-dropdown-menu #menu="nzDropdownMenu">
-                  <ul nz-menu nzSelectable>
+                  <ul nz-menu nzSelectable style="min-width: 120px;">
                     <li
                       class="menu-item"
                       nz-menu-item
-                      style="color: blue"
-                      (click)="
-                        uiservice.showEdit(
-                          data.id || 0,
-                          data.name!,
-                          this.projectId
-                        )
-                      "
+                      style="color: blue; padding-left: 15px;"
+                      (click)="uiservice.showEdit(data.id || 0, this.projectId)"
                     >
-                      <i nz-icon nzType="edit"></i>&nbsp;
-                      <span class="action-text">{{ 'Edit' | translate }}</span>
+                      <span class="menu-item-content">
+                        <i
+                          nz-icon
+                          nzType="edit"
+                          style="margin-right: 10px;"
+                        ></i>
+                        <span class="action-text">{{
+                          'Edit' | translate
+                        }}</span>
+                      </span>
                     </li>
                     <li
                       class="menu-item"
                       nz-menu-item
-                      style="color: red"
-                      (click)="uiservice.showDalete(data.id || 0, data.name!)"
+                      style="color: red; padding-left: 15px;"
+                      (click)="uiservice.showDalete(data.id || 0)"
                     >
-                      <i nz-icon nzType="delete"></i>&nbsp;
-                      <span class="action-text">{{
-                        'Delete' | translate
-                      }}</span>
+                      <span class="menu-item-content">
+                        <i
+                          nz-icon
+                          nzType="delete"
+                          style="margin-right: 10px;"
+                        ></i>
+                        <span class="action-text">{{
+                          'Delete' | translate
+                        }}</span>
+                      </span>
                     </li>
                   </ul>
                 </nz-dropdown-menu>
@@ -115,9 +124,11 @@ import { NzNotificationService } from 'ng-zorro-antd/notification';
             </ul>
           </nz-sider>
         </nz-layout>
-
         <div class="content-test">
-          <app-test-case-list [mainId]="mainId"></app-test-case-list>
+          <app-test-case-list
+            [mainId]="mainId"
+            [prId]="projectId"
+          ></app-test-case-list>
         </div>
       </nz-content>
     </nz-layout>
@@ -128,19 +139,18 @@ import { NzNotificationService } from 'ng-zorro-antd/notification';
         padding-left: 10px;
       }
       .content-test {
-        width: 100%;
+        min-height: 87vh;
+        min-width: 1000px;
       }
       .sub-sidebar {
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         position: relative;
         z-index: 10;
-        min-height: 88vh;
         background: #fff;
       }
       nz-content {
         margin: 11px;
         display: flex;
-        min-height: 92vh;
         background: #fff;
         min-width: 1000px;
       }
@@ -192,14 +202,15 @@ import { NzNotificationService } from 'ng-zorro-antd/notification';
     `,
   ],
 })
-export class MainTestListComponent implements OnInit, OnDestroy {
-  main: MainTest[] = [];
+export class MainTestListComponent
+  extends BaseListComponent<MainTest>
+  implements OnInit, OnDestroy
+{
   projectId = 0;
-  loading = false;
   totalMain = 0;
   mainId = 0;
   draged = false;
-  param: QueryParam = {
+  override param: QueryParam = {
     pageIndex: 1,
     pageSize: 999999,
     filters: '',
@@ -207,12 +218,14 @@ export class MainTestListComponent implements OnInit, OnDestroy {
   private refreshSub$!: Subscription;
 
   constructor(
-    private service: MainTestService,
+    service: MainTestService,
     public uiservice: MainUiService,
     private notification: NzNotificationService
-  ) {}
+  ) {
+    super(service);
+  }
 
-  ngOnInit(): void {
+  override ngOnInit(): void {
     const storedProjectId = localStorage.getItem('selectedProjectId');
     if (storedProjectId) {
       this.projectId = +storedProjectId;
@@ -227,22 +240,24 @@ export class MainTestListComponent implements OnInit, OnDestroy {
     this.search();
   }
 
-  search(): void {
+  override search(): void {
     if (this.loading) return;
     this.loading = true;
-    const filters = [
-      { field: 'projectId', operator: 'eq', value: this.projectId },
-    ];
-    this.param.filters = JSON.stringify(filters);
-    this.service.search(this.param).subscribe({
-      next: (response: any) => {
-        this.main = response.results;
-        this.mainId = this.main.length ? this.main[0].id! : 0;
-        this.totalMain = response.param.rowCount;
-        this.loading = false;
-      },
-      error: () => (this.loading = false),
-    });
+    setTimeout(() => {
+      const filters = [
+        { field: 'projectId', operator: 'eq', value: this.projectId },
+      ];
+      this.param.filters = JSON.stringify(filters);
+      this.service.search(this.param).subscribe({
+        next: (response: any) => {
+          this.lists = response.results;
+          this.mainId = this.lists.length ? this.lists[0].id! : 0;
+          this.totalMain = response.param.rowCount;
+          this.loading = false;
+        },
+        error: () => (this.loading = false),
+      });
+    }, 50);
   }
 
   changeMainId(id: number) {
@@ -251,7 +266,10 @@ export class MainTestListComponent implements OnInit, OnDestroy {
 
   saveOrdering() {
     this.loading = true;
-    const newLists = this.main.map((item, i) => ({ ...item, ordering: i + 1 }));
+    const newLists = this.lists.map((item, i) => ({
+      ...item,
+      ordering: i + 1,
+    }));
     this.service.updateOrdering(newLists).subscribe(() => {
       this.loading = false;
       this.draged = false;
@@ -260,7 +278,7 @@ export class MainTestListComponent implements OnInit, OnDestroy {
   }
 
   drop(event: CdkDragDrop<any>): void {
-    moveItemInArray(this.main, event.previousIndex, event.currentIndex);
+    moveItemInArray(this.lists, event.previousIndex, event.currentIndex);
     this.draged = event.previousIndex !== event.currentIndex;
   }
 

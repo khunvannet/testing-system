@@ -55,59 +55,64 @@ export interface Language {
       <nz-layout>
         <nz-header>
           <div class="header-app">
-            <div
-              style="background-color: #f0f0f0; font-size: 17px; border-radius: 5px; padding: 5px 15px; height: 25px; display: flex; align-items: center; justify-content: center; margin-top: 20px;"
-            >
+            <!-- Server indicator -->
+            <div class="server-indicator">
               <span nz-icon nzType="cloud-server" nzTheme="outline"></span>
               <span>S9 Server</span>
             </div>
-            <div class="header" style="margin-left: 10px;">
-              <div nz-dropdown nzTrigger="click" [nzDropdownMenu]="menu">
+
+            <!-- Language selector -->
+            <div class="language-selector">
+              <div
+                nz-dropdown
+                nzTrigger="click"
+                [nzDropdownMenu]="menu"
+                nzPlacement="bottomRight"
+              >
                 <img [src]="selectLang.flag" [alt]="selectLang.name" />
               </div>
               <nz-dropdown-menu #menu="nzDropdownMenu">
-                <ul nz-menu>
+                <ul nz-menu style="min-width: 140px;">
                   <li
                     *ngFor="let lang of languages"
                     nz-menu-item
                     (click)="switchLang(lang)"
                     [ngClass]="{ active: lang.code === selectLang.code }"
+                    style="padding-left: 15px;"
                   >
-                    <img class="flag" [src]="lang.flag" [alt]="lang.name" />
+                    <img
+                      style=" width: 20px; height: 20px; margin-right: 10px;"
+                      [src]="lang.flag"
+                      [alt]="lang.name"
+                    />
                     {{ lang.name }}
                     <span *ngIf="lang.code === selectLang.code">✔️</span>
                   </li>
                 </ul>
               </nz-dropdown-menu>
             </div>
-            <div style="margin-top: 5px; margin-left: 10px;">
-              <i
-                nz-icon
-                nzType="appstore"
-                nzTheme="outline"
-                style="color: #1890ff; font-size: 20px;"
-              ></i>
+
+            <!-- App store icon -->
+            <div class="header-icon">
+              <i nz-icon nzType="appstore" nzTheme="outline"></i>
             </div>
-            <a (click)="toggleFullScreen()">
-              <div style="margin-top: 5px; margin-left: 10px;">
-                <span
-                  nz-icon
-                  [nzType]="isFullScreen ? 'fullscreen-exit' : 'fullscreen'"
-                  nzTheme="outline"
-                  style="color: #1890ff; font-size: 20px;"
-                ></span>
-              </div>
-            </a>
-            <div style="margin-top: 2px; margin-left: 10px;">
+            <!-- Fullscreen toggle -->
+            <a (click)="toggleFullScreen()" class="header-icon">
               <span
                 nz-icon
-                nzType="user"
+                [nzType]="isFullScreen ? 'fullscreen-exit' : 'fullscreen'"
                 nzTheme="outline"
-                style="font-size: 18px; border-radius: 50%; width: 20px; height: 20px; background: #1890ff; color: #fff;"
               ></span>
+            </a>
+
+            <!-- User avatar -->
+            <div class="user-avatar">
+              <span nz-icon nzType="user" nzTheme="outline"></span>
             </div>
-            <div style="margin-top: 2px; margin-left: 10px;">
-              <span style="color: #1890ff; font-size: 20px;">KhunVannet</span>
+
+            <!-- Username -->
+            <div class="username">
+              <span>KhunVannet</span>
             </div>
           </div>
         </nz-header>
@@ -122,9 +127,10 @@ export interface Language {
 export class LayoutComponent implements OnInit {
   isCollapsed = false;
   selectLang!: Language;
-  defualtLang: string = 'en';
+  readonly defaultLang = 'en';
+  isFullScreen = false;
 
-  languages: Language[] = [
+  readonly languages: Language[] = [
     {
       name: 'English',
       code: 'en',
@@ -136,55 +142,63 @@ export class LayoutComponent implements OnInit {
       flag: '../../../assets/images/Khmer-logo.svg',
     },
   ];
-  isFullScreen = false;
-  isLoading = false;
+
   constructor(
-    public uiservice: HomeUiService,
+    public uiService: HomeUiService,
     private translateService: TranslateService,
     private i18n: NzI18nService
   ) {}
+
   ngOnInit(): void {
-    const storeLang = localStorage.getItem('selectedLang') || this.defualtLang;
-    this.selectLang =
-      this.languages.find((lang) => lang.code === storeLang) ||
-      this.getDefaultLang();
-    this.translateService.use(this.selectLang.code);
-    this.i18n.setLocale(this.selectLang.code === 'km' ? km_KH : en_US);
+    const storedLang = localStorage.getItem('selectedLang') || this.defaultLang;
+    this.selectLang = this.getLanguage(storedLang);
+    this.setLanguage(this.selectLang);
   }
 
   toggleFullScreen(): void {
-    const elem = document.documentElement;
     if (!document.fullscreenElement) {
-      elem
-        .requestFullscreen()
-        .then(() => {
-          this.isFullScreen = true;
-        })
-        .catch((err) => {
-          console.log(
-            `Error attempting to enable full-screen mode: ${err.message} (${err.name})`
-          );
-        });
+      this.enterFullScreen();
     } else {
-      document
-        .exitFullscreen()
-        .then(() => {
-          this.isFullScreen = false;
-        })
-        .catch((err) => {
-          console.log(
-            `Error attempting to disable full-screen mode: ${err.message} (${err.name})`
-          );
-        });
+      this.exitFullScreen();
     }
   }
-  private getDefaultLang(): Language {
-    return this.languages.find((lang) => lang.code === this.defualtLang)!;
-  }
+
   switchLang(lang: Language): void {
     this.selectLang = lang;
+    this.setLanguage(lang);
+    localStorage.setItem('selectedLang', lang.code);
+  }
+
+  private getLanguage(code: string): Language {
+    return (
+      this.languages.find((lang) => lang.code === code) || this.getDefaultLang()
+    );
+  }
+
+  private getDefaultLang(): Language {
+    return this.getLanguage(this.defaultLang);
+  }
+
+  private setLanguage(lang: Language): void {
     this.translateService.use(lang.code);
     this.i18n.setLocale(lang.code === 'km' ? km_KH : en_US);
-    localStorage.setItem('selectedLang', lang.code);
+  }
+
+  private enterFullScreen(): void {
+    document.documentElement
+      .requestFullscreen()
+      .then(() => (this.isFullScreen = true))
+      .catch(this.handleFullScreenError);
+  }
+
+  private exitFullScreen(): void {
+    document
+      .exitFullscreen()
+      .then(() => (this.isFullScreen = false))
+      .catch(this.handleFullScreenError);
+  }
+
+  private handleFullScreenError(err: Error): void {
+    console.error(`Fullscreen error: ${err.message} (${err.name})`);
   }
 }

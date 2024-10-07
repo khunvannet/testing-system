@@ -6,12 +6,10 @@ import {
   EventEmitter,
 } from '@angular/core';
 import { HomeUiService } from './home-ui.service';
-import { NzNotificationService } from 'ng-zorro-antd/notification';
 import { Subscription } from 'rxjs';
 import { HomeService, Project } from './home.service';
 import { ProjectService } from 'src/app/helper/project-select.service';
-import { QueryParam } from 'src/app/helper/base-api.service';
-import { NzTableQueryParams } from 'ng-zorro-antd/table';
+import { BaseListComponent } from 'src/app/utils/components/base-list.component';
 
 @Component({
   selector: 'app-list',
@@ -30,7 +28,7 @@ import { NzTableQueryParams } from 'ng-zorro-antd/table';
       </div>
     </nz-header>
     <nz-table
-      [nzData]="projects"
+      [nzData]="lists"
       nzTableLayout="fixed"
       nzShowSizeChanger
       nzShowPagination
@@ -38,7 +36,7 @@ import { NzTableQueryParams } from 'ng-zorro-antd/table';
       [nzPageIndex]="param.pageIndex!"
       [nzPageSize]="param.pageSize!"
       nzSize="small"
-      [nzTotal]="totalProject"
+      [nzTotal]="totalList"
       [nzLoading]="loading"
       [nzNoResult]="noResult"
       (nzQueryParams)="onQueryParamsChange($event)"
@@ -57,7 +55,7 @@ import { NzTableQueryParams } from 'ng-zorro-antd/table';
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let data of projects; let i = index">
+        <tr *ngFor="let data of lists; let i = index">
           <td>
             {{ ((param.pageIndex || 1) - 1) * (param.pageSize || 10) + i + 1 }}
           </td>
@@ -80,7 +78,7 @@ import { NzTableQueryParams } from 'ng-zorro-antd/table';
               <a
                 *nzSpaceItem
                 nz-typography
-                (click)="uiService.showEdit(data.id || 0, data.name!)"
+                (click)="uiService.showEdit(data.id || 0)"
               >
                 <i nz-icon nzType="edit" nzTheme="outline"></i>
                 {{ 'Edit' | translate }}
@@ -105,27 +103,13 @@ import { NzTableQueryParams } from 'ng-zorro-antd/table';
       nz-table {
         max-height: 495px;
         overflow-y: auto;
+        margin-top: 10px;
       }
       .t-head {
         position: sticky;
         top: 0;
         background-color: #fff;
         z-index: 1;
-      }
-      #text {
-        color: #7d8597;
-      }
-      .title-menu {
-        margin-left: 10px;
-        font-size: 14px;
-        font-weight: bold;
-      }
-      .container {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        margin-top: 15%;
       }
       .header {
         display: flex;
@@ -134,39 +118,30 @@ import { NzTableQueryParams } from 'ng-zorro-antd/table';
       nz-header {
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         background: #f8f9fa;
-        padding: 0;
-        padding-left: 10px;
-      }
-      nz-table {
-        margin-top: 10px;
+        padding: 0 0 0 10px;
       }
     `,
   ],
 })
-export class ListComponent implements OnInit, OnDestroy {
+export class ListComponent
+  extends BaseListComponent<Project>
+  implements OnInit, OnDestroy
+{
   @Output() pId = new EventEmitter<any | null>();
-  projects: Project[] = [];
-  loading: boolean = false;
-  searchText: string = '';
-  totalProject = 0;
-  param: QueryParam = {
-    pageIndex: 1,
-    pageSize: 10,
-    filters: '',
-  };
   private refreshSub$!: Subscription;
 
   constructor(
-    private service: HomeService,
+    service: HomeService,
     public uiService: HomeUiService,
-    private notification: NzNotificationService,
     private projectService: ProjectService
-  ) {}
+  ) {
+    super(service);
+  }
 
-  ngOnInit(): void {
+  override ngOnInit(): void {
     this.refreshSub$ = this.uiService.refresher.subscribe(() => this.search());
   }
-  search(): void {
+  override search(): void {
     if (this.loading) {
       return;
     }
@@ -178,25 +153,16 @@ export class ListComponent implements OnInit, OnDestroy {
       this.param.filters = JSON.stringify(filters);
       this.service.search(this.param).subscribe({
         next: (response: any) => {
-          this.projects = response.results;
-          this.totalProject = response.param.rowCount;
+          this.lists = response.results;
+          this.totalList = response.param.rowCount;
           this.loading = false;
         },
-        error: (error: any) => {
-          this.notification.error('Project', 'Fetching data faild');
+        error: () => {
           this.loading = false;
         },
       });
-    }, 500);
+    }, 50);
   }
-
-  onQueryParamsChange(params: NzTableQueryParams) {
-    const { pageIndex, pageSize } = params;
-    this.param.pageIndex = pageIndex;
-    this.param.pageSize = pageSize;
-    this.search();
-  }
-
   clickSelect(id: number): void {
     this.projectService.changeProjectId(id);
   }

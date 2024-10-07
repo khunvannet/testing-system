@@ -9,10 +9,9 @@ import {
 import { Subscription } from 'rxjs';
 import { TestCase, TestCaseService } from './test-case.service';
 import { TestCaseUiService } from './test-case-ui.service';
-import { QueryParam } from 'src/app/helper/base-api.service';
 import { NzNotificationService } from 'ng-zorro-antd/notification';
-import { NzTableQueryParams } from 'ng-zorro-antd/table';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
+import { BaseListComponent } from 'src/app/utils/components/base-list.component';
 @Component({
   selector: 'app-test-case-list',
   template: `
@@ -25,7 +24,7 @@ import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
           *ngIf="draged"
           nz-button
           nzType="primary"
-          style="margin-left:10px;"
+          style="margin-left:10px; "
           (click)="saveOrdering()"
         >
           {{ 'Save' | translate }}
@@ -44,7 +43,7 @@ import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
     </nz-header>
     <div class="table-case">
       <nz-table
-        [nzData]="tests"
+        [nzData]="lists"
         nzTableLayout="fixed"
         nzShowSizeChanger
         nzShowPagination
@@ -52,7 +51,7 @@ import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
         [nzPageIndex]="param.pageIndex!"
         [nzPageSize]="param.pageSize!"
         nzSize="small"
-        [nzTotal]="totalTest"
+        [nzTotal]="totalList"
         [nzLoading]="loading"
         [nzNoResult]="noResult"
         (nzQueryParams)="onQueryParamsChange($event)"
@@ -75,9 +74,9 @@ import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
         <tbody
           cdkDropList
           (cdkDropListDropped)="drop($event)"
-          [cdkDropListData]="tests"
+          [cdkDropListData]="lists"
         >
-          <tr *ngFor="let test of tests; let i = index" cdkDrag>
+          <tr *ngFor="let test of lists; let i = index" cdkDrag>
             <td style="width: 35px; cursor: move;" cdkDragHandle>
               <span nz-icon nzType="holder" nzTheme="outline"></span>
             </td>
@@ -91,7 +90,7 @@ import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
             </td>
             <td nzEllipsis style="flex: 2.2;">{{ test.name }}</td>
             <td nzEllipsis style="flex: 1.4;">{{ test.description }}</td>
-            <td class="action-buttons" style="flex: 1.2;">
+            <td style="flex: 1.2; display: flex; justify-content: end;">
               <nz-space [nzSplit]="spaceSplit">
                 <ng-template #spaceSplit>
                   <nz-divider nzType="vertical"></nz-divider>
@@ -99,9 +98,7 @@ import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
                 <a
                   *nzSpaceItem
                   nz-typography
-                  (click)="
-                    uiService.showEdit(test.id!, test.name!, test.mainId!)
-                  "
+                  (click)="uiService.showEdit(test.id!, test.mainId!)"
                 >
                   <i
                     nz-icon
@@ -115,7 +112,7 @@ import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
                   *nzSpaceItem
                   nz-typography
                   class="delete-link"
-                  (click)="uiService.showDelete(test.id!, test.name!)"
+                  (click)="uiService.showDelete(test.id!)"
                 >
                   <i
                     nz-icon
@@ -190,33 +187,30 @@ import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
     `,
   ],
 })
-export class TestCaseListComponent implements OnInit, OnDestroy, OnChanges {
+export class TestCaseListComponent
+  extends BaseListComponent<TestCase>
+  implements OnInit, OnDestroy, OnChanges
+{
   @Input() mainId: number = 0;
-  searchText: string = '';
-  tests: TestCase[] = [];
-  totalTest = 0;
-  param: QueryParam = {
-    pageIndex: 1,
-    pageSize: 10,
-    filters: '',
-  };
-  loading = false;
+  @Input() prId: number = 0;
   draged: boolean = false;
   private refreshSub$!: Subscription;
 
   constructor(
-    private service: TestCaseService,
+    service: TestCaseService,
     public uiService: TestCaseUiService,
     private notification: NzNotificationService
-  ) {}
+  ) {
+    super(service);
+  }
 
-  ngOnInit(): void {
+  override ngOnInit(): void {
     this.refreshSub$ = this.uiService.refresher.subscribe(() => this.search());
   }
   ngOnChanges(changes: SimpleChanges): void {
     this.search();
   }
-  search(): void {
+  override search(): void {
     if (this.loading) {
       return;
     }
@@ -230,23 +224,23 @@ export class TestCaseListComponent implements OnInit, OnDestroy, OnChanges {
       this.param.filters = JSON.stringify(filters);
       this.service.search(this.param).subscribe({
         next: (response: any) => {
-          this.tests = response.results;
-          this.totalTest = response.param.rowCount;
+          this.lists = response.results;
+          this.totalList = response.param.rowCount;
           this.loading = false;
         },
-        error: (error: any) => {
+        error: () => {
           this.notification.error('Project', 'Fetching data failed');
           this.loading = false;
         },
       });
-    }, 500);
+    }, 150);
   }
 
   saveOrdering() {
     this.loading = true;
     let newLists: TestCase[] = [];
 
-    this.tests.forEach((item, i) => {
+    this.lists.forEach((item, i) => {
       item.ordering = i + 1;
       newLists.push(item);
     });
@@ -257,16 +251,10 @@ export class TestCaseListComponent implements OnInit, OnDestroy, OnChanges {
     });
   }
   drop(event: CdkDragDrop<TestCase[], any, any>): void {
-    moveItemInArray(this.tests, event.previousIndex, event.currentIndex);
+    moveItemInArray(this.lists, event.previousIndex, event.currentIndex);
     if (event.previousIndex !== event.currentIndex) this.draged = true;
   }
 
-  onQueryParamsChange(params: NzTableQueryParams) {
-    const { pageIndex, pageSize } = params;
-    this.param.pageIndex = pageIndex;
-    this.param.pageSize = pageSize;
-    this.search();
-  }
   ngOnDestroy(): void {
     this.refreshSub$?.unsubscribe();
   }

@@ -20,9 +20,9 @@ import { timeout } from 'rxjs';
       .content-inline {
         margin: 11px;
         display: flex;
-        min-height: 88vh;
+        min-height: 87vh;
         background: #fff;
-        width: 98%;
+        min-width: 1000px;
       }
     `,
   ],

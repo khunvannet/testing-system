@@ -1,60 +1,36 @@
-import {
-  Component,
-  EventEmitter,
-  Inject,
-  Input,
-  OnDestroy,
-  OnInit,
-  Output,
-} from '@angular/core';
-import {
-  FormBuilder,
-  FormGroup,
-  FormArray,
-  Validators,
-  AbstractControl,
-  ValidationErrors,
-} from '@angular/forms';
-import { NZ_MODAL_DATA, NzModalRef } from 'ng-zorro-antd/modal';
-import { TestRun, TestRunService } from './test-run.service';
-import { TestCase } from '../testcase/test-case.service';
-import { TestRunUiService } from './test-run-ui.service';
-import { catchError, map, Observable, of } from 'rxjs';
+import { Component, inject, Input, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup } from '@angular/forms';
+import { NzModalRef, NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
+import { CustomValidators } from 'src/app/helper/customValidators';
+import { TestRunService } from './test-run.service';
 
 @Component({
   selector: 'app-run-operation',
   template: `
     <div *nzModalTitle class="modal-header-ellipsis">
-      <span class="title">{{ mode === 'add' ? 'Add ' : 'Edit ' }}</span>
+      <span>{{ mode === 'add' ? 'Add ' : 'Edit ' }}</span>
     </div>
     <div class="modal-content" style="margin-top:20px;">
-      <form nz-form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <form
+        nz-form
+        [formGroup]="frm"
+        (ngSubmit)="onSubmit()"
+        [nzAutoTips]="autoTips"
+      >
         <nz-form-item>
-          <nz-form-label [nzSpan]="6" nzFor="code">Code</nz-form-label>
-          <nz-form-control [nzSpan]="16">
-            <input
-              nz-input
-              formControlName="code"
-              type="text"
-              id="code"
-              placeholder="New Code"
-            />
+          <nz-form-label [nzSpan]="6" nzFor="code" nzRequired>
+            Code
+          </nz-form-label>
+          <nz-form-control [nzSpan]="16" nzHasFeedback>
+            <input nz-input formControlName="code" type="text" id="code" />
           </nz-form-control>
         </nz-form-item>
         <nz-form-item>
           <nz-form-label [nzSpan]="6" nzFor="name" nzRequired
             >Name</nz-form-label
           >
-          <nz-form-control [nzSpan]="16" nzHasFeedback [nzErrorTip]="errorTpl">
+          <nz-form-control [nzSpan]="16" nzHasFeedback>
             <input nz-input formControlName="name" type="text" id="name" />
-            <ng-template #errorTpl let-control>
-              <ng-container *ngIf="control.hasError('required')"
-                >Name is required</ng-container
-              >
-              <ng-container *ngIf="control.hasError('nameExists')"
-                >Name already exists</ng-container
-              >
-            </ng-template>
           </nz-form-control>
         </nz-form-item>
         <nz-form-item>
@@ -62,7 +38,22 @@ import { catchError, map, Observable, of } from 'rxjs';
             >Project</nz-form-label
           >
           <nz-form-control [nzSpan]="16">
-            
+            <app-select-project
+              (valueChanged)="onChange($event)"
+              [isDisabled]="true"
+            ></app-select-project>
+          </nz-form-control>
+        </nz-form-item>
+        <nz-form-item>
+          <nz-form-label [nzSpan]="6" nzFor="project" nzRequired
+            >Main Test</nz-form-label
+          >
+          <nz-form-control [nzSpan]="16">
+            <app-main-multiple-select
+              [projectId]="projectId"
+              (valueChanged)="onMainIdChange($event)"
+              formControlName="mainId"
+            ></app-main-multiple-select>
           </nz-form-control>
         </nz-form-item>
         <nz-form-item>
@@ -70,14 +61,14 @@ import { catchError, map, Observable, of } from 'rxjs';
             >Test Case</nz-form-label
           >
           <nz-form-control [nzSpan]="16">
-            <app-tree
-              [projectId]="projectId"
-              (selectedTestCases)="onSelectedTestCases($event)"
-            ></app-tree>
+            <app-test-multiple-select
+              [selectedMainIds]="mainIds"
+              formControlName="testId"
+            ></app-test-multiple-select>
           </nz-form-control>
         </nz-form-item>
         <nz-form-item>
-          <nz-form-label [nzSpan]="6" nzFor="description"
+          <nz-form-label [nzSpan]="6" nzFor="description" row="3"
             >Description</nz-form-label
           >
           <nz-form-control [nzSpan]="16">
@@ -93,7 +84,7 @@ import { catchError, map, Observable, of } from 'rxjs';
     </div>
     <div *nzModalFooter>
       <button
-        [disabled]="!form.valid"
+        [disabled]="frm.invalid"
         nz-button
         nzType="primary"
         [nzLoading]="loading"
@@ -109,124 +100,104 @@ import { catchError, map, Observable, of } from 'rxjs';
       nz-select {
         width: 200px;
       }
-      .title {
+      .modal-header-ellipsis {
         display: block;
         text-align: center;
+        font-size: 14px;
+      }
+      ::ng-deep .ant-modal-header {
+        padding: 8px 10px;
       }
     `,
   ],
 })
 export class RunOperationComponent implements OnInit {
   @Input() mode: 'add' | 'edit' | undefined;
-  @Input() form!: FormGroup;
-  @Input() testRun?: TestRun;
-  @Output() refreshList = new EventEmitter<void>();
-  projectId: number | null = null;
+  frm!: FormGroup;
   loading = false;
-  nameExists = false;
-
+  projectId = 0;
+  mainIds: number[] = [];
+  autoTips = CustomValidators.autoTips;
   constructor(
-    @Inject(NZ_MODAL_DATA) public data: any,
-    private modalRef: NzModalRef,
     private fb: FormBuilder,
-    private service: TestRunService,
-    public uiService: TestRunUiService
-  ) {
-    this.form = this.fb.group({
-      code: [{ value: '', disabled: true }],
-      name: ['', [Validators.required], [this.nameExistsValidator.bind(this)]],
-      projectId: [data.projectId, Validators.required],
-      testcase: this.fb.array([], Validators.required),
-      description: [''],
-      active: [true],
-    });
-  }
-
+    private modalRef: NzModalRef,
+    private service: TestRunService
+  ) {}
+  readonly modal = inject(NZ_MODAL_DATA);
   ngOnInit(): void {
-    if (this.mode === 'edit' && this.testRun) {
-      this.form.patchValue({
-        code: this.testRun.code,
-        name: this.testRun.name,
-        projectId: this.testRun.projectId,
-        description: this.testRun.description,
-        active: this.testRun.active,
-      });
-      this.onSelectedTestCases(this.testRun.testCases || []);
+    this.initControl();
+    if (this.mode === 'edit' && this.modal.id) {
+      this.setFrmValue();
     }
   }
 
-  get testcaseArray(): FormArray {
-    return this.form.get('testcase') as FormArray;
-  }
-
-  onProjectChange(projectId: number | null): void {
-    this.projectId = projectId;
-    this.form.patchValue({ projectId });
-  }
-
-  onSelectedTestCases(selectedTestCases: TestCase[]): void {
-    const formArray = this.testcaseArray;
-    formArray.clear();
-    selectedTestCases.forEach((testCase) => {
-      formArray.push(this.fb.group(testCase));
+  private initControl(): void {
+    const { required, nameExistValidator, codeExistValidator } =
+      CustomValidators;
+    this.frm = this.fb.group({
+      code: [
+        null,
+        [required],
+        [codeExistValidator(this.service, this.modal?.id)],
+      ],
+      name: [
+        null,
+        [required],
+        [nameExistValidator(this.service, this.modal?.id)],
+      ],
+      projectId: [{ value: this.modal?.projectId, disabled: true }, [required]],
+      mainId: [[], [required]],
+      testId: [[], [required]],
+      description: [null],
     });
   }
-
-  nameExistsValidator(
-    control: AbstractControl
-  ): Observable<ValidationErrors | null> {
-    const name = control.value;
-    if (!name) {
-      return of(null);
-    }
-
-    return this.service.isExists(name).pipe(
-      map((response) => (response.exists ? { nameExists: true } : null)),
-      catchError(() => of(null))
-    );
+  private setFrmValue(): void {
+    this.service.find(this.modal.id).subscribe({
+      next: (results) => {
+        this.frm.setValue({
+          code: results.code,
+          name: results.name,
+          description: results.description,
+          mainId: results.mainId,
+          testId: results.testId,
+          projectId: results.projectId,
+        });
+        // Trigger the test case search by setting the main IDs
+        this.onMainIdChange(
+          Array.isArray(results.mainId) ? results.mainId : []
+        );
+      },
+    });
   }
 
   onSubmit(): void {
-    if (this.form.valid) {
+    if (this.frm.valid) {
       this.loading = true;
-      const formData = this.form.getRawValue();
-      console.log('Submitting form data:', formData);
-      if (this.mode === 'add') {
-        this.service.addTestRun(formData).subscribe({
-          next: () => {
-            this.modalRef.close(true);
-            this.uiService.refresher.emit();
-            this.loading = false;
-            this.form.reset();
-          },
-          error: (err) => {
-            console.error('Error adding test run:', err);
-            this.loading = false;
-          },
-        });
-      } else if (this.mode === 'edit' && this.testRun) {
-        const update: TestRun = {
-          ...this.testRun,
-          ...formData,
-        };
-        console.log('Updating test run:', update);
-        this.service.editTestRun(this.testRun.id, update).subscribe({
-          next: () => {
-            this.modalRef.close(true);
-            this.uiService.refresher.emit();
-            this.loading = false;
-          },
-          error: (err) => {
-            console.error('Error editing test run:', err);
-            this.loading = false;
-          },
-        });
-      }
+      const data = { ...this.frm.getRawValue() };
+      const operation =
+        this.mode === 'add'
+          ? this.service.add(data)
+          : this.service.edit(this.modal!.id, { ...data, id: this.modal!.id });
+
+      operation.subscribe({
+        next: () => {
+          this.loading = false;
+          this.modalRef.triggerOk();
+        },
+        error: (err: any) => {
+          this.loading = false;
+          console.error(`${this.mode === 'add' ? 'Add' : 'Edit'} failed`, err);
+        },
+      });
     }
   }
-
+  onMainIdChange(mainIds: number[]): void {
+    this.mainIds = mainIds;
+  }
+  onChange(projectId: number): void {
+    this.projectId = projectId;
+  }
   onCancel(): void {
     this.modalRef.close();
-    this.form.reset();
   }
 }

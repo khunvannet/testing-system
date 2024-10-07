@@ -1,32 +1,16 @@
-import { Component, EventEmitter, inject, OnInit, Output } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { NzModalRef, NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
-import { NzNotificationService } from 'ng-zorro-antd/notification';
 import { CustomValidators } from 'src/app/helper/customValidators';
-import { HomeUiService } from './home-ui.service';
-import { HomeService, Project } from './home.service';
+import { TestRunService } from '../test-run.service';
 
 @Component({
-  selector: 'app-delete-pro',
+  selector: 'app-close-active',
   template: `
     <div *nzModalTitle class="modal-header-ellipsis">
-      <span>{{ 'Delete' | translate }} {{ model.name }} </span>
+      <span>{{ 'Close' | translate }} </span>
     </div>
     <div class="modal-content">
-      <nz-spin
-        *ngIf="loading"
-        style="position: absolute; top: 50%; left: 50%"
-      ></nz-spin>
-      <div
-        *ngIf="msg && !loading"
-        nz-row
-        nzJustify="center"
-        style="margin:2px 0 ; margin-bottom: 35px;"
-      >
-        <span nz-typography nzType="danger" style="position: absolute">{{
-          msg | translate
-        }}</span>
-      </div>
       <form nz-form [formGroup]="frm" (ngSubmit)="onSubmit()">
         <nz-form-item>
           <nz-form-label [nzSpan]="8" nzFor="name" nzRequired>
@@ -53,15 +37,13 @@ import { HomeService, Project } from './home.service';
     </div>
     <div *nzModalFooter>
       <button
-        *ngIf="!isInused"
         nz-button
-        [disabled]="!frm.valid"
         nzType="primary"
+        [disabled]="!frm.valid"
         [nzLoading]="loading"
         (click)="onSubmit()"
-        style="background-color: red; color: white"
       >
-        {{ 'Delete' | translate }}
+        {{ 'Close' | translate }}
       </button>
       <button nz-button nzType="default" (click)="onCancel()">
         {{ 'Cancel' | translate }}
@@ -84,41 +66,22 @@ import { HomeService, Project } from './home.service';
     `,
   ],
 })
-export class DeleteProjectComponent implements OnInit {
-  @Output() refreshList = new EventEmitter<Project>();
+export class CloseActiveComponent implements OnInit {
   frm!: FormGroup;
   loading = false;
   readonly modal = inject(NZ_MODAL_DATA);
-  model: Project = {};
-  isInused = false;
-  msg = '';
   constructor(
     private fb: FormBuilder,
     private modalRef: NzModalRef,
-    private service: HomeService,
-    public uiService: HomeUiService,
-    private notification: NzNotificationService
+    private service: TestRunService
   ) {}
 
-  ngOnInit(): void {
+  ngOnInit() {
     this.initForm();
     if (this.modal.id) {
-      this.checkProjectInUse();
       this.setFrmValue();
     }
   }
-  private checkProjectInUse(): void {
-    this.service.inused(this.modal.id).subscribe({
-      next: (response) => {
-        this.isInused = !response.can;
-        this.msg = response.message;
-      },
-      error: () => {
-        this.notification.error('Error', 'Error checking if project is in use');
-      },
-    });
-  }
-
   private initForm(): void {
     this.frm = this.fb.group({
       name: [{ value: null, disabled: true }, [CustomValidators.required]],
@@ -129,7 +92,6 @@ export class DeleteProjectComponent implements OnInit {
   private setFrmValue(): void {
     this.service.find(this.modal.id).subscribe({
       next: (results) => {
-        this.model = results;
         this.frm.setValue({
           name: results.name,
           note: '',
@@ -137,20 +99,18 @@ export class DeleteProjectComponent implements OnInit {
       },
     });
   }
-
-  onSubmit(): void {
+  onSubmit() {
     if (this.frm.valid) {
       this.loading = true;
       const data = { id: this.modal.id, note: this.frm.value.note };
 
-      this.service.delete(this.modal.id, data).subscribe({
+      this.service.close(this.modal.id, data).subscribe({
         next: () => {
           this.loading = false;
           this.modalRef.triggerOk();
         },
         error: () => {
           this.loading = false;
-          this.notification.error('Error', 'Error deleting the project');
         },
       });
     }

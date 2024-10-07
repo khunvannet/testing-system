@@ -25,10 +25,10 @@ export class MainUiService {
     });
   }
 
-  showEdit(id: number, name: string, projectId: number): void {
+  showEdit(id: number, projectId: number): void {
     this.modalService.create({
       nzContent: MainTestOperationComponent,
-      nzData: { id, name, projectId },
+      nzData: { id, projectId },
       nzMaskClosable: false,
       nzFooter: null,
       nzClosable: false,
@@ -40,10 +40,10 @@ export class MainUiService {
       },
     });
   }
-  showDalete(id: number, name: string): void {
+  showDalete(id: number): void {
     this.modalService.create({
       nzContent: DeleteMainComponent,
-      nzData: { id, name },
+      nzData: { id },
       nzMaskClosable: false,
       nzFooter: null,
       nzClosable: false,

@@ -26,10 +26,10 @@ export class HomeUiService {
     });
   }
 
-  showEdit(id: number, name: string) {
+  showEdit(id: number) {
     this.modalService.create({
       nzContent: OperationComponent,
-      nzData: { id, name },
+      nzData: { id },
       nzFooter: null,
       nzMaskClosable: false,
       nzClosable: false,

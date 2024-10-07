@@ -1,18 +1,17 @@
-import { NzModalService } from 'ng-zorro-antd/modal';
+import { NzModalRef, NzModalService } from 'ng-zorro-antd/modal';
 import { RunOperationComponent } from './run-operation.component';
 import { EventEmitter, Injectable } from '@angular/core';
-import { TestRun, TestRunService } from './test-run.service';
+import { CloseActiveComponent } from './active-run/close-active.component';
+import { RunAgainComponent } from './close-run/run-again.component';
+import { DeleteRunComponent } from './active-run/delete-run.component';
 
 @Injectable({
   providedIn: 'root',
 })
 export class TestRunUiService {
-  constructor(
-    private modalService: NzModalService,
-    private service: TestRunService
-  ) {}
+  constructor(private modalService: NzModalService) {}
   refresher = new EventEmitter<void>();
-  showAdd(projectId: number | null): void {
+  showAdd(projectId: number): void {
     this.modalService.create({
       nzContent: RunOperationComponent,
       nzData: { projectId },
@@ -24,13 +23,16 @@ export class TestRunUiService {
       nzComponentParams: {
         mode: 'add',
       },
+      nzOnOk: () => {
+        this.refresher.emit();
+      },
     });
   }
 
-  showEdit(testRun: TestRun, projectId: number, componentId: any = ''): void {
+  showEdit(id: number): void {
     this.modalService.create({
       nzContent: RunOperationComponent,
-      nzData: { projectId },
+      nzData: { id },
       nzFooter: null,
       nzClosable: true,
       nzWidth: 500,
@@ -38,75 +40,52 @@ export class TestRunUiService {
       nzBodyStyle: { padding: '0 ' },
       nzComponentParams: {
         mode: 'edit',
-        testRun,
+      },
+      nzOnOk: () => {
+        this.refresher.emit();
       },
     });
   }
-  showDelete(id: number, refreshCallback: () => void): void {
-    this.modalService.confirm({
-      nzTitle: 'Are you sure you want to delete?',
-
-      nzOkText: 'Yes',
-      nzOkType: 'primary',
-      nzOkDanger: true,
+  showClose(id: number) {
+    this.modalService.create({
+      nzContent: CloseActiveComponent,
+      nzData: { id },
+      nzFooter: null,
       nzMaskClosable: false,
+      nzClosable: false,
+      nzWidth: 400,
+      nzBodyStyle: { height: '300', padding: '0 ' },
       nzOnOk: () => {
-        this.service.delete(id).subscribe({
-          next: (response: any) => {
-            refreshCallback();
-          },
-          error: (error: any) => {
-            console.error('Error deleting project:', error);
-          },
-        });
+        this.refresher.emit();
       },
-      nzCancelText: 'No',
-      nzOnCancel: () => console.log('Cancel'),
     });
   }
-
-  showClose(id: number, refreshCallback: () => void): void {
-    this.modalService.confirm({
-      nzTitle: 'You want close Test Run',
-
-      nzOkText: 'Yes',
-      nzOkType: 'primary',
-      nzOkDanger: true,
+  showRunAgain(id: number) {
+    this.modalService.create({
+      nzContent: RunAgainComponent,
+      nzData: { id },
+      nzFooter: null,
       nzMaskClosable: false,
+      nzClosable: false,
+      nzWidth: 400,
+      nzBodyStyle: { height: '300', padding: '0 ' },
       nzOnOk: () => {
-        this.service.closeRun(id).subscribe({
-          next: (response: any) => {
-            refreshCallback();
-          },
-          error: (error: any) => {
-            console.error('Error deleting project:', error);
-          },
-        });
+        this.refresher.emit();
       },
-      nzCancelText: 'No',
-      nzOnCancel: () => console.log('Cancel'),
     });
   }
-  showActive(id: number, refreshCallback: () => void): void {
-    this.modalService.confirm({
-      nzTitle: 'You want close Test Run',
-
-      nzOkText: 'Yes',
-      nzOkType: 'primary',
-      nzOkDanger: true,
+  showDelete(id: number) {
+    this.modalService.create({
+      nzContent: DeleteRunComponent,
+      nzData: { id },
+      nzFooter: null,
       nzMaskClosable: false,
+      nzClosable: false,
+      nzWidth: 400,
+      nzBodyStyle: { height: '300', padding: '0 ' },
       nzOnOk: () => {
-        this.service.activeRun(id).subscribe({
-          next: (response: any) => {
-            refreshCallback();
-          },
-          error: (error: any) => {
-            console.error('Error deleting project:', error);
-          },
-        });
+        this.refresher.emit();
       },
-      nzCancelText: 'No',
-      nzOnCancel: () => console.log('Cancel'),
     });
   }
 }

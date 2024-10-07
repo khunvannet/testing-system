@@ -1,5 +1,5 @@
 import { Component, EventEmitter, inject, OnInit, Output } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup } from '@angular/forms';
 import { NzModalRef, NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
 import { NzNotificationService } from 'ng-zorro-antd/notification';
 import { CustomValidators } from 'src/app/helper/customValidators';
@@ -8,7 +8,7 @@ import { TestCase, TestCaseService } from './test-case.service';
   selector: 'app-delete-pro',
   template: `
     <div *nzModalTitle class="modal-header-ellipsis">
-      <span>{{ 'Delete' | translate }} {{ modal?.name }} </span>
+      <span>{{ 'Delete' | translate }} {{ model.name }} </span>
     </div>
     <div class="modal-content">
       <form nz-form [formGroup]="frm" (ngSubmit)="onSubmit()">
@@ -60,6 +60,7 @@ import { TestCase, TestCaseService } from './test-case.service';
       .modal-header-ellipsis {
         display: block;
         text-align: center;
+        font-size: 14px;
       }
       .error-message {
         color: red;
@@ -71,6 +72,7 @@ export class DeleteTestComponent implements OnInit {
   @Output() refreshList = new EventEmitter<TestCase>();
   frm!: FormGroup;
   loading = false;
+  model: TestCase = {};
   constructor(
     private fb: FormBuilder,
     private modalRef: NzModalRef,
@@ -94,6 +96,7 @@ export class DeleteTestComponent implements OnInit {
   private setFrmValue(): void {
     this.service.find(this.modal?.id).subscribe({
       next: (results) => {
+        this.model = results;
         this.frm.setValue({
           name: results.name,
           notes: results.notes || null,
@@ -112,7 +115,6 @@ export class DeleteTestComponent implements OnInit {
         next: () => {
           this.loading = false;
           this.modalRef.triggerOk();
-          this.notification.success('Success', 'Test deleted successfully');
         },
         error: () => {
           this.notification.error(
