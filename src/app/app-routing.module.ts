@@ -1,13 +1,13 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
-import { HomeComponent } from './pages/home/home.component';
+import { HomeComponent } from './pages/project/project-sidebar.component';
 import { LayoutComponent } from './pages/layout/layout.component';
 import { TestRunComponent } from './pages/test-run/test-run.component';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { ActiveRunComponent } from './pages/test-run/active-run/active-run.component';
 import { CloseRunComponent } from './pages/test-run/close-run/close-run.component';
 import { SettingComponent } from './pages/setting/setting.component';
-import { MainTestListComponent } from './pages/main-test/main-list.component';
+import { MainTestListComponent } from './pages/main/main-list.component';
 
 const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'home' },

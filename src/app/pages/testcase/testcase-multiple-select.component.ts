@@ -11,7 +11,7 @@ import {
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { QueryParam } from 'src/app/helper/base-api.service';
 import { BaseListComponent } from 'src/app/utils/components/base-list.component';
-import { TestCase, TestCaseService } from './test-case.service';
+import { TestCase, TestCaseService } from './testcase-case.service';
 
 @Component({
   selector: 'app-test-multiple-select',

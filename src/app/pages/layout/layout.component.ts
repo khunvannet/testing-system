@@ -1,5 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { HomeUiService } from '../home/home-ui.service';
+import { HomeUiService } from '../project/project-ui.service';
 import { TranslateService } from '@ngx-translate/core';
 import { en_US, km_KH, NzI18nService } from 'ng-zorro-antd/i18n';
 export interface Language {

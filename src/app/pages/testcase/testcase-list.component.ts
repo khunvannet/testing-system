@@ -7,8 +7,8 @@ import {
   SimpleChanges,
 } from '@angular/core';
 import { Subscription } from 'rxjs';
-import { TestCase, TestCaseService } from './test-case.service';
-import { TestCaseUiService } from './test-case-ui.service';
+import { TestCase, TestCaseService } from './testcase-case.service';
+import { TestCaseUiService } from './testcase-ui.service';
 import { NzNotificationService } from 'ng-zorro-antd/notification';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { BaseListComponent } from 'src/app/utils/components/base-list.component';

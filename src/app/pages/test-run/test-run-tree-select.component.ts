@@ -9,8 +9,8 @@ import {
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { NzFormatEmitEvent } from 'ng-zorro-antd/tree';
 import { QueryParam } from 'src/app/helper/base-api.service';
-import { MainTest, MainTestService } from '../main-test/main-test.service';
-import { TestCase, TestCaseService } from '../testcase/test-case.service';
+import { MainTest, MainTestService } from '../main/main-test.service';
+import { TestCase, TestCaseService } from '../testcase/testcase-case.service';
 
 @Component({
   selector: 'app-tree-select',

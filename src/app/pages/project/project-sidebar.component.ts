@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { en_US, km_KH, NzI18nService } from 'ng-zorro-antd/i18n';
-import { HomeUiService } from './home-ui.service';
+import { HomeUiService } from './project-ui.service';
 
 export interface Language {
   name: string;

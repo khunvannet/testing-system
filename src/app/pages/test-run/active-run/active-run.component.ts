@@ -1,10 +1,10 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { RunUiService } from './run-ui.service';
+import { RunUiService } from './active-run-ui.service';
 import { Observable, Subscription } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
 import { NzButtonSize } from 'ng-zorro-antd/button';
 import { BaseListComponent } from 'src/app/utils/components/base-list.component';
-import { Rundetail, RunService } from './run.service';
+import { Rundetail, RunService } from './active-run.service';
 
 @Component({
   selector: 'app-run',

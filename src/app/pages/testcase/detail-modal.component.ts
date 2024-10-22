@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { TestCaseUiService } from './test-case-ui.service';
+import { TestCaseUiService } from './testcase-ui.service';
 @Component({
   selector: 'app-detail-modal',
   template: `

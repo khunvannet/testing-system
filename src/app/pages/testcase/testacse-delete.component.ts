@@ -1,34 +1,19 @@
-import {
-  Component,
-  EventEmitter,
-  inject,
-  Input,
-  OnInit,
-  Output,
-} from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Component, EventEmitter, inject, OnInit, Output } from '@angular/core';
+import { FormBuilder, FormGroup } from '@angular/forms';
 import { NzModalRef, NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
-import { Project, HomeService } from './home.service';
 import { NzNotificationService } from 'ng-zorro-antd/notification';
 import { CustomValidators } from 'src/app/helper/customValidators';
+import { TestCase, TestCaseService } from './testcase-case.service';
 @Component({
-  selector: 'app-operation',
+  selector: 'app-delete-pro',
   template: `
     <div *nzModalTitle class="modal-header-ellipsis">
-      <span *ngIf="mode === 'add'">{{ 'Add' | translate }} </span>
-      <span *ngIf="mode === 'edit'"
-        >{{ 'Edit' | translate }} {{ model.name }}</span
-      >
+      <span>{{ 'Delete' | translate }} {{ model.name }} </span>
     </div>
     <div class="modal-content">
-      <form
-        nz-form
-        [formGroup]="frm"
-        (ngSubmit)="onSubmit()"
-        [nzAutoTips]="autoTips"
-      >
+      <form nz-form [formGroup]="frm" (ngSubmit)="onSubmit()">
         <nz-form-item>
-          <nz-form-label [nzSpan]="8" nzFor="name" nzRequired>
+          <nz-form-label [nzSpan]="8" nzFor="name">
             {{ 'Name' | translate }}
           </nz-form-label>
           <nz-form-control [nzSpan]="15" nzHasFeedback>
@@ -36,15 +21,15 @@ import { CustomValidators } from 'src/app/helper/customValidators';
           </nz-form-control>
         </nz-form-item>
         <nz-form-item>
-          <nz-form-label [nzSpan]="8" nzFor="description">
-            {{ 'Description' | translate }}
+          <nz-form-label [nzSpan]="8" nzFor="notes">
+            {{ 'Notes' | translate }}
           </nz-form-label>
           <nz-form-control [nzSpan]="15">
             <textarea
               rows="3"
               nz-input
-              formControlName="description"
-              id="description"
+              formControlName="notes"
+              id="notes"
             ></textarea>
           </nz-form-control>
         </nz-form-item>
@@ -52,24 +37,12 @@ import { CustomValidators } from 'src/app/helper/customValidators';
     </div>
     <div *nzModalFooter>
       <button
-        *ngIf="mode === 'add'"
-        [disabled]="!frm.valid"
         nz-button
         nzType="primary"
         [nzLoading]="loading"
         (click)="onSubmit()"
       >
-        {{ 'Add' | translate }}
-      </button>
-      <button
-        *ngIf="mode === 'edit'"
-        [disabled]="!frm.valid"
-        nz-button
-        nzType="primary"
-        [nzLoading]="loading"
-        (click)="onSubmit()"
-      >
-        {{ 'Edit' | translate }}
+        {{ 'Delete' | translate }}
       </button>
       <button nz-button nzType="default" (click)="onCancel()">
         {{ 'Cancel' | translate }}
@@ -95,71 +68,64 @@ import { CustomValidators } from 'src/app/helper/customValidators';
     `,
   ],
 })
-export class OperationComponent implements OnInit {
-  @Input() mode: 'add' | 'edit' = 'add';
-  @Output() refreshList = new EventEmitter<Project>();
+export class DeleteTestComponent implements OnInit {
+  @Output() refreshList = new EventEmitter<TestCase>();
   frm!: FormGroup;
   loading = false;
-  model: Project = {};
-  autoTips = CustomValidators.autoTips;
+  model: TestCase = {};
   constructor(
     private fb: FormBuilder,
     private modalRef: NzModalRef,
-    private service: HomeService,
+    private service: TestCaseService,
     private notification: NzNotificationService
   ) {}
   readonly modal = inject(NZ_MODAL_DATA);
   ngOnInit(): void {
     this.initControl();
-    if (this.mode === 'edit' && this.modal.id) {
+    if (this.modal.id) {
       this.setFrmValue();
     }
   }
   private initControl(): void {
-    const { required, nameExistValidator } = CustomValidators;
+    const { required } = CustomValidators;
     this.frm = this.fb.group({
-      name: [
-        null,
-        [required],
-        [nameExistValidator(this.service, this.modal?.id)],
-      ],
-      description: [null],
+      name: [{ value: null, disabled: true }, [required]],
+      notes: [null],
     });
   }
   private setFrmValue(): void {
-    this.service.find(this.modal.id).subscribe({
+    this.service.find(this.modal?.id).subscribe({
       next: (results) => {
         this.model = results;
         this.frm.setValue({
           name: results.name,
-          description: results.description,
+          notes: results.notes || null,
         });
       },
     });
   }
-  onSubmit(): void {
+  onSubmit() {
     if (this.frm.valid) {
       this.loading = true;
-      const data = this.frm.getRawValue();
-      const operation =
-        this.mode === 'add'
-          ? this.service.add(data)
-          : this.service.edit(this.modal.id, { ...data, id: this.modal.id });
-
-      operation.subscribe({
+      const data = {
+        id: this.modal.id,
+        note: this.frm.value.note,
+      };
+      this.service.delete(this.modal.id, data).subscribe({
         next: () => {
           this.loading = false;
           this.modalRef.triggerOk();
         },
-        error: (err) => {
+        error: () => {
+          this.notification.error(
+            'Error',
+            'Error occurred while deleting the test'
+          );
           this.loading = false;
-          console.error(`${this.mode} failed`, err);
-          this.notification.error('Data', `${this.mode} failed`);
         },
       });
     }
   }
-
   onCancel(): void {
     this.modalRef.close();
   }

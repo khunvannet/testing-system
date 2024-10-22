@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { HomeUiService } from '../home/home-ui.service';
+import { HomeUiService } from '../project/project-ui.service';
 
 @Component({
   selector: 'app-no-project-found',

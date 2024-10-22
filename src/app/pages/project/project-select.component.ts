@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { QueryParam } from 'src/app/helper/base-api.service';
-import { HomeService, Project } from './home.service';
+import { HomeService, Project } from './project.service';
 import { ProjectService } from 'src/app/helper/project-select.service';
 import { Router } from '@angular/router';
 

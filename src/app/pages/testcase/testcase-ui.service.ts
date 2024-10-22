@@ -1,8 +1,8 @@
 import { EventEmitter, Injectable } from '@angular/core';
 import { NzModalService } from 'ng-zorro-antd/modal';
-import { TestOperationComponent } from './test-operation.component';
+import { TestOperationComponent } from './testcase-operation.component';
 import { DetailModalComponent } from './detail-modal.component';
-import { DeleteTestComponent } from './delete-testcase.component';
+import { DeleteTestComponent } from './testacse-delete.component';
 
 @Injectable({
   providedIn: 'root',

@@ -1,33 +1,32 @@
-import { Component, EventEmitter, inject, OnInit, Output } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import {
+  Component,
+  EventEmitter,
+  inject,
+  Input,
+  OnInit,
+  Output,
+} from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NzModalRef, NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
+import { Project, HomeService } from './project.service';
 import { NzNotificationService } from 'ng-zorro-antd/notification';
 import { CustomValidators } from 'src/app/helper/customValidators';
-import { HomeUiService } from './home-ui.service';
-import { HomeService, Project } from './home.service';
-
 @Component({
-  selector: 'app-delete-pro',
+  selector: 'app-operation',
   template: `
     <div *nzModalTitle class="modal-header-ellipsis">
-      <span>{{ 'Delete' | translate }} {{ model.name }} </span>
+      <span *ngIf="mode === 'add'">{{ 'Add' | translate }} </span>
+      <span *ngIf="mode === 'edit'"
+        >{{ 'Edit' | translate }} {{ model.name }}</span
+      >
     </div>
     <div class="modal-content">
-      <nz-spin
-        *ngIf="loading"
-        style="position: absolute; top: 50%; left: 50%"
-      ></nz-spin>
-      <div
-        *ngIf="msg && !loading"
-        nz-row
-        nzJustify="center"
-        style="margin:2px 0 ; margin-bottom: 35px;"
+      <form
+        nz-form
+        [formGroup]="frm"
+        (ngSubmit)="onSubmit()"
+        [nzAutoTips]="autoTips"
       >
-        <span nz-typography nzType="danger" style="position: absolute">{{
-          msg | translate
-        }}</span>
-      </div>
-      <form nz-form [formGroup]="frm" (ngSubmit)="onSubmit()">
         <nz-form-item>
           <nz-form-label [nzSpan]="8" nzFor="name" nzRequired>
             {{ 'Name' | translate }}
@@ -37,15 +36,15 @@ import { HomeService, Project } from './home.service';
           </nz-form-control>
         </nz-form-item>
         <nz-form-item>
-          <nz-form-label [nzSpan]="8" nzFor="notes">
-            {{ 'Notes' | translate }}
+          <nz-form-label [nzSpan]="8" nzFor="description">
+            {{ 'Description' | translate }}
           </nz-form-label>
           <nz-form-control [nzSpan]="15">
             <textarea
               rows="3"
               nz-input
-              formControlName="note"
-              id="notes"
+              formControlName="description"
+              id="description"
             ></textarea>
           </nz-form-control>
         </nz-form-item>
@@ -53,15 +52,24 @@ import { HomeService, Project } from './home.service';
     </div>
     <div *nzModalFooter>
       <button
-        *ngIf="!isInused"
-        nz-button
+        *ngIf="mode === 'add'"
         [disabled]="!frm.valid"
+        nz-button
         nzType="primary"
         [nzLoading]="loading"
         (click)="onSubmit()"
-        style="background-color: red; color: white"
       >
-        {{ 'Delete' | translate }}
+        {{ 'Add' | translate }}
+      </button>
+      <button
+        *ngIf="mode === 'edit'"
+        [disabled]="!frm.valid"
+        nz-button
+        nzType="primary"
+        [nzLoading]="loading"
+        (click)="onSubmit()"
+      >
+        {{ 'Edit' | translate }}
       </button>
       <button nz-button nzType="default" (click)="onCancel()">
         {{ 'Cancel' | translate }}
@@ -81,76 +89,72 @@ import { HomeService, Project } from './home.service';
         text-align: center;
         font-size: 14px;
       }
+      .error-message {
+        color: red;
+      }
     `,
   ],
 })
-export class DeleteProjectComponent implements OnInit {
+export class OperationComponent implements OnInit {
+  @Input() mode: 'add' | 'edit' = 'add';
   @Output() refreshList = new EventEmitter<Project>();
   frm!: FormGroup;
   loading = false;
-  readonly modal = inject(NZ_MODAL_DATA);
   model: Project = {};
-  isInused = false;
-  msg = '';
+  autoTips = CustomValidators.autoTips;
   constructor(
     private fb: FormBuilder,
     private modalRef: NzModalRef,
     private service: HomeService,
-    public uiService: HomeUiService,
     private notification: NzNotificationService
   ) {}
-
+  readonly modal = inject(NZ_MODAL_DATA);
   ngOnInit(): void {
-    this.initForm();
-    if (this.modal.id) {
-      this.checkProjectInUse();
+    this.initControl();
+    if (this.mode === 'edit' && this.modal.id) {
       this.setFrmValue();
     }
   }
-  private checkProjectInUse(): void {
-    this.service.inused(this.modal.id).subscribe({
-      next: (response) => {
-        this.isInused = !response.can;
-        this.msg = response.message;
-      },
-      error: () => {
-        this.notification.error('Error', 'Error checking if project is in use');
-      },
-    });
-  }
-
-  private initForm(): void {
+  private initControl(): void {
+    const { required, nameExistValidator } = CustomValidators;
     this.frm = this.fb.group({
-      name: [{ value: null, disabled: true }, [CustomValidators.required]],
-      note: [''],
+      name: [
+        null,
+        [required],
+        [nameExistValidator(this.service, this.modal?.id)],
+      ],
+      description: [null],
     });
   }
-
   private setFrmValue(): void {
     this.service.find(this.modal.id).subscribe({
       next: (results) => {
         this.model = results;
         this.frm.setValue({
           name: results.name,
-          note: '',
+          description: results.description,
         });
       },
     });
   }
-
   onSubmit(): void {
     if (this.frm.valid) {
       this.loading = true;
-      const data = { id: this.modal.id, note: this.frm.value.note };
+      const data = this.frm.getRawValue();
+      const operation =
+        this.mode === 'add'
+          ? this.service.add(data)
+          : this.service.edit(this.modal.id, { ...data, id: this.modal.id });
 
-      this.service.delete(this.modal.id, data).subscribe({
+      operation.subscribe({
         next: () => {
           this.loading = false;
           this.modalRef.triggerOk();
         },
-        error: () => {
+        error: (err) => {
           this.loading = false;
-          this.notification.error('Error', 'Error deleting the project');
+          console.error(`${this.mode} failed`, err);
+          this.notification.error('Data', `${this.mode} failed`);
         },
       });
     }

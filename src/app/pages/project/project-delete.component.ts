@@ -3,7 +3,9 @@ import { FormBuilder, FormGroup } from '@angular/forms';
 import { NzModalRef, NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
 import { NzNotificationService } from 'ng-zorro-antd/notification';
 import { CustomValidators } from 'src/app/helper/customValidators';
-import { TestCase, TestCaseService } from './test-case.service';
+import { HomeUiService } from './project-ui.service';
+import { HomeService, Project } from './project.service';
+
 @Component({
   selector: 'app-delete-pro',
   template: `
@@ -11,9 +13,23 @@ import { TestCase, TestCaseService } from './test-case.service';
       <span>{{ 'Delete' | translate }} {{ model.name }} </span>
     </div>
     <div class="modal-content">
+      <nz-spin
+        *ngIf="loading"
+        style="position: absolute; top: 50%; left: 50%"
+      ></nz-spin>
+      <div
+        *ngIf="msg && !loading"
+        nz-row
+        nzJustify="center"
+        style="margin:2px 0 ; margin-bottom: 35px;"
+      >
+        <span nz-typography nzType="danger" style="position: absolute">{{
+          msg | translate
+        }}</span>
+      </div>
       <form nz-form [formGroup]="frm" (ngSubmit)="onSubmit()">
         <nz-form-item>
-          <nz-form-label [nzSpan]="8" nzFor="name">
+          <nz-form-label [nzSpan]="8" nzFor="name" nzRequired>
             {{ 'Name' | translate }}
           </nz-form-label>
           <nz-form-control [nzSpan]="15" nzHasFeedback>
@@ -28,7 +44,7 @@ import { TestCase, TestCaseService } from './test-case.service';
             <textarea
               rows="3"
               nz-input
-              formControlName="notes"
+              formControlName="note"
               id="notes"
             ></textarea>
           </nz-form-control>
@@ -37,10 +53,13 @@ import { TestCase, TestCaseService } from './test-case.service';
     </div>
     <div *nzModalFooter>
       <button
+        *ngIf="!isInused"
         nz-button
+        [disabled]="!frm.valid"
         nzType="primary"
         [nzLoading]="loading"
         (click)="onSubmit()"
+        style="background-color: red; color: white"
       >
         {{ 'Delete' | translate }}
       </button>
@@ -62,70 +81,81 @@ import { TestCase, TestCaseService } from './test-case.service';
         text-align: center;
         font-size: 14px;
       }
-      .error-message {
-        color: red;
-      }
     `,
   ],
 })
-export class DeleteTestComponent implements OnInit {
-  @Output() refreshList = new EventEmitter<TestCase>();
+export class DeleteProjectComponent implements OnInit {
+  @Output() refreshList = new EventEmitter<Project>();
   frm!: FormGroup;
   loading = false;
-  model: TestCase = {};
+  readonly modal = inject(NZ_MODAL_DATA);
+  model: Project = {};
+  isInused = false;
+  msg = '';
   constructor(
     private fb: FormBuilder,
     private modalRef: NzModalRef,
-    private service: TestCaseService,
+    private service: HomeService,
+    public uiService: HomeUiService,
     private notification: NzNotificationService
   ) {}
-  readonly modal = inject(NZ_MODAL_DATA);
+
   ngOnInit(): void {
-    this.initControl();
+    this.initForm();
     if (this.modal.id) {
+      this.checkProjectInUse();
       this.setFrmValue();
     }
   }
-  private initControl(): void {
-    const { required } = CustomValidators;
-    this.frm = this.fb.group({
-      name: [{ value: null, disabled: true }, [required]],
-      notes: [null],
+  private checkProjectInUse(): void {
+    this.service.inused(this.modal.id).subscribe({
+      next: (response) => {
+        this.isInused = !response.can;
+        this.msg = response.message;
+      },
+      error: () => {
+        this.notification.error('Error', 'Error checking if project is in use');
+      },
     });
   }
+
+  private initForm(): void {
+    this.frm = this.fb.group({
+      name: [{ value: null, disabled: true }, [CustomValidators.required]],
+      note: [''],
+    });
+  }
+
   private setFrmValue(): void {
-    this.service.find(this.modal?.id).subscribe({
+    this.service.find(this.modal.id).subscribe({
       next: (results) => {
         this.model = results;
         this.frm.setValue({
           name: results.name,
-          notes: results.notes || null,
+          note: '',
         });
       },
     });
   }
-  onSubmit() {
+
+  onSubmit(): void {
     if (this.frm.valid) {
       this.loading = true;
-      const data = {
-        id: this.modal.id,
-        note: this.frm.value.note,
-      };
+      const data = { id: this.modal.id, note: this.frm.value.note };
+
       this.service.delete(this.modal.id, data).subscribe({
         next: () => {
           this.loading = false;
           this.modalRef.triggerOk();
         },
         error: () => {
-          this.notification.error(
-            'Error',
-            'Error occurred while deleting the test'
-          );
           this.loading = false;
+          this.notification.error('Error', 'Error deleting the project');
         },
       });
     }
   }
+
   onCancel(): void {
     this.modalRef.close();
   }

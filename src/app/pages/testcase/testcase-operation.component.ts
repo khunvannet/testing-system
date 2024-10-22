@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NzModalRef, NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
-import { TestCase, TestCaseService } from './test-case.service';
+import { TestCase, TestCaseService } from './testcase-case.service';
 import { NzNotificationService } from 'ng-zorro-antd/notification';
 import { CustomValidators } from 'src/app/helper/customValidators';
 

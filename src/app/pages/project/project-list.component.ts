@@ -5,9 +5,9 @@ import {
   Output,
   EventEmitter,
 } from '@angular/core';
-import { HomeUiService } from './home-ui.service';
+import { HomeUiService } from './project-ui.service';
 import { Subscription } from 'rxjs';
-import { HomeService, Project } from './home.service';
+import { HomeService, Project } from './project.service';
 import { ProjectService } from 'src/app/helper/project-select.service';
 import { BaseListComponent } from 'src/app/utils/components/base-list.component';
 

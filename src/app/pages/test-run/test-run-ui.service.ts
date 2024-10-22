@@ -1,9 +1,9 @@
 import { NzModalRef, NzModalService } from 'ng-zorro-antd/modal';
-import { RunOperationComponent } from './run-operation.component';
+import { RunOperationComponent } from './test-run-operation.component';
 import { EventEmitter, Injectable } from '@angular/core';
-import { CloseActiveComponent } from './active-run/close-active.component';
-import { RunAgainComponent } from './close-run/run-again.component';
-import { DeleteRunComponent } from './active-run/delete-run.component';
+import { CloseActiveComponent } from './active-run/active-run-close.component';
+import { RunAgainComponent } from './close-run/close-run-again.component';
+import { DeleteRunComponent } from './active-run/active-run-delete.component';
 
 @Injectable({
   providedIn: 'root',
