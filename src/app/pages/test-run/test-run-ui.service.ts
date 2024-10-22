@@ -17,9 +17,9 @@ export class TestRunUiService {
       nzData: { projectId },
       nzFooter: null,
       nzClosable: true,
-      nzWidth: 500,
+      nzWidth: 600,
       nzMaskClosable: false,
-      nzBodyStyle: { padding: '0 ' },
+      nzBodyStyle: { height: '400px', padding: '0 10px ' },
       nzComponentParams: {
         mode: 'add',
       },
@@ -37,7 +37,7 @@ export class TestRunUiService {
       nzClosable: true,
       nzWidth: 500,
       nzMaskClosable: false,
-      nzBodyStyle: { padding: '0 ' },
+      nzBodyStyle: { height: '400px', padding: '0 10px ' },
       nzComponentParams: {
         mode: 'edit',
       },

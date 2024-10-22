@@ -10,10 +10,10 @@ export interface TestRun {
   description?: string;
   projectId?: number;
   projectName?: string;
-  mainId?: number;
-  mainName?: string;
   testId?: number;
   testName?: string;
+  statusId?: number;
+  statusName?: string;
   ordering?: number;
   active?: boolean;
   note?: string;

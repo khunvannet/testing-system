@@ -1,8 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { RunUiService } from './run-ui.service';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
 import { NzButtonSize } from 'ng-zorro-antd/button';
+import { BaseListComponent } from 'src/app/utils/components/base-list.component';
+import { Rundetail, RunService } from './run.service';
 
 @Component({
   selector: 'app-run',
@@ -15,87 +17,86 @@ import { NzButtonSize } from 'ng-zorro-antd/button';
           ></app-breadcrumb>
         </div>
         <div class="search">
-          <nz-input-group [nzSuffix]="suffixIconSearch">
-            <input type="text" nz-input />
-          </nz-input-group>
-          <ng-template #suffixIconSearch>
-            <span nz-icon nzType="search"></span>
-          </ng-template>
+          <app-filter-input
+            (filterChanged)="searchText = $event; param.pageIndex = 1; search()"
+          ></app-filter-input>
         </div>
         <div class="select-status">
-          <nz-select ngModel="Pending">
-            <nz-option nzValue="All Status" nzLabel="All Status"></nz-option>
-            <nz-option nzValue="Success" nzLabel="Success"></nz-option>
-            <nz-option nzValue="Skip" nzLabel="Skip"></nz-option>
-            <nz-option nzValue="Pending" nzLabel="Pending"></nz-option>
-          </nz-select>
+          <app-EnumStatus
+            (valueChanged)="onStatusChange($event)"
+          ></app-EnumStatus>
         </div>
       </div>
     </nz-header>
     <nz-layout>
       <nz-content>
-        <div class="content-inline">
-          <div class="table-case">
-            <nz-table
-              [nzShowPagination]="true"
-              nzSize="small"
-              nzNoResult="noResult"
-              [nzData]="run"
-            >
-              <thead>
-                <tr>
-                  <th nzWidth="50px">#</th>
-                  <th nzColumnKey="code" nzWidth="100px">Code</th>
-                  <th nzColumnKey="title" nzWidth="35%">Title</th>
-                  <th nzColumnKey="status" nzWidth="100px">Status</th>
-                  <th nzWidth="165px"></th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let data of run; let i = index">
-                  <td nzEllipsis>{{ i + 1 }}</td>
-                  <td nzEllipsis>{{ data.code }}</td>
+        <div class="table-case">
+          <nz-table
+            [nzData]="lists"
+            nzTableLayout="fixed"
+            nzShowSizeChanger
+            nzShowPagination
+            [nzFrontPagination]="false"
+            [nzPageIndex]="param.pageIndex!"
+            [nzPageSize]="param.pageSize!"
+            nzSize="small"
+            [nzTotal]="totalList"
+            [nzLoading]="loading"
+            [nzNoResult]="noResult"
+            (nzQueryParams)="onQueryParamsChange($event)"
+          >
+            <ng-template #noResult>
+              <app-no-result-found></app-no-result-found>
+            </ng-template>
+            <thead>
+              <tr>
+                <th nzWidth="50px">#</th>
+                <th nzColumnKey="code" nzWidth="100px">Code</th>
+                <th nzColumnKey="title" nzWidth="35%">Title</th>
+                <th nzColumnKey="status" nzWidth="100px">Status</th>
+                <th nzWidth="165px"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let data of lists; let i = index">
+                <td nzEllipsis>
+                  {{
+                    ((param.pageIndex || 1) - 1) * (param.pageSize || 10) +
+                      i +
+                      1
+                  }}
+                </td>
+                <td nzEllipsis>{{ data.code }}</td>
 
-                  <td nzEllipsis>{{ data.name }}</td>
+                <td nzEllipsis>{{ data.testName }}</td>
 
-                  <td nzEllipsis>{{ data.result }}</td>
-                  <td class="action-buttons">
-                    <nz-space>
-                      <button
-                        nzSize="small"
-                        *nzSpaceItem
-                        nz-button
-                        nzType="primary"
-                        nzGhost
-                        (click)="uiService.showUpdateResult()"
-                      >
-                        Test
-                      </button>
-                      <button
-                        nzSize="small"
-                        *nzSpaceItem
-                        nz-button
-                        nzType="primary"
-                        nzGhost
-                        style=" border-color:green; color:green;"
-                      >
-                        Skip
-                      </button>
-                      <button
-                        nzSize="small"
-                        *nzSpaceItem
-                        nz-button
-                        nzType="dashed"
-                        nzDanger
-                      >
-                        Delete
-                      </button>
-                    </nz-space>
-                  </td>
-                </tr>
-              </tbody>
-            </nz-table>
-          </div>
+                <td nzEllipsis>{{ data.statusName }}</td>
+                <td class="action-buttons">
+                  <nz-space>
+                    <button
+                      nzSize="small"
+                      *nzSpaceItem
+                      nz-button
+                      nzType="primary"
+                      nzGhost
+                    >
+                      Test
+                    </button>
+                    <button
+                      nzSize="small"
+                      *nzSpaceItem
+                      nz-button
+                      nzType="primary"
+                      nzGhost
+                      style=" border-color:green; color:green;"
+                    >
+                      Skip
+                    </button>
+                  </nz-space>
+                </td>
+              </tr>
+            </tbody>
+          </nz-table>
         </div>
       </nz-content>
     </nz-layout>`,
@@ -115,64 +116,73 @@ import { NzButtonSize } from 'ng-zorro-antd/button';
         margin-top: 10px;
         margin: 15px;
       }
-      ::ng-deep
-        .ant-select-single.ant-select-show-arrow
-        .ant-select-selection-item {
-        width: 210px;
-      }
 
       .search {
         margin-left: 35px;
       }
-      nz-input-group {
-        width: 250px;
-      }
+
       nz-header {
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
         background: #f8f9fa;
       }
-      .content-inline {
-        width: 1700px;
-      }
+
       .header {
         display: flex;
       }
       nz-content {
         margin: 11px;
         display: flex;
-        min-height: 92vh;
+        min-height: 78vh;
         background: #fff;
-        width: 98%;
+        min-width: 1000px;
       }
     `,
   ],
 })
-export class ActiveRunComponent implements OnInit {
+export class ActiveRunComponent
+  extends BaseListComponent<Rundetail>
+  implements OnInit, OnDestroy
+{
   breadcrumbData!: Observable<any>;
-  run: any[] = [
-    {
-      id: 1,
-      code: 101,
-      name: 'form required',
-      noOfTest: 1,
-      asigned: 'Khun Vannet',
-      result: 'Pending',
-    },
-    {
-      id: 2,
-      code: 104,
-      name: 'form validation',
-      noOfTest: 1,
-      asigned: 'Khun Vannet',
-      result: 'Pending',
-    },
-  ];
+  id?: number = 0;
+  run: [] = [];
+  statusId: number = 0;
+  private refreshSub$!: Subscription;
+  constructor(service: RunService, private route: ActivatedRoute) {
+    super(service);
+  }
+  override ngOnInit(): void {
+    this.breadcrumbData = this.route.data;
+    this.route.paramMap.subscribe((params) => {
+      this.id = Number(params.get('id'));
+    });
+  }
+  override search(): void {
+    if (this.loading) return;
+    this.loading = true;
+    setTimeout(() => {
+      const filters = [
+        { field: 'testName', operator: 'contains', value: this.searchText },
+        { field: 'runId', operator: 'eq', value: this.id },
+        { field: 'statusId', operator: 'eq', value: this.statusId },
+      ];
+      this.param.filters = JSON.stringify(filters);
+      this.service.search(this.param).subscribe({
+        next: (response: any) => {
+          this.lists = response.results;
+          this.totalList = response.param.rowCount;
+          this.loading = false;
+        },
+        error: () => (this.loading = false),
+      });
+    }, 150);
+  }
+  onStatusChange(selectedStatus: number): void {
+    this.statusId = selectedStatus;
+    this.search();
+  }
 
-  constructor(
-    public uiService: RunUiService,
-    private activated: ActivatedRoute
-  ) {}
-  ngOnInit(): void {
-    this.breadcrumbData = this.activated.data;
+  ngOnDestroy(): void {
+    this.refreshSub$?.unsubscribe();
   }
 }

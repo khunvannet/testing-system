@@ -48,8 +48,8 @@ export class BaseApiService<T> {
   close(id: number, data: any): Observable<T> {
     return this.http.post<T>(`${this.getEndpoint()}/${id}/close`, data);
   }
-  runAgain(id: number, data: any): Observable<T> {
-    return this.http.post<T>(`${this.getEndpoint()}/${id}/run-again`, data);
+  clone(id: number, data: any): Observable<T> {
+    return this.http.post<T>(`${this.getEndpoint()}/${id}/clone`, data);
   }
   exist(
     name: string = '',

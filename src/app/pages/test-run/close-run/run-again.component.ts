@@ -105,7 +105,7 @@ export class RunAgainComponent implements OnInit {
       this.loading = true;
       const data = { id: this.modal.id, note: this.frm.value.note };
 
-      this.service.runAgain(this.modal.id, data).subscribe({
+      this.service.clone(this.modal.id, data).subscribe({
         next: () => {
           this.loading = false;
           this.modalRef.triggerOk();

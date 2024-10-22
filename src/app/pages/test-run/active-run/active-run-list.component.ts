@@ -87,7 +87,7 @@ import { NzNotificationService } from 'ng-zorro-antd/notification';
               }}
             </td>
             <td nzEllipsis style="flex: 0.8;">
-              <a routerLink="/test/test_run/run">{{ data.code }} </a>
+              <a [routerLink]="['/test/test_run', data.id]">{{ data.code }}</a>
             </td>
             <td nzEllipsis style="flex: 2;">{{ data.name }}</td>
             <td nzEllipsis style="flex: 1;">{{ data.testName?.length }}</td>
@@ -207,12 +207,14 @@ export class ActiveRunListComponent
   }
 
   override ngOnInit(): void {
+    this.refreshSub$ = this.uiService.refresher.subscribe(() => {
+      this.search();
+    });
     const storedProjectId = localStorage.getItem('selectedProjectId');
     if (storedProjectId) {
       this.projectId = +storedProjectId;
       this.search();
     }
-    this.refreshSub$ = this.uiService.refresher.subscribe(() => this.search());
   }
   override search(): void {
     if (this.loading) return;

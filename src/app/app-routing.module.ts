@@ -36,7 +36,7 @@ const routes: Routes = [
         },
       },
       {
-        path: 'test_run/run',
+        path: 'test_run/:id',
         component: ActiveRunComponent,
         data: [
           { index: 0, label: 'Test Run', url: '/test/test_run' },

@@ -66,8 +66,9 @@ export class SelectProjectComponent implements OnInit, ControlValueAccessor {
     filters: '',
   };
   @Input() isDisabled: boolean = false;
-  onChange(_value: any) {}
-  onTouched() {}
+
+  onChange = (_value: any) => {};
+  onTouched = () => {};
 
   constructor(
     private service: HomeService,
@@ -77,7 +78,6 @@ export class SelectProjectComponent implements OnInit, ControlValueAccessor {
 
   ngOnInit(): void {
     const storedProjectId = localStorage.getItem('selectedProjectId');
-
     if (storedProjectId) {
       this.selectedValue = +storedProjectId;
       this.writeValue(this.selectedValue);
@@ -85,7 +85,6 @@ export class SelectProjectComponent implements OnInit, ControlValueAccessor {
     } else if (this.showAllOption) {
       this.selectedValue = 0;
     }
-
     this.projectService.currentProjectId$.subscribe((id) => {
       if (id) {
         this.selectedValue = id;
@@ -125,16 +124,19 @@ export class SelectProjectComponent implements OnInit, ControlValueAccessor {
     this.valueChanged.emit(this.selectedValue);
     this.onChange(this.selectedValue);
     localStorage.setItem('selectedProjectId', this.selectedValue.toString());
-
     if (this.selectedValue === 0) {
       setTimeout(() => {
         this.router.navigate(['/home']);
       }, 0);
     }
   }
+
   writeValue(value: any): void {
-    this.selectedValue = value;
-    this.search();
+    if (value !== undefined) {
+      this.selectedValue = value;
+      this.onChange(this.selectedValue);
+      this.search();
+    }
   }
 
   registerOnChange(fn: any): void {
@@ -143,5 +145,9 @@ export class SelectProjectComponent implements OnInit, ControlValueAccessor {
 
   registerOnTouched(fn: any): void {
     this.onTouched = fn;
+  }
+
+  setDisabledState?(isDisabled: boolean): void {
+    this.isDisabled = isDisabled;
   }
 }
