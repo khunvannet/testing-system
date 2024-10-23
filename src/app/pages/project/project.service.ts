@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BaseApiService } from 'src/app/helper/base-api.service';
+import { SettingService } from 'src/app/app-setting';
 
 export interface Project {
   id?: number;
@@ -16,7 +17,10 @@ export interface Project {
   providedIn: 'root',
 })
 export class HomeService extends BaseApiService<Project> {
-  constructor(protected override http: HttpClient) {
-    super(http, 'Project');
+  constructor(
+    protected override http: HttpClient,
+    settingService: SettingService
+  ) {
+    super(http, 'Project', settingService);
   }
 }

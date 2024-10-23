@@ -2,12 +2,12 @@ import { HttpClient } from '@angular/common/http';
 import { Inject, Injectable } from '@angular/core';
 
 export class Setting {
-  LANG_URL: string = 'https://core.sgx.bz/files/langs/uat';
-  BASE_API_URL: string = 'https://latest.sgx.bz/uat/api';
-  AUTH_API_URL: string = 'https://core.sgx.bz/api';
-  AUTH_UI_URL: string = 'https://core.sgx.bz';
-  APP_NAME: string = 'UAT';
-  APP_ICON: string = 'https://core.sgx.bz/files/22/12/logo_text-black-02_.png';
+  LANG_URL: string = '';
+  BASE_API_URL: string = '';
+  AUTH_API_URL: string = '';
+  AUTH_UI_URL: string = '';
+  APP_NAME: string = '';
+  APP_ICON: string = '';
   PDF_URL: string = '';
   INVOICING_URL: string = '';
 }

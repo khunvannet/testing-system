@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import { APP_INITIALIZER, LOCALE_ID, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -6,6 +6,7 @@ import { km_KH, NzI18nInterface, NZ_I18N } from 'ng-zorro-antd/i18n';
 import { en_US } from 'ng-zorro-antd/i18n';
 import { registerLocaleData } from '@angular/common';
 import en from '@angular/common/locales/en';
+import km from '@angular/common/locales/en';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -50,15 +51,42 @@ import { DeleteRunComponent } from './pages/test-run/active-run/active-run-delet
 import { TreeSelectComponent } from './pages/test-run/test-run-tree-select.component';
 import { EnumStatusComponent } from './pages/shared/EnumStatus.component';
 import { LanguageInputComponent } from './pages/shared/language-input.component';
+import { SettingHttpService, SettingService } from './app-setting';
+import { Observable, catchError } from 'rxjs';
 
-registerLocaleData(en);
+// registerLocaleData(en);
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http);
 }
 
-export function i18nFactory(): NzI18nInterface {
-  const storedLang = localStorage.getItem('selectedLang') || 'en';
-  return storedLang === 'km' ? km_KH : en_US;
+// export function i18nFactory(): NzI18nInterface {
+//   const storedLang = localStorage.getItem('selectedLang') || 'en';
+//   return storedLang === 'km' ? km_KH : en_US;
+// }
+// export function app_Init(settingsHttpService: SettingHttpService) {
+//   return () => settingsHttpService.initializeApp();
+// }
+export function app_Init(settingsHttpService: SettingHttpService) {
+  return () => settingsHttpService.initializeApp();
+}
+
+registerLocaleData(km);
+registerLocaleData(en);
+
+export class CustomTranslate implements TranslateLoader {
+  constructor(
+    private http: HttpClient,
+    private settingService: SettingService
+  ) {}
+  getTranslation(lang: string): Observable<any> {
+    // Here we are making http call to our server to get the
+    // translation files. lang will be our language for which we are
+    // calling translations if it fails to get that language's
+    // translation then translation should be called for en language.
+    return this.http
+      .get(`${this.settingService.setting.LANG_URL}-${lang}.json`)
+      .pipe(catchError((_) => this.http.get(`/assets/i18n/${lang}.json`)));
+  }
 }
 
 @NgModule({
@@ -120,13 +148,36 @@ export function i18nFactory(): NzI18nInterface {
     DragDropModule,
     TranslateModule.forRoot({
       loader: {
-        provide: TranslateLoader,
-        useFactory: HttpLoaderFactory,
-        deps: [HttpClient],
+        provide: TranslateLoader, // Main provider for loader
+        useClass: CustomTranslate, // Custom Loader
+        deps: [HttpClient, SettingService], // Dependencies which helps serving loader
       },
+      isolate: false,
     }),
   ],
-  providers: [{ provide: NZ_I18N, useFactory: i18nFactory }],
+  providers: [
+    {
+      provide: NZ_I18N,
+      useFactory: (localId: string) => {
+        switch (localId) {
+          case 'km':
+            return km_KH;
+          case 'en':
+            return en_US;
+          /** keep the same with angular.json/i18n/locales configuration **/
+          default:
+            return km_KH;
+        }
+      },
+      deps: [LOCALE_ID],
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: app_Init,
+      deps: [SettingHttpService],
+      multi: true,
+    },
+  ],
   bootstrap: [AppComponent],
 })
 export class AppModule {}

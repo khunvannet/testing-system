@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { SettingService } from 'src/app/app-setting';
 import { BaseApiService } from 'src/app/helper/base-api.service';
 
 export interface TestRun {
@@ -23,7 +24,10 @@ export interface TestRun {
   providedIn: 'root',
 })
 export class TestRunService extends BaseApiService<TestRun> {
-  constructor(protected override http: HttpClient) {
-    super(http, 'TestRun');
+  constructor(
+    protected override http: HttpClient,
+    settingService: SettingService
+  ) {
+    super(http, 'TestRun', settingService);
   }
 }

@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { SettingService } from 'src/app/app-setting';
 import { BaseApiService } from 'src/app/helper/base-api.service';
 export interface Rundetail {
   id?: number;
@@ -22,7 +23,10 @@ export enum Status {
   providedIn: 'root',
 })
 export class RunService extends BaseApiService<Rundetail> {
-  constructor(protected override http: HttpClient) {
-    super(http, 'RunDetail');
+  constructor(
+    protected override http: HttpClient,
+    settingService: SettingService
+  ) {
+    super(http, 'RunDetail', settingService);
   }
 }

@@ -1,5 +1,5 @@
 {
-  "BASE_API_URL": "https://latest.sgx.bz/uat/api",
+  "BASE_API_URL": "http://s8.sgx.bz:60590/api",
   "LANG_URL": "https://core.sgx.bz/files/langs/uat",
   "AUTH_API_URL": "https://core.sgx.bz/api",
   "AUTH_UI_URL": "https://core.sgx.bz",

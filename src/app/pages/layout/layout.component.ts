@@ -91,15 +91,16 @@ export interface Language {
                     *ngFor="let lang of languages"
                     nz-menu-item
                     (click)="switchLang(lang)"
-                    [ngClass]="{ active: lang.code === selectLang.code }"
-                    style="padding-left: 15px;"
+                    style="padding-left: 15px; display:flex; justify-content:space-between;"
                   >
-                    <img
-                      style=" width: 20px; height: 20px; margin-right: 10px;"
-                      [src]="lang.flag"
-                      [alt]="lang.name"
-                    />
-                    {{ lang.name }}
+                    <div>
+                      <img
+                        style=" width: 20px; height: 20px; margin-right: 10px;"
+                        [src]="lang.flag"
+                        [alt]="lang.name"
+                      />
+                      {{ lang.name }}
+                    </div>
                     <span *ngIf="lang.code === selectLang.code">✔️</span>
                   </li>
                 </ul>
@@ -148,12 +149,12 @@ export class LayoutComponent implements OnInit {
     {
       name: 'English',
       code: 'en',
-      flag: '../../../assets/images/English-logo.svg',
+      flag: 'assets/images/en_FLAG.png',
     },
     {
       name: 'Khmer',
       code: 'km',
-      flag: '../../../assets/images/Khmer-logo.svg',
+      flag: 'assets/images/kh_FLAG.png',
     },
   ];
 
