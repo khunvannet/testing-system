@@ -19,8 +19,12 @@ export interface Language {
         [(nzCollapsed)]="isCollapsed"
         [nzTrigger]="null"
       >
-        <div class="select-project">
-          <app-select-project [showAllOption]="true"></app-select-project>
+        <div class="logo">
+          <img
+            src="assets/images/quality-control_3270362.png"
+            alt="Quality Control Image"
+            style="width: 75px; height: 75px;"
+          />
         </div>
         <ul
           nz-menu
@@ -33,19 +37,29 @@ export interface Language {
             routerLinkActive="active"
             [routerLinkActiveOptions]="{ exact: true }"
           >
-            <a routerLink="/test/dashboard">
+            <a routerLink="/home">
               <i nz-icon nzType="dashboard" nzTheme="outline"></i>
               <span>{{ 'Dashboard' | translate }}</span>
             </a>
           </li>
+          <li
+            nz-menu-item
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: true }"
+          >
+            <a routerLink="/project">
+              <i nz-icon nzType="project" nzTheme="outline"></i>
+              <span>{{ 'Projects' | translate }}</span>
+            </a>
+          </li>
           <li nz-menu-item routerLinkActive="active">
-            <a routerLink="/test/test_cases">
+            <a routerLink="/test_cases">
               <i nz-icon nzType="folder" nzTheme="outline"></i>
               <span>{{ 'Test Cases' | translate }}</span>
             </a>
           </li>
           <li nz-menu-item routerLinkActive="active">
-            <a routerLink="/test/test_run">
+            <a routerLink="/test_run">
               <i nz-icon nzType="code" nzTheme="outline"></i>
               <span>{{ 'Test Run' | translate }}</span>
             </a>

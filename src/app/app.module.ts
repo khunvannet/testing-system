@@ -10,7 +10,6 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NgZorroAntdModule } from './ng-zorro-antd.module';
-import { HomeComponent } from './pages/project/project-sidebar.component';
 import { NoResultFoundComponent } from './pages/shared/no-result-found.component';
 import { ListComponent } from './pages/project/project-list.component';
 import { LayoutComponent } from './pages/layout/layout.component';
@@ -64,7 +63,6 @@ export function i18nFactory(): NzI18nInterface {
 @NgModule({
   declarations: [
     AppComponent,
-    HomeComponent,
     NoResultFoundComponent,
     ListComponent,
     OperationComponent,

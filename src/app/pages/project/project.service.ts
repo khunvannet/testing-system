@@ -6,6 +6,8 @@ export interface Project {
   id?: number;
   name?: string;
   description?: string;
+  countRun?: number;
+  countTest?: number;
   note?: string;
   active?: boolean;
 }

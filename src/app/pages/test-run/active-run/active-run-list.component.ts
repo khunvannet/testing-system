@@ -87,7 +87,7 @@ import { NzNotificationService } from 'ng-zorro-antd/notification';
               }}
             </td>
             <td nzEllipsis style="flex: 0.8;">
-              <a [routerLink]="['/test/test_run', data.id]">{{ data.code }}</a>
+              <a [routerLink]="['/test_run', data.id]">{{ data.code }}</a>
             </td>
             <td nzEllipsis style="flex: 2;">{{ data.name }}</td>
             <td nzEllipsis style="flex: 1;">{{ data.testName?.length }}</td>

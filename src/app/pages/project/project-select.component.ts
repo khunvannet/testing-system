@@ -9,7 +9,7 @@ import {
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { QueryParam } from 'src/app/helper/base-api.service';
 import { HomeService, Project } from './project.service';
-import { ProjectService } from 'src/app/helper/project-select.service';
+
 import { Router } from '@angular/router';
 
 @Component({
@@ -72,7 +72,7 @@ export class SelectProjectComponent implements OnInit, ControlValueAccessor {
 
   constructor(
     private service: HomeService,
-    private projectService: ProjectService,
+
     private router: Router
   ) {}
 
@@ -85,14 +85,6 @@ export class SelectProjectComponent implements OnInit, ControlValueAccessor {
     } else if (this.showAllOption) {
       this.selectedValue = 0;
     }
-    this.projectService.currentProjectId$.subscribe((id) => {
-      if (id) {
-        this.selectedValue = id;
-        this.onChange(id);
-        this.valueChanged.emit(id);
-        localStorage.setItem('selectedProjectId', id.toString());
-      }
-    });
   }
 
   search() {
