@@ -1,0 +1,15 @@
+#!/bin/zshch
+
+ng build --configuration production
+
+cd .docker
+
+export DOCKER_HOST=tcp://192.168.31.65:2376
+export DOCKER_TLS_VERIFY=1
+export DOCKER_CERT_PATH=~/.docker/d3-ssl
+
+docker build .. --file ../.docker/Dockerfile -t dkr.sgx.bz/uat-ui:latest
+docker push dkr.sgx.bz/uat-ui
+
+echo "UAT UI is builded..."
+exit 0

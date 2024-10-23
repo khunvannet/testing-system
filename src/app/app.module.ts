@@ -50,6 +50,7 @@ import { RunAgainComponent } from './pages/test-run/close-run/close-run-again.co
 import { DeleteRunComponent } from './pages/test-run/active-run/active-run-delete.component';
 import { TreeSelectComponent } from './pages/test-run/test-run-tree-select.component';
 import { EnumStatusComponent } from './pages/shared/EnumStatus.component';
+import { LanguageInputComponent } from './pages/shared/language-input.component';
 
 registerLocaleData(en);
 export function HttpLoaderFactory(http: HttpClient) {
@@ -85,6 +86,7 @@ export function i18nFactory(): NzI18nInterface {
     DeleteTestComponent,
     MainMultipleSelectComponent,
     TestMultipleSelectComponent,
+    LanguageInputComponent,
 
     //share
 

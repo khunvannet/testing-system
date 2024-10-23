@@ -1,0 +1,14 @@
+version: "3.2"
+services:
+  fitness-ui-ctn:
+    image: dkr.sgx.bz/fitness-ui
+    restart: always
+    ports:
+      - 60594:80
+    environment:
+      - "LANG_URL=https://core.sgx.bz/files/langs/uat"
+      - "BASE_API_URL=https://latest.sgx.bz/uat/api"
+      - "AUTH_API_URL=https://core.sgx.bz/api"
+      - "AUTH_UI_URL=https://core.sgx.bz"
+      - "APP_NAME=UAT"
+      - "APP_ICON=https://core.sgx.bz/files/23/01/dt-logo-removebg-preview.png"

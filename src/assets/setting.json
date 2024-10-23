@@ -1,0 +1,8 @@
+{
+  "BASE_API_URL": "https://latest.sgx.bz/uat/api",
+  "LANG_URL": "https://core.sgx.bz/files/langs/uat",
+  "AUTH_API_URL": "https://core.sgx.bz/api",
+  "AUTH_UI_URL": "https://core.sgx.bz",
+  "APP_NAME": "UAT",
+  "APP_ICON": "https://core.sgx.bz/files/22/12/logo_text-black-02_.png"
+}

@@ -1,0 +1,10 @@
+{
+  "LANG_URL" : "${LANG_URL}",
+  "BASE_API_URL" : "${BASE_API_URL}",
+  "AUTH_API_URL" : "${AUTH_API_URL}",
+  "AUTH_UI_URL": "${AUTH_UI_URL}",
+  "APP_NAME": "${APP_NAME}",
+  "APP_ICON": "${APP_ICON}",
+  "PDF_URL": "${PDF_URL}",
+  "INVOICING_URL": "${INVOICING_URL}"
+}

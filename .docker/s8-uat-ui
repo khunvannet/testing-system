@@ -1,0 +1,13 @@
+#!/bin/zshch
+
+
+cd .docker
+export DOCKER_HOST=tcp://s8.sgx.bz:2375
+export DOCKER_TLS_VERIFY=1
+export DOCKER_CERT_PATH=~/.docker/s8-ssl
+
+docker pull dkr.sgx.bz/uat-ui
+
+docker-compose -f uat-ui.yml -p uat up -d
+echo "UAT UI is up and running..."
+exit 0

@@ -8,6 +8,7 @@ import { ActiveRunComponent } from './pages/test-run/active-run/active-run.compo
 import { CloseRunComponent } from './pages/test-run/close-run/close-run.component';
 import { SettingComponent } from './pages/setting/setting.component';
 import { MainTestListComponent } from './pages/main/main-list.component';
+import { RedirectComponent } from './pages/redirect/redirect.component';
 
 const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'home' },
@@ -56,6 +57,10 @@ const routes: Routes = [
         component: SettingComponent,
       },
     ],
+  },
+  {
+    path: 'redirect/:requestId',
+    component: RedirectComponent,
   },
 ];
 
