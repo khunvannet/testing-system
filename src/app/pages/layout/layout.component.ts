@@ -2,6 +2,8 @@ import { Component, Input, OnInit } from '@angular/core';
 import { HomeUiService } from '../project/project-ui.service';
 import { TranslateService } from '@ngx-translate/core';
 import { en_US, km_KH, NzI18nService } from 'ng-zorro-antd/i18n';
+import { AuthService } from 'src/app/helper/auth.service';
+import { SettingService } from 'src/app/app-setting';
 export interface Language {
   name: string;
   code: string;
@@ -70,9 +72,9 @@ export interface Language {
         <nz-header>
           <div class="header-app">
             <!-- Server indicator -->
-            <div class="server-indicator">
-              <span nz-icon nzType="cloud-server" nzTheme="outline"></span>
-              <span>S9 Server</span>
+            <div class="tenant">
+              <img [src]="authService.tenant?.logo" alt="tenant" />
+              <span>{{ authService.tenant?.name }}</span>
             </div>
 
             <!-- Language selector -->
@@ -108,9 +110,9 @@ export interface Language {
             </div>
 
             <!-- App store icon -->
-            <div class="header-icon">
+            <a class="header-icon" (click)="redirectToMainUrl()">
               <i nz-icon nzType="appstore" nzTheme="outline"></i>
-            </div>
+            </a>
             <!-- Fullscreen toggle -->
             <a (click)="toggleFullScreen()" class="header-icon">
               <span
@@ -121,13 +123,13 @@ export interface Language {
             </a>
 
             <!-- User avatar -->
-            <div class="user-avatar">
+            <a class="user-avatar" (click)="redirectToViewProfileUrl()">
               <span nz-icon nzType="user" nzTheme="outline"></span>
-            </div>
+            </a>
 
             <!-- Username -->
             <div class="username">
-              <span>KhunVannet</span>
+              <span>{{ name }}</span>
             </div>
           </div>
         </nz-header>
@@ -138,12 +140,35 @@ export interface Language {
     </nz-layout>
   `,
   styleUrls: ['../../../assets/scss/layout.component.scss'],
+  styles: [
+    `
+      .tenant {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 28px;
+        font-size: 17px;
+        padding: 5px 15px;
+        border-radius: 5px;
+        background-color: #f0f0f0;
+        color: black;
+        cursor: default;
+        margin-right: 10px;
+
+        img {
+          width: 18px;
+          margin-right: 4px;
+        }
+      }
+    `,
+  ],
 })
 export class LayoutComponent implements OnInit {
   isCollapsed = false;
   selectLang!: Language;
   readonly defaultLang = 'en';
   isFullScreen = false;
+  name = '';
 
   readonly languages: Language[] = [
     {
@@ -161,13 +186,18 @@ export class LayoutComponent implements OnInit {
   constructor(
     public uiService: HomeUiService,
     private translateService: TranslateService,
-    private i18n: NzI18nService
+    private i18n: NzI18nService,
+    public authService: AuthService,
+    public settingService: SettingService
   ) {}
 
   ngOnInit(): void {
     const storedLang = localStorage.getItem('selectedLang') || this.defaultLang;
     this.selectLang = this.getLanguage(storedLang);
     this.setLanguage(this.selectLang);
+    this.name =
+      this.authService.clientInfo.fullName?.charAt(0).toUpperCase()! +
+      this.authService.clientInfo.fullName?.slice(1);
   }
 
   toggleFullScreen(): void {
@@ -215,5 +245,19 @@ export class LayoutComponent implements OnInit {
 
   private handleFullScreenError(err: Error): void {
     console.error(`Fullscreen error: ${err.message} (${err.name})`);
+  }
+  redirectToMainUrl() {
+    // console.log(this.settingService.setting.AUTH_UI_URL);
+
+    window.open(
+      `${this.settingService.setting.AUTH_UI_URL}/appcenter`,
+      'app-center'
+    );
+  }
+  redirectToViewProfileUrl() {
+    window.open(
+      `${this.settingService.setting.AUTH_UI_URL}/appcenter/user-view`,
+      'app-center'
+    );
   }
 }
